@@ -1,3 +1,5 @@
+run dist.js --take 0.1 --target high --host all --scale 0.5 --free 256 --tail
+
 run dist.js --take 0.9 --target worth --host all --scale 0.5 --free 256 --tail
 run dist.js --take 0.9 --target worth --host all --scale 0.5 --free 256 --silent
 

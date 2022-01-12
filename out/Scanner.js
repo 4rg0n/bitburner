@@ -484,6 +484,9 @@ export class ServerInfo {
 		this.path = zerver.path;
 		this.type = zerver.type;
 		this.securityRank = zerver.securityRank;
+		this.moneyRank = zerver.moneyRank;
+		this.isHackable = zerver.isHackable;
+		this.isTargetable = zerver.isTargetable;
 	}
 
 	/**

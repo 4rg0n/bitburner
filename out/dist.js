@@ -6,10 +6,10 @@ import { Master } from "./Master.js";
 import { Log } from "./Log.js";
 import { WorkTicket } from "./WorkTicket.js";
 import { ProgressBar, Progression } from "./ProgressBar.js";
-import { asFormat, median } from "./utils.js";
+import { asFormat } from "./utils.js";
 import { Purchaser } from "./Purchaser.js";
 import { Flags } from "./Flags.js";
-import { Crack } from "./Crack.js";
+import { Cracker } from "./Crack.js";
 
 const TargetType = {
     Worth: "worth",
@@ -21,13 +21,16 @@ const TargetType = {
 /**
  * For distributing hack / grow / weaken threads to attack a set of targets
  * 
+ * @todo Fine tune distribution: higher available money means easier grow? 
+ *       So it would be good to keep servers as near as max money as possible?
+ * 
  * @param {NS} ns
  */
 export async function main(ns) {
     ns.disableLog('ALL');
 
     const flags = new Flags(ns, [
-        ["target", TargetType.Worth, `Category of targets to attack: ${Object.values(TargetType).join(", ")}`],
+        ["target", [], `Category of targets to attack: ${Object.values(Zerver.MoneyRank).join(", ")}`],
         ["host", Scheduler.WorkerType.NotHome, `Category of hosts to deploy: ${Object.values(Scheduler.WorkerType).join(", ")}`],
         ["take", 0.5, "Percentage of money, wich should be hacked between 0 and 1"],
         ["scale", 0, "Percante of available money between 0 and 1 to regularly buy new servers. 0 means no servers will be bought"],
@@ -38,41 +41,28 @@ export async function main(ns) {
     
     const args = flags.args();
 
+    /** @type {Zerver[]} */
     let targets = [];
     const taking = args.take - 0;
     const scale = args.scale - 0;
     const homeRamMinFree = args.free;
     const workerType = args.host;
     const silent = args.silent;
-    const cracker = new Crack(ns);
+    const cracker = new Cracker(ns);
+    const targetCategories = args.target;
 
     const servers = Zerver.get(ns);
     cracker.crackServers(servers);
 
-    switch(args.target.toLowerCase()) {
-        case TargetType.Low.toLowerCase():
-            targets = filterLowServers(ns, servers, taking);
-            break;
-        case TargetType.Mid.toLowerCase():
-            targets = filterMidServers(ns, servers, taking);
-            break;
-        case TargetType.High.toLowerCase():
-            targets = filterHighServers(ns, servers, taking);
-            break;        
-        default: 
-        case TargetType.Worth.toLowerCase():
-            targets = filterWorthServers(ns, servers);
-            break;   
-    }   
+    targets = servers.filter(t => t.isTargetable);
+    targets = filterByMoneyRanks(targets, targetCategories);
 
     const log = new Log(ns);
-    const purchaser = new Purchaser(ns, scale);
+    const purchaser = new Purchaser(ns, scale, 4);
     /** @type {Master[]} masters */
     const masters = targets.map(target => new Master(ns, target.name, taking));
     const scheduler = new Scheduler(ns, masters, workerType, homeRamMinFree);
 
-    console.log(scheduler);
-    
     await scheduler.cleanup();    
     purchaser.upgradeServers(); // will only buy when scale > 0
     await scheduler.deployHacksToServers();
@@ -191,55 +181,20 @@ export async function main(ns) {
 
 /**
  * 
- * @param {NS} ns 
  * @param {Zerver[]} servers 
- * @param {number} taking
- * @returns {Zerver[]}
+ * @param {string[]} ranks 
+ * @returns 
  */
-function filterHighServers(ns, servers, taking) {
-    return filterWorthServers(ns, servers)
-        .filter(s => s.moneyMax >= 1000000000);
-}
+function filterByMoneyRanks(servers, ranks = []) {
+    if (ranks.length === 0) {
+        return servers;
+    }
 
-/**
- * 
- * @param {NS} ns 
- * @param {Zerver[]} servers 
- * @param {number} taking
- * @returns {Zerver[]}
- */
-function filterMidServers(ns, servers, taking) {
-    return filterWorthServers(ns, servers)
-        .filter(s => s.moneyMax > 100000000 && s.moneyMax < 1000000000);
-}
+    let targets = [];
 
-/**
- * 
- * @param {NS} ns 
- * @param {Zerver[]} servers
- * @param {number} taking 
- * @returns {Zerver[]}
- */
-function filterLowServers(ns, servers, taking) {
-    return filterWorthServers(ns, servers)
-        .filter(s => s.moneyMax <= 100000000);
-}
+    for (const rank of ranks) {
+        targets = targets.concat(servers.filter(t => t.moneyRank.toLowerCase() === rank.toLowerCase()))
+    }
 
-/**
- * 
- * @param {NS} ns 
- * @param {Zerver[]} servers 
- * @returns {Zerver[]}
- */
-function filterWorthServers(ns, servers) {
-    return servers
-        // Ignore servers that can't be hacked
-        .filter(s => s.type === Zerver.ServerType.MoneyFarm)
-        // Ignore servers we don't have root for yet
-        .filter(s => s.hasRoot)
-        .filter(s => s.levelNeeded <= ns.getHackingLevel())
-        // Ignore servers that has out of control security
-        .filter(s => s.securityCurr <= 100)
-        // Filter from blacklisted servers (never worth using)
-        .filter(s => ['fulcrumassets'].indexOf(s.name) === -1);
+    return targets;
 }

@@ -12,19 +12,20 @@ export async function main(ns) {
 		["_", 8, "Amount of ram in GB to purchase"],
 		["max", false, "When given, the max possible amount of servers will be bought"],
 		["scale", 1, "Defines the percent between 0 and 1 to buy max possible amount of servers with"],
+		["multi", 2, "Multiplikator for next possible ram upgrade"],
 		["help", false]
 	]);
 	const args = flags.args();
 
 	let ram = args._[0];
-	const purchaser = new Purchaser(ns, args.scale);
+	const purchaser = new Purchaser(ns, args.scale, args.multi);
 
 	if (args.max) {
 		ram = purchaser.getRamMaxUpgrade();
 	}
 
 	ns.tprintf(`There are ${purchaser.getFreeSlots()} free server slots`);
-	ns.tprintf(`Max upgrade could be from [min: ${asFormatGB(purchaser.getRamMin())}|max: ${asFormatGB(purchaser.getRamMax())}] to ${asFormatGB(purchaser.getRamNextUpgrade())} for ${asFormat(purchaser.getUpgradeCosts())}`);	
+	ns.tprintf(`Possible next upgrade could be from [min: ${asFormatGB(purchaser.getRamMin())}|max: ${asFormatGB(purchaser.getRamMax())}] to ${asFormatGB(purchaser.getRamNextUpgrade())} for ${asFormat(purchaser.getUpgradeCosts())}`);	
 
 	const prompt = await ns.prompt(`Upgrading to ${args.max ? "MAX " : ""} ${asFormatGB(ram)} will cost you ${asFormat(purchaser.getCostTotal(ram))}`);
 
@@ -64,7 +65,7 @@ export class Purchaser {
 			return [];
 		}
 
-		let ram = this.getRamMaxUpgrade();
+		let ram = this.getRamNextUpgrade();
 		return this.buyServers(ram);
 	}
 

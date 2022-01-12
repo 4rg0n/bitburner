@@ -16,7 +16,7 @@ export async function main(ns) {
     ]);
     const args = flags.args();
 
-    const crack = new Crack(ns);
+    const crack = new Cracker(ns);
     let servers = crack.getServersMissingRoot();
     
     ns.tprintf(`Found ${servers.length} server(s), which don't have root yet.`);
@@ -38,7 +38,7 @@ export async function main(ns) {
     }
 }
 
-export class Crack {
+export class Cracker {
 
     static Scripts = [
         "BruteSSH.exe",
@@ -58,7 +58,6 @@ export class Crack {
     /**
      * 
      * @param {Zerver[]} servers 
-     * @param {*} force 
      * @returns 
      */
     crackServers(servers = []) {
@@ -76,11 +75,11 @@ export class Crack {
     }
 
     getAvailCracks() {
-        return Crack.Scripts.filter(s => this.ns.fileExists(s));
+        return Cracker.Scripts.filter(s => this.ns.fileExists(s));
     }
 
     getMissingCracks() {
-        return Crack.Scripts.filter(s => !this.ns.fileExists(s));
+        return Cracker.Scripts.filter(s => !this.ns.fileExists(s));
     }
 
     buyCracks() {

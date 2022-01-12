@@ -25,9 +25,15 @@ export class Zerver {
         Highest: 100
     }
 
-    static Home = "home"
+    static MoneyRank = {
+        None: "None",
+        Low: "Low",
+        Med: "Med",
+        High: "High",
+        Highest: "Highest"
+    }
 
-    
+    static Home = "home"
 
     /**
      * @param {NS} ns
@@ -36,7 +42,7 @@ export class Zerver {
      * @param {Zerver} parent
     */
     constructor(ns, name, depth = 0, parent = null) { 
-        this.type = Zerver.getServerType(ns, name);
+        this.type = Zerver.getServerType(name);
         this.ns = ns;
         this.name = name;
         this.depth = depth
@@ -85,10 +91,9 @@ export class Zerver {
     }
     
     /**
-     * @param {NS} ns
      * @param {string} name
      */
-    static getServerType(ns, name) {
+    static getServerType(name) {
         if (name.startsWith('home') || name.startsWith('pserv'))
             return Zerver.ServerType.Own;
         switch (name) {
@@ -197,6 +202,9 @@ export class Zerver {
         return path.reverse().join("/");
     }
 
+    /**
+     * @returns {number}
+     */
     get securityRank() {
         const securityCurr = this.securityCurr;
 
@@ -209,6 +217,35 @@ export class Zerver {
         } else {
             return Zerver.SecurityRank.Highest;
         }
+    }
+
+    /**
+     * @returns {string}
+     */
+    get moneyRank() {
+        const moneyMax = this.moneyMax;
+
+        if (moneyMax === 0) {
+            return Zerver.MoneyRank.None;
+        }
+
+        if (moneyMax <= 1000000000) {
+            return Zerver.MoneyRank.Low;
+        } else if (moneyMax > 1000000000 && moneyMax <= 15000000000) {
+            return Zerver.MoneyRank.Med;
+        } else if (moneyMax > 15000000000 && moneyMax <= 50000000000) {
+            return Zerver.MoneyRank.High;
+        } else {
+            return Zerver.MoneyRank.Highest;
+        }
+    }
+
+    get isHackable() {
+        return this.hasRoot && (this.levelNeeded <= this.ns.getHackingLevel()) && this.securityCurr <= 100;
+    }
+
+    get isTargetable() {
+        return this.type === Zerver.ServerType.MoneyFarm && this.isHackable; 
     }
 
     /**

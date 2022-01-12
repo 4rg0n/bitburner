@@ -3,30 +3,52 @@ import { asFormat } from "./utils.js";
 
 /** @typedef {import(".").NS} NS */
 
-
 /** @param {NS} ns **/
 export async function main(ns) {
-	const moneyBuffer = new NumberStack([], 60);
-	const ui = new StatsUI(8, 28);
 	ns.disableLog("ALL");
 
-	while(true) {
-		moneyBuffer.push(ns.getServerMoneyAvailable("home"));
+	const moneyBuffer = new NumberStack([], 60);
+	const strExpBuffer = new NumberStack([], 60);
+	const defExpBuffer = new NumberStack([], 60);
+	const dexExpBuffer = new NumberStack([], 60);
+	const agiExpBuffer = new NumberStack([], 60);
+	const chrExpBuffer = new NumberStack([], 60);
+	const ui = new StatsUI(12, 28);
 
+	while(true) {
 		const pServers = ns.getPurchasedServers();
 		const pServerTotalRamMax = pServers.map(server => ns.getServerMaxRam(server)).reduce((a, b) => a + b, 0);
         const pServerTotalRamUsed = pServers.map(server =>  ns.getServerUsedRam(server)).reduce((a, b) => a + b, 0);
 		const hServerRamMax = ns.getServerMaxRam("home");
 		const hServerRamUsed = ns.getServerUsedRam("home");
+		const moneyCurr = ns.getServerMoneyAvailable("home");
+		const strExp = ns.getPlayer().strength_exp;
+		const defExp = ns.getPlayer().defense_exp;
+		const dexExp = ns.getPlayer().dexterity_exp;
+		const agiExp = ns.getPlayer().agility_exp;
+		const chrExp = ns.getPlayer().charisma_exp;
+
+		moneyBuffer.push(moneyCurr);
+		// todo only show stat exp when it is actualy not 0 
+		strExpBuffer.push(strExp);
+		defExpBuffer.push(defExp);
+		dexExpBuffer.push(dexExp);
+		agiExpBuffer.push(agiExp);
+		chrExpBuffer.push(chrExp);
 				
 		ui.update(new UIModel(
 			moneyBuffer.diff(),
+			ns.getScriptIncome()[0],
+			ns.getScriptExpGain(),
+			strExpBuffer.diff(),
+			defExpBuffer.diff(),
+			dexExpBuffer.diff(),
+			agiExpBuffer.diff(),
+			chrExpBuffer.diff(),
 			pServerTotalRamUsed, 
 			pServerTotalRamMax, 
 			hServerRamUsed,
-			hServerRamMax,
-			ns.getScriptIncome()[0], 
-			ns.getScriptExpGain()
+			hServerRamMax
 		));
 
 		await ns.sleep(1000);		
@@ -67,12 +89,33 @@ export class StatsUI {
 }
 
 export class UIModel {
-	constructor(moneyPerMin = 0, pServerUsedGB = 0, pServerMaxGB = 0, hServerUsedGB = 0, hServerMaxGB = 0, incPerSec = 0, expPerSec = 0) {
-		this.money = new ValueTimeUnit(moneyPerMin, "$", "m");
-		this.script = new ValueTimeUnit(incPerSec, "$", "s");
-		this.exp = new ValueTimeUnit(expPerSec,  "xp", "s");
-		this.pload = new Progression(new ProgressBar(10), Progression.Format.Byte, [Progression.Templates.Value, Progression.Templates.Bar]).setProgress(pServerUsedGB, pServerMaxGB);
-		this.hload = new Progression(new ProgressBar(10), Progression.Format.Byte, [Progression.Templates.Value, Progression.Templates.Bar]).setProgress(hServerUsedGB, hServerMaxGB);
+	constructor(
+		moneyPerMin = 0,
+		incPerSec = 0,
+		scrExpPerMin = 0,
+		strExpPerMin = 0, 
+		defExpPerMin = 0, 
+		dexExpPerMin = 0, 
+		agiExpPerMin = 0, 
+		chrExpPerMin = 0,
+		pServerUsedGB = 0, 
+		pServerMaxGB = 0, 
+		hServerUsedGB = 0, 
+		hServerMaxGB = 0
+	) {
+		this.Money = new ValueTimeUnit(moneyPerMin, "$", "m");
+
+		this.Script_Money = new ValueTimeUnit(incPerSec, "$", "s");
+		this.Script_Exp = new ValueTimeUnit(scrExpPerMin,  "xp", "s");
+
+		this.Str_Exp = new ValueTimeUnit(strExpPerMin,  "xp", "m");
+		this.Def_Exp = new ValueTimeUnit(defExpPerMin,  "xp", "m");
+		this.Dex_Exp = new ValueTimeUnit(dexExpPerMin,  "xp", "m");
+		this.Agi_Exp = new ValueTimeUnit(agiExpPerMin,  "xp", "m");
+		this.Chr_Exp = new ValueTimeUnit(chrExpPerMin,  "xp", "m");
+
+		this.Prv_Load = new Progression(new ProgressBar(10), Progression.Format.Byte, [Progression.Templates.Value, Progression.Templates.Bar]).setProgress(pServerUsedGB, pServerMaxGB);
+		this.Home_Load = new Progression(new ProgressBar(10), Progression.Format.Byte, [Progression.Templates.Value, Progression.Templates.Bar]).setProgress(hServerUsedGB, hServerMaxGB);
 	}
 }
 
@@ -120,17 +163,30 @@ class NumberStack {
 		return this.elements.pop();
 	}
 
-	avg() {
+	avg(elements = undefined) {
+		elements = elements || this.elements;
+
 		let sum = 0;
-		for (let num of moneyBuffer.elements) {
+		for (let num of elements) {
 			sum += num;
 		}
 
-		return sum / maxSize;
+		return sum / elements.length;
 	}
 
 	diff() {
 		return this.last() - this.first(); 
+	}
+
+	increases() {
+		return this.elements.map((currVal, index) => {
+			if (index === 0) {
+				return;
+			}
+
+			const prevVal = this.elements[index - 1];
+			return ((currVal - prevVal) / prevVal);
+		}).filter(Boolean);
 	}
 
 	first() {
