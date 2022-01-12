@@ -1,0 +1,9 @@
+{
+    "settings": {
+      "import/resolver": {
+        "node": {
+          "paths": ["out"]
+        }
+      }
+    }
+  }
