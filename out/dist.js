@@ -24,6 +24,9 @@ const TargetType = {
  * @todo Fine tune distribution: higher available money means easier grow? 
  *       So it would be good to keep servers as near as max money as possible?
  * 
+ * @todo When there's alot of RAM available, distirbution only produces a 
+ *       load of ~10% and does not run scripts on all servers.
+ * 
  * @param {NS} ns
  */
 export async function main(ns) {
@@ -82,8 +85,8 @@ export async function main(ns) {
     const loadBar = new Progression(new ProgressBar(10), Progression.Format.Byte);
     const waitingBar = new Progression(new ProgressBar(10));
     const moneyBar = new Progression(new ProgressBar(10));
-    const scaleBar = new Progression(new ProgressBar(10));
-    const rampUpBar = new Progression(new ProgressBar(10, 2), null, [Progression.Templates.Bar, Progression.Templates.Percent]);
+    const scaleBar = new Progression(new ProgressBar(10), null, [Progression.Templates.Bar, Progression.Templates.Percent]);
+    const rampUpBar = new Progression(new ProgressBar(10, 10), null, [Progression.Templates.Bar, Progression.Templates.Percent]);
 
     const secLowBar = new Progression(new ProgressBar(10));
     const secMedBar = new Progression(new ProgressBar(10));

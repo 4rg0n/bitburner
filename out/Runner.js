@@ -9,13 +9,13 @@ export class Runner {
 
     /**
      * @param {NS} ns
-     * @param {string} host
+     * @param {string} targetHost
      * @param {string} defaultArgs
      * 
      */
-    constructor(ns, host = ns.getHostname(), defaultArgs = '', ramMinFree = 0) {
+    constructor(ns, targetHost = ns.getHostname(), defaultArgs = '', ramMinFree = 0) {
         this.ns = ns;
-        this.host = host;
+        this.targetHost = targetHost;
         this.defaultArgs = defaultArgs;
         this.ramMinFree = ramMinFree;
         this.running = {} 
@@ -29,7 +29,7 @@ export class Runner {
     }
 
     calcRamFree() {
-        const free = this.ns.getServerMaxRam(this.host) - this.ns.getServerUsedRam(this.host) - this.ramMinFree;
+        const free = this.ns.getServerMaxRam(this.targetHost) - this.ns.getServerUsedRam(this.targetHost) - this.ramMinFree;
 
         if (free < 0) {
             return 0;
@@ -61,7 +61,7 @@ export class Runner {
     }
 
     isRunning(script, args = this.defaultArgs) {
-        this.running[script + " " + args] = this.ns.isRunning(script, this.host, args);
+        this.running[script + " " + args] = this.ns.isRunning(script, this.targetHost, args);
         return this.running[script];
     }
 
@@ -72,7 +72,7 @@ export class Runner {
             const script = scripts[i];
             this.ns.print(`Waiting for ${script} (${args}) to finish...`);
 
-            while (this.ns.isRunning(script, this.host, args)) {
+            while (this.ns.isRunning(script, this.targetHost, args)) {
                 await this.ns.sleep(1000);
             }
 
@@ -90,8 +90,8 @@ export class Runner {
         if (threads < 1) return;
 
         for (let i in scripts) {
-            while (ns.exec(scripts[i], this.host, threads, args) === 0 && 
-                    ns.isRunning(scripts[i], this.host, args) === false) {
+            while (ns.exec(scripts[i], this.targetHost, threads, args) === 0 && 
+                    ns.isRunning(scripts[i], this.targetHost, args) === false) {
                 await ns.sleep(1000);
             }
         }
@@ -108,7 +108,7 @@ export class Runner {
         scripts = asArray(scripts);
 
         for (let i in scripts) {
-            this.ns.kill(scripts[i], this.host, args);
+            this.ns.kill(scripts[i], this.targetHost, args);
         }
            
         await this.await(scripts, args);
