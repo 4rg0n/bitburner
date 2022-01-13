@@ -13,6 +13,7 @@ export async function main(ns) {
 	const dexExpBuffer = new NumberStack([], 60);
 	const agiExpBuffer = new NumberStack([], 60);
 	const chrExpBuffer = new NumberStack([], 60);
+	const repBuffer = new NumberStack([], 60);
 	const ui = new StatsUI(12, 28);
 
 	while(true) {
@@ -27,8 +28,10 @@ export async function main(ns) {
 		const dexExp = ns.getPlayer().dexterity_exp;
 		const agiExp = ns.getPlayer().agility_exp;
 		const chrExp = ns.getPlayer().charisma_exp;
+		const repGained = ns.getPlayer().workRepGained;
 
 		moneyBuffer.push(moneyCurr);
+		repBuffer.push(repGained);
 		// todo only show stat exp when it is actualy not 0 
 		strExpBuffer.push(strExp);
 		defExpBuffer.push(defExp);
@@ -37,14 +40,15 @@ export async function main(ns) {
 		chrExpBuffer.push(chrExp);
 				
 		ui.update(new UIModel(
+			repBuffer.avgIncrement(),
 			moneyBuffer.diff(),
 			ns.getScriptIncome()[0],
 			ns.getScriptExpGain(),
-			strExpBuffer.diff(),
-			defExpBuffer.diff(),
-			dexExpBuffer.diff(),
-			agiExpBuffer.diff(),
-			chrExpBuffer.diff(),
+			strExpBuffer.avgIncrement(),
+			defExpBuffer.avgIncrement(),
+			dexExpBuffer.avgIncrement(),
+			agiExpBuffer.avgIncrement(),
+			chrExpBuffer.avgIncrement(),
 			pServerTotalRamUsed, 
 			pServerTotalRamMax, 
 			hServerRamUsed,
@@ -90,29 +94,31 @@ export class StatsUI {
 
 export class UIModel {
 	constructor(
-		moneyPerMin = 0,
+		rep = 0,
+		money = 0,
 		incPerSec = 0,
-		scrExpPerMin = 0,
-		strExpPerMin = 0, 
-		defExpPerMin = 0, 
-		dexExpPerMin = 0, 
-		agiExpPerMin = 0, 
-		chrExpPerMin = 0,
+		scrExp = 0,
+		strExp = 0, 
+		defExpP = 0, 
+		dexExpP = 0, 
+		agiExp = 0, 
+		chrExp = 0,
 		pServerUsedGB = 0, 
 		pServerMaxGB = 0, 
 		hServerUsedGB = 0, 
 		hServerMaxGB = 0
 	) {
-		this.Money = new ValueTimeUnit(moneyPerMin, "$", "m");
+		this.Money = new ValueTimeUnit(money, "$", "m");
+		this.Rep = new ValueTimeUnit(rep, "r", "s");
 
 		this.Script_Money = new ValueTimeUnit(incPerSec, "$", "s");
-		this.Script_Exp = new ValueTimeUnit(scrExpPerMin,  "xp", "s");
+		this.Script_Exp = new ValueTimeUnit(scrExp,  "xp", "s");
 
-		this.Str_Exp = new ValueTimeUnit(strExpPerMin,  "xp", "m");
-		this.Def_Exp = new ValueTimeUnit(defExpPerMin,  "xp", "m");
-		this.Dex_Exp = new ValueTimeUnit(dexExpPerMin,  "xp", "m");
-		this.Agi_Exp = new ValueTimeUnit(agiExpPerMin,  "xp", "m");
-		this.Chr_Exp = new ValueTimeUnit(chrExpPerMin,  "xp", "m");
+		this.Str_Exp = new ValueTimeUnit(strExp,  "xp", "s");
+		this.Def_Exp = new ValueTimeUnit(defExpP,  "xp", "s");
+		this.Dex_Exp = new ValueTimeUnit(dexExpP,  "xp", "s");
+		this.Agi_Exp = new ValueTimeUnit(agiExp,  "xp", "s");
+		this.Chr_Exp = new ValueTimeUnit(chrExp,  "xp", "s");
 
 		this.Prv_Load = new Progression(new ProgressBar(10), Progression.Format.Byte, [Progression.Templates.Value, Progression.Templates.Bar]).setProgress(pServerUsedGB, pServerMaxGB);
 		this.Home_Load = new Progression(new ProgressBar(10), Progression.Format.Byte, [Progression.Templates.Value, Progression.Templates.Bar]).setProgress(hServerUsedGB, hServerMaxGB);
@@ -163,8 +169,12 @@ class NumberStack {
 		return this.elements.pop();
 	}
 
-	avg(elements = undefined) {
+	avg(elements = []) {
 		elements = elements || this.elements;
+
+		if (elements.length == 0) {
+			return 0;
+		}
 
 		let sum = 0;
 		for (let num of elements) {
@@ -178,15 +188,19 @@ class NumberStack {
 		return this.last() - this.first(); 
 	}
 
-	increases() {
+	increasements() {
 		return this.elements.map((currVal, index) => {
 			if (index === 0) {
 				return;
 			}
 
 			const prevVal = this.elements[index - 1];
-			return ((currVal - prevVal) / prevVal);
+			return currVal - prevVal;
 		}).filter(Boolean);
+	}
+
+	avgIncrement() {
+		return this.avg(this.increasements());
 	}
 
 	first() {

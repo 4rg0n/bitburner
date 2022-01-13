@@ -30,7 +30,7 @@ export function toPrintableString(thing, blackList = ["ns"]) {
     let percents = numbers
         .map(n => (n * 100).toFixed(decimals))
         .map(n => isNaN(n) ? 0 : n)
-        .map(n => n +'%');
+        .map(n => n +'％'); // this is a special percent sign, so ns.tprintf() or ns.sprintf() will not parse it
 
     if (usePadding) {
         let max = Math.max(...(percents.map(n => n.length)));
@@ -40,7 +40,7 @@ export function toPrintableString(thing, blackList = ["ns"]) {
     return isArray ? percents : percents[0];
 }
 
-let units = [' ', 'k', 'm', 'b', 't', 'q', 'Q', 's', 'S'];
+let units = ['', 'k', 'm', 'b', 't', 'q', 'Q', 's', 'S'];
 
 /**
  * Given big numbers convert to readable, defaults to 2 decimals

@@ -1,3 +1,4 @@
+ // @ts-check 
 /** @typedef {import(".").NS} NS */
 import { asFormat, asFormatGB, asPercent } from "./utils.js";
 
@@ -10,7 +11,7 @@ export async function main(ns) {
 
     const bar = new ProgressBar(10,2);
 
-    for (let i = 1; i < 13; i++) {
+    for (let i = 1; i < 14; i++) {
         ns.tprintf("" + bar);
         bar.setProgress(i);
     }
@@ -19,9 +20,24 @@ export async function main(ns) {
 
     const ratioedBar = new ProgressBar(10,2); 
 
-    for (let i = 1; i < 13; i++) {
+    for (let i = 1; i < 14; i++) {
         ns.tprintf("" + ratioedBar);
-        ratioedBar.setPercentage(i / 12);
+        ratioedBar.setPercentage(i / 10);
+    }
+
+    const progress = new Progression(new ProgressBar(10,2), null, [
+        Progression.Templates.Bar, 
+        Progression.Templates.Value, 
+        Progression.Templates.Total,
+        Progression.Templates.Ratio,
+        Progression.Templates.Percent
+    ]);
+
+    ns.tprintf("\n");
+
+    for (let i = 1; i < 14; i++) {
+        ns.tprintf(`${progress}`);
+        progress.setProgress(i, 10);
     }
 }
 
@@ -33,7 +49,7 @@ export class ProgressBar {
         None: "_",
         Progress: "░",
         Overload: "▒",
-        Break: "|"
+        Break: "¦"
     };
 
     constructor(progressSize = 10, overloadSize = 0, progress = 0, overload = 0) {
@@ -80,12 +96,13 @@ export class ProgressBar {
         const progressSigns = Array(this.progressSize).fill(ProgressBar.Signs.None); 
         const overloadSigns = Array(this.overloadSize).fill(ProgressBar.Signs.None); 
 
-        for (const i in progressSigns) {
+        for (let i = 0; i < progressSigns.length; i++) {
             if (i < this.progress) {
                 progressSigns[i] = ProgressBar.Signs.Progress;
             }
         }
-        for (const i in overloadSigns) {
+
+        for (let i = 0; i < overloadSigns.length; i++) {
             if (i < this.overload) {
                 overloadSigns[i] = ProgressBar.Signs.Overload;
             }
@@ -97,6 +114,11 @@ export class ProgressBar {
         }
    
         return `[${signs.join("")}]`;
+    }
+
+    reset() {
+        this.progress = 0;
+        this.overload = 0;
     }
 
     get size() {
@@ -118,7 +140,9 @@ export class Progression {
     static Templates = {
         Bar: "bar",
         Percent: "percent",
-        Value: "value"
+        Value: "value",
+        Total: "total",
+        Ratio: "ratio"
     }
 
     static DefaultTemplate = [
@@ -141,6 +165,7 @@ export class Progression {
         this.format = format;
         this.spacer = spacer;
         this.template = template;
+        this.error = false;
     }
 
     /**
@@ -163,11 +188,41 @@ export class Progression {
     getPercentage() {
         return this.progress / this.progressTotal;
     }
+
+    reset() {
+        this.bar.reset();
+    }
+    /**
+     * 
+     * @param {number} number 
+     * @returns {boolean}
+     */
+    isValid(number) {
+        return typeof number !== "number" || !Number.isFinite(number) || !Number.isNaN(number);
+    }
+
+    /**
+     * 
+     * @param  {...number} numbers 
+     */
+    validate(...numbers) {
+        for (const number of numbers) {
+            if (!this.isValid(number)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
     
     /**
      * @returns {string} e.g. [|||||-----] 50.00 (50%)
      */
     toString() {
+        if (!this.validate(this.progress, this.progressTotal)) {
+            return "ERROR :(";
+        }
+
         return this.formatParts(this.template).join(this.spacer);
     }
 
@@ -182,9 +237,15 @@ export class Progression {
                 case Progression.Templates.Value: 
                     parts.push(this.formatValue(this.progress));
                     break;
+                case Progression.Templates.Total: 
+                    parts.push(this.formatValue(this.progressTotal));
+                    break;
+                case Progression.Templates.Ratio: 
+                    parts.push(`(${this.formatValue(this.progress)}/${this.formatValue(this.progressTotal)})`);
+                    break;       
                 case Progression.Templates.Percent: 
                     parts.push(`(${asPercent(this.getPercentage())})`);
-                    break;     
+                    break;              
             }
         }
 

@@ -64,7 +64,7 @@ export async function main(ns) {
 }
 
 export class ServerMonitor {
-    static MaxServerGrowth = 3000;
+    static MaxServerGrowth = 100;
     static MaxHackDifficulty = 100;
 
     /**
@@ -80,8 +80,8 @@ export class ServerMonitor {
 
         this.bars.securityBar = new Progression(new ProgressBar(10));
         this.bars.loadBar = new Progression(new ProgressBar(10));
-        this.bars.hackSkillBar = new Progression(new ProgressBar(10));
-        this.bars.moneyBar = new Progression(new ProgressBar(10));
+        this.bars.hackSkillBar = new Progression(new ProgressBar(10), null, [Progression.Templates.Bar, Progression.Templates.Ratio]);
+        this.bars.moneyBar = new Progression(new ProgressBar(10), null, [Progression.Templates.Bar, Progression.Templates.Ratio]);
         this.bars.growBar = new Progression(new ProgressBar(10));
     }
 

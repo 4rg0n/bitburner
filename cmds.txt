@@ -1,7 +1,7 @@
 run dist.js --take 0.1 --target high --host all --scale 0.5 --free 256 --tail
 
-run dist.js --take 0.9 --target worth --host all --scale 0.5 --free 256 --tail
-run dist.js --take 0.9 --target worth --host all --scale 0.5 --free 256 --silent
+run dist.js --take 0.8 --target med --target high --host all --scale 0.5 --free 256 --tail
+run dist.js --take 0.8 --target med --target high --host all --scale 0.5 --free 256 --silent
 
 run Scanner.js moneyMax >1000000000 --cat moneyfarm --sort moneyMax --desc
 run Scanner.js requiredHackingSkill <=getPlayer().hacking --cat moneyfarm --filter moneyMax --sort moneyMax --desc

@@ -43,6 +43,8 @@ export class Purchaser {
 
 	static ServerPrefix = "pserv";
 
+	static RamMaxPurchasable = Math.pow(2, 20);
+
 	/**
 	 * @param {NS} ns
 	 * @param {number} scale how much % of own money should be spent for buying between 0 and 1
@@ -70,6 +72,10 @@ export class Purchaser {
 	}
 
 	canUpgradeServers() {
+		if (this.getRamMax() === Purchaser.RamMaxPurchasable && this.getRamMin() === Purchaser.RamMaxPurchasable) {
+			return false;
+		}
+
 		return this.canBuyServers(this.getRamNextUpgrade());
 	}
 
@@ -120,6 +126,10 @@ export class Purchaser {
 	 * @returns {string[]} hostnames of bought / upgraded servers
 	 */
 	canBuyServers(ram) {
+		if (ram > Purchaser.RamMaxPurchasable) {
+			return false;
+		}
+
 		const moneyLimit = this.getAvailableMoney();
 		if (this.getCostTotal(ram) > moneyLimit) {
 			return false;
@@ -228,7 +238,13 @@ export class Purchaser {
 			nextRam = nextRam * this.multi;
 		}
 
-		return nextRam / 2;
+		const maxRam =  nextRam / 2;
+
+		if (maxRam >= Purchaser.RamMaxPurchasable) {
+			return Purchaser.RamMaxPurchasable;
+		}
+
+		return maxRam;
 	}
 
 	getFreeSlots() {
@@ -244,6 +260,10 @@ export class Purchaser {
 			curRamMax = curRamMax * this.multi;
 		}
 
-		return curRamMax ;
+		if (curRamMax >= Purchaser.RamMaxPurchasable) {
+			return Purchaser.RamMaxPurchasable;
+		}
+
+		return curRamMax;
 	}
 }

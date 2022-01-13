@@ -28,7 +28,7 @@ export async function main(ns) {
     const homeRamMinFree = args.free;
     const workerType = args.host;
 
-    targets = filterWorthServers(ns, servers);
+    targets = servers.filter(t => t.isTargetable);
 
     /** @type {Master[]} masters */
     const masters = targets.map(target => new Master(ns, target.name, taking));
@@ -45,23 +45,4 @@ export async function main(ns) {
         await SCHEDULER.run();
         await ns.sleep(500);   
     }  
-}
-
-/**
- * 
- * @param {NS} ns 
- * @param {Zerver[]} servers 
- * @returns {Zerver[]}
- */
-function filterWorthServers(ns, servers) {
-    return servers
-        // Ignore servers that can't be hacked
-        .filter(s => s.type === Zerver.ServerType.MoneyFarm)
-        // Ignore servers we don't have root for yet
-        .filter(s => s.hasRoot)
-        .filter(s => s.levelNeeded <= ns.getHackingLevel())
-        // Ignore servers that has out of control security
-        .filter(s => s.securityCurr <= 100)
-        // Filter from blacklisted servers (never worth using)
-        .filter(s => ['fulcrumassets'].indexOf(s.name) === -1);
 }

@@ -47,16 +47,6 @@ export class Zerver {
         this.name = name;
         this.depth = depth
         this.parent = parent;
-        this._moneyMax = undefined;
-        this._securityMin = undefined;
-        this._hasRoot = undefined;
-        this._moneyAvail = undefined;
-        this._securityCurr = undefined;
-        this._levelNeeded = undefined;
-        this._ramMax = undefined;
-        this._ramUsed = undefined;
-        /** @type {{hack: number, grow: number, weaken: number}} _threads */
-        this._threads = undefined;
     }
     
     /**
@@ -117,18 +107,14 @@ export class Zerver {
      * @returns {number}
      */
     get moneyAvail() {
-        this._moneyAvail = this.ns.getServerMoneyAvailable(this.name);
-
-        return this._moneyAvail;
+        return this.ns.getServerMoneyAvailable(this.name);
     }
 
     /**
      * @returns {number}
      */
     get moneyMax() {
-        this._moneyMax = this.ns.getServerMaxMoney(this.name);
-
-        return this._moneyMax;
+        return this.ns.getServerMaxMoney(this.name);
     }
 
     /**
@@ -142,18 +128,14 @@ export class Zerver {
      * @returns {number}
      */
     get securityMin() {
-        this._securityMin = this.ns.getServerMinSecurityLevel(this.name);
-
-        return this._securityMin;
+        return this.ns.getServerMinSecurityLevel(this.name);
     }
 
     /**
      * @returns {number}
      */
     get securityCurr() {
-        this._securityCurr = this.ns.getServerSecurityLevel(this.name);
-
-        return this._securityCurr;
+        return this.ns.getServerSecurityLevel(this.name);
     }
 
     /**
@@ -167,9 +149,7 @@ export class Zerver {
      * @returns {boolean}
      */
     get hasRoot() {
-        this._hasRoot = this.ns.hasRootAccess(this.name);
-
-        return this._hasRoot;
+        return this.ns.hasRootAccess(this.name);
     }
 
     get levelNeeded() {
@@ -179,15 +159,15 @@ export class Zerver {
     }
 
     get ramMax() {
-        this._ramMax = this.ns.getServerMaxRam(this.name);
-
-        return this._ramMax;
+        return this.ns.getServerMaxRam(this.name);
     }
 
     get ramUsed() {
-        this._ramUsed = this.ns.getServerUsedRam(this.name);
+        return this.ns.getServerUsedRam(this.name);
+    }
 
-        return this._ramUsed;
+    get grow() {
+        return this.ns.getServerGrowth(this.name);
     }
 
     get path() {
@@ -241,11 +221,15 @@ export class Zerver {
     }
 
     get isHackable() {
-        return this.hasRoot && (this.levelNeeded <= this.ns.getHackingLevel()) && this.securityCurr <= 100;
+        return this.hasRoot 
+            && (this.levelNeeded <= this.ns.getHackingLevel()) 
+            && this.securityCurr <= 100;
     }
 
     get isTargetable() {
-        return this.type === Zerver.ServerType.MoneyFarm && this.isHackable; 
+        return this.type === Zerver.ServerType.MoneyFarm 
+            && this.isHackable 
+            && this.grow > 1 
     }
 
     /**
@@ -340,13 +324,11 @@ export class Zerver {
             grow = 0;
         }
                 
-        this._threads = {
+        return {
             hack: hack,
             grow: grow,
             weaken: (Math.ceil((.004 * grow + .002 * hack) / .05) + 5),
         }
-
-        return this._threads;
     }
 
     /**
