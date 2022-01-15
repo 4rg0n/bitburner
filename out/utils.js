@@ -1,13 +1,15 @@
-export function getArgs(ns) {
-    if (ns.args.length === 1)
-        return ns.args[0].split(';');
+// @ts-check
+/** @typedef {import(".").NS} NS */
 
-    return ns.args;
-}
-
-export function toPrintableString(thing, blackList = ["ns"]) {
+/**
+ * 
+ * @param {any} thing 
+ * @param {string[]} blacklist of keys to not print 
+ * @returns 
+ */
+export function toPrintableString(thing, blacklist = ["ns"]) {
 	return JSON.stringify(thing, (key, value) => {
-		if (blackList.indexOf(key) > -1) {
+		if (blacklist.indexOf(key) > -1) {
 			return undefined;
 		}
 
@@ -25,9 +27,11 @@ export function toPrintableString(thing, blackList = ["ns"]) {
  */
  export function asPercent(numbers, decimals = 1, usePadding = true) {
     let isArray = Array.isArray(numbers);
+    // @ts-ignore
     if (!isArray) numbers = [numbers];
     
     let percents = numbers
+        // @ts-ignore
         .map(n => (n * 100).toFixed(decimals))
         .map(n => isNaN(n) ? 0 : n)
         .map(n => n +'％'); // this is a special percent sign, so ns.tprintf() or ns.sprintf() will not parse it
@@ -56,14 +60,17 @@ let units = ['', 'k', 'm', 'b', 't', 'q', 'Q', 's', 'S'];
  */
 export function asFormat(numbers, decimals = 2, usePadding = true) {
     let isArray = Array.isArray(numbers);    
+    // @ts-ignore
     if (!isArray) numbers = [numbers];
 
+    // @ts-ignore
     let biggest = Math.max(...(numbers.map(Math.abs)));
     let unit = 0;
     for (; biggest >= 1000; unit++, biggest /= 1000) {
     }
 
     let div = Math.pow(10, Math.min(unit, units.length - 1) * 3);
+    // @ts-ignore
     let formatted = numbers.map(n => (n / div).toFixed(decimals) + units[unit]);
     if (usePadding) {
         let longest = Math.max(...(formatted.map(n => n.length)));
@@ -105,6 +112,7 @@ export function fromFormatGB(text) {
 
     for(let i = 0; i < unitsGB.length; i++) {
         if (text.toLowerCase().indexOf(unitsGB[i].toLowerCase()) !== -1) {
+            // @ts-ignore
             gigabyte = new Number(text.replace(unitsGB[i], ""));
             pow = i;
             break;

@@ -1,3 +1,4 @@
+// @ts-check
 import { Progression, ProgressBar } from "./ProgressBar.js";
 import { asFormat } from "./utils.js";
 

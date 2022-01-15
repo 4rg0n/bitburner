@@ -1,40 +1,6 @@
+// @ts-check
 /** @typedef {import(".").NS} NS */
-import { Flags } from "./Flags.js";
-import { asFormat, asFormatGB } from "./utils.js";
-
-/**
- * For purchasing or upgrading servers
- * 
- * @param {NS} ns 
- */
-export async function main(ns) {
-	const flags = new Flags(ns, [
-		["_", 8, "Amount of ram in GB to purchase"],
-		["max", false, "When given, the max possible amount of servers will be bought"],
-		["scale", 1, "Defines the percent between 0 and 1 to buy max possible amount of servers with"],
-		["multi", 2, "Multiplikator for next possible ram upgrade"],
-		["help", false]
-	]);
-	const args = flags.args();
-
-	let ram = args._[0];
-	const purchaser = new Purchaser(ns, args.scale, args.multi);
-
-	if (args.max) {
-		ram = purchaser.getRamMaxUpgrade();
-	}
-
-	ns.tprintf(`There are ${purchaser.getFreeSlots()} free server slots`);
-	ns.tprintf(`Possible next upgrade could be from [min: ${asFormatGB(purchaser.getRamMin())}|max: ${asFormatGB(purchaser.getRamMax())}] to ${asFormatGB(purchaser.getRamNextUpgrade())} for ${asFormat(purchaser.getUpgradeCosts())}`);	
-
-	const prompt = await ns.prompt(`Upgrading to ${args.max ? "MAX " : ""} ${asFormatGB(ram)} will cost you ${asFormat(purchaser.getCostTotal(ram))}`);
-
-	if (!prompt) {
-	 	return;
-	}
-	
-	purchaser.buyServers(ram);
-}
+import { asFormatGB } from "./utils.js";
 
 /**
  * For purchasing / upgrading private servers
@@ -67,20 +33,20 @@ export class Purchaser {
 			return [];
 		}
 
-		let ram = this.getRamNextUpgrade();
+		let ram = this.getRamMaxUpgrade();
 		return this.buyServers(ram);
 	}
 
 	canUpgradeServers() {
-		if (this.getRamMax() === Purchaser.RamMaxPurchasable && this.getRamMin() === Purchaser.RamMaxPurchasable) {
+		if (this.getRamMin() >= Purchaser.RamMaxPurchasable) {
 			return false;
 		}
 
-		return this.canBuyServers(this.getRamNextUpgrade());
+		return this.canBuyServers(this.getRamMaxUpgrade());
 	}
 
 	getUpgradeCosts() {
-		return this.getCostTotal(this.getRamNextUpgrade());
+		return this.getCostTotal(this.getRamMaxUpgrade());
 	}
 
 	/**
@@ -123,7 +89,7 @@ export class Purchaser {
 
 	/**
 	 * @param {number} ram 
-	 * @returns {string[]} hostnames of bought / upgraded servers
+	 * @returns {boolean}
 	 */
 	canBuyServers(ram) {
 		if (ram > Purchaser.RamMaxPurchasable) {
@@ -155,6 +121,12 @@ export class Purchaser {
 		return this.buy(ram);
 	}
 
+	/**
+	 * 
+	 * @param {string} host 
+	 * @param {number} ram 
+	 * @returns {string} bought server name
+	 */
 	buyUpgrade(host, ram) {
 		const currentRam = this.ns.getServerMaxRam(host);
 
@@ -171,6 +143,11 @@ export class Purchaser {
 		this.ns.deleteServer(host);
 	}
 
+	/**
+	 * 
+	 * @param {number} ram 
+	 * @returns {number} cost to replace all servers
+	 */
 	getCostTotal(ram) {
 		return this.ns.getPurchasedServerCost(ram) * this.ns.getPurchasedServerLimit();
 	}
@@ -188,6 +165,11 @@ export class Purchaser {
 		return hostname; 
 	}
 
+	/**
+	 * 
+	 * @param {number} ram 
+	 * @returns {boolean}
+	 */
 	canBuy(ram) {
 		return (this.ns.getServerMoneyAvailable(this.ns.getHostname()) > this.ns.getPurchasedServerCost(ram));
 	}
@@ -198,9 +180,13 @@ export class Purchaser {
 	getRamMax() {
 		let ramMax = Math.max(...this.getRamAll());
 
-		if (typeof ramMax !== "number" || ramMax < 1) {
-			ramMax = 0;
+		if (typeof ramMax !== "number") {
+			return 0;
 		}	
+
+		if (ramMax < 1 || Number.isNaN(ramMax) || !Number.isFinite(ramMax)) {
+			return 0;
+		}
 
 		return ramMax;
 	}
@@ -211,9 +197,13 @@ export class Purchaser {
 	getRamMin() {
 		let ramMin = Math.min(...this.getRamAll());
 
-		if (typeof ramMin !== "number" || ramMin < 1) {
-			ramMin = 0;
-		}	
+		if (typeof ramMin !== "number") {
+			return 0;
+		}
+		
+		if (ramMin < 1 || Number.isNaN(ramMin) || !Number.isFinite(ramMin)) {
+			return 0;
+		}
 
 		return ramMin;
 	}
@@ -235,33 +225,29 @@ export class Purchaser {
 		let nextRam = this.getRamNextUpgrade();
 		
 		while(this.canBuyServers(nextRam)) {
-			nextRam = nextRam * this.multi;
+			nextRam = this.getRamNextUpgrade(nextRam);
 		}
 
-		const maxRam =  nextRam / 2;
-
-		if (maxRam >= Purchaser.RamMaxPurchasable) {
+		if (nextRam >= Purchaser.RamMaxPurchasable) {
 			return Purchaser.RamMaxPurchasable;
 		}
 
-		return maxRam;
+		return nextRam;
 	}
 
 	getFreeSlots() {
 		return this.ns.getPurchasedServerLimit() - this.ns.getPurchasedServers().length;
 	}
 
-	getRamNextUpgrade() {
-		let curRamMax = this.getRamMax();
+	getRamNextUpgrade(curRamMax = 0) {
+		if (curRamMax === 0) {
+			curRamMax = this.getRamMax();
+		}
 		
 		if (curRamMax < this.minRam) {
 			curRamMax = this.minRam;
 		} else {
 			curRamMax = curRamMax * this.multi;
-		}
-
-		if (curRamMax >= Purchaser.RamMaxPurchasable) {
-			return Purchaser.RamMaxPurchasable;
 		}
 
 		return curRamMax;

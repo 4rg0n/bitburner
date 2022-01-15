@@ -1,3 +1,4 @@
+// @ts-check
 /** @typedef {import(".").NS} NS */
 
 /**
@@ -12,12 +13,6 @@ export class Zerver {
         Target: 'Target'
     }
 
-    static Scripts = {
-        hack: "hack.script",
-        grow: "grow.script",
-        weaken: "weaken.script"
-    }
-
     static SecurityRank = {
         Low: 25,
         Med: 50,
@@ -27,6 +22,7 @@ export class Zerver {
 
     static MoneyRank = {
         None: "None",
+        Lowest: "Lowest",
         Low: "Low",
         Med: "Med",
         High: "High",
@@ -51,7 +47,6 @@ export class Zerver {
     
     /**
      * @param {NS} ns
-     * @param {string[]} whitelist
      * @returns {Zerver[]}
      */
     static get(ns) {
@@ -76,6 +71,12 @@ export class Zerver {
         return servers;
     }
 
+    /**
+     * @param {NS} ns
+     * @param {string} name
+     * 
+     * @returns {Zerver}
+     */
     static create(ns, name) {
         return new Zerver(ns, name);
     }
@@ -118,6 +119,17 @@ export class Zerver {
     }
 
     /**
+     * @returns {number}
+     */
+    get moneyFree() {
+        return this.moneyMax - this.moneyAvail;
+    }
+
+    get moneyFreePercent() {
+        return this.moneyFree / this.moneyMax;
+    }
+
+    /**
      * @returns {boolean}
      */
     get hasMaxMoney() {
@@ -153,9 +165,7 @@ export class Zerver {
     }
 
     get levelNeeded() {
-        this._levelNeeded = this.ns.getServerRequiredHackingLevel(this.name);
-
-        return this._levelNeeded;
+        return this.ns.getServerRequiredHackingLevel(this.name);
     }
 
     get ramMax() {
@@ -171,6 +181,7 @@ export class Zerver {
     }
 
     get path() {
+        /** @type {Zerver} */
         let server = this;
         const path = [];
 
@@ -208,8 +219,9 @@ export class Zerver {
         if (moneyMax === 0) {
             return Zerver.MoneyRank.None;
         }
-
-        if (moneyMax <= 1000000000) {
+        if (moneyMax <= 50000000) {
+            return Zerver.MoneyRank.Lowest;
+        } else if (moneyMax > 50000000 && moneyMax <= 1000000000) {
             return Zerver.MoneyRank.Low;
         } else if (moneyMax > 1000000000 && moneyMax <= 15000000000) {
             return Zerver.MoneyRank.Med;
@@ -224,6 +236,10 @@ export class Zerver {
         return this.hasRoot 
             && (this.levelNeeded <= this.ns.getHackingLevel()) 
             && this.securityCurr <= 100;
+    }
+
+    get isHome() {
+        return this.name == Zerver.Home;
     }
 
     get isTargetable() {
@@ -296,22 +312,51 @@ export class Zerver {
 
     /**
      * @param {number} taking 
-     * 
-     * @returns {{hack: number, grow: number, weaken: number}}
+     * @returns 
      */
-    analyzeThreads(taking) {
-        if (taking >= 1) {
-            taking = 0.99; // do not take everything
+    analyzeInitThreads(taking, booster = 1) {
+        // has nearly max money?
+        if (this.moneyFreePercent <= 0.1) {
+           return {
+               hack: 0,
+               grow: 0,
+               weaken: 5
+           }
         }
-   
-        let hackAmount = this.moneyMax * taking;
 
-        if (hackAmount > this.moneyAvail) {
+        const growAnalyzeThreads = this.ns.growthAnalyze(this.name, 1 / (1 - taking + .001));
+
+        let grow = Math.ceil(growAnalyzeThreads);
+
+        if (!Number.isFinite(grow) || Number.isNaN(grow)) {
+            grow = 0;
+        }
+
+        if (grow > 0) {
+            // harder to grow servers will get more grow threads (obsolete?)
+            grow = grow * (grow / (grow * (this.grow / 100)));
+        }
+
+        grow *= booster;
+
+        const threads = {
+            hack: 0,
+            grow: Math.ceil(grow),
+            weaken: (Math.ceil((.004 * growAnalyzeThreads + .002 * 0) / .05) + 5),
+        };
+
+        return threads;
+    }
+
+    analyzeAttackThreads(taking, booster = 1) {
+        let hackAmount = this.moneyMax * taking;
+        // has nearly max money?
+        if (this.moneyFreePercent <= 0.1) {
             hackAmount = this.moneyAvail;
         }
 
         const hackAnalyzeThreads = this.ns.hackAnalyzeThreads(this.name, hackAmount);
-        const growAnalyzeThreads = this.ns.growthAnalyze(this.name, 1 / (1 - taking));
+        const growAnalyzeThreads = this.ns.growthAnalyze(this.name, 1 / (1 - taking + .001));
 
         let hack = Math.floor(hackAnalyzeThreads);
         let grow = Math.ceil(growAnalyzeThreads);
@@ -323,18 +368,20 @@ export class Zerver {
         if (!Number.isFinite(grow) || Number.isNaN(grow)) {
             grow = 0;
         }
-                
-        return {
-            hack: hack,
-            grow: grow,
+
+        const threads = {
+            hack: Math.floor(hack * booster),
+            grow: Math.ceil(grow * booster),
             weaken: (Math.ceil((.004 * grow + .002 * hack) / .05) + 5),
-        }
+        };
+        
+        return threads;
     }
 
     /**
      * @param {string} script 
      * @param {number} ramMax 
-     * @returns {number}
+     * @returns {number} number of possible threads
      */
     threads(script, ramMax = null) {
         ramMax = ramMax || this.ramMax;
@@ -351,9 +398,5 @@ export class Zerver {
         for (let file of files) {
             this.ns.rm(file, this.name);
         }
-    }
-
-    isHome() {
-        return this.name === Zerver.Home;
     }
 }

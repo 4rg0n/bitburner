@@ -1,3 +1,4 @@
+// @ts-check
 /** @typedef {import(".").NS} NS */
 
 /**
@@ -9,16 +10,18 @@ export class Flags {
 
     /**
      * @param {NS} ns
-     * @param {[[]]} flagSchemas 
+     * @param {[string, (string | number | boolean | string[]), (string | undefined)][]} flagSchemas 
      */
     constructor(ns, flagSchemas) {
         this.ns = ns;
+        this.script = ns.getScriptName();
 
         if (!Array.isArray(flagSchemas)) {
             throw new Error("flagSchemas is not an Array, is: " + typeof flagSchemas);
         }
 
         this.flagSchemas = flagSchemas;
+        /** @type {[string, string | number | boolean | string[]][]} */
         this.nsFlags = [];
         this.paramDefaults = [];
 
@@ -32,11 +35,28 @@ export class Flags {
     }
 
     /**
+     * @returns {(string | number | boolean)[]}
+     */
+    allArgs() {
+        return this.ns.args;
+    }
+
+    /**
+     * @returns {string}
+     */
+    cmdLine() {
+       // @ts-ignore
+       return ["run", this.script].concat(this.allArgs()).join(" ");
+    }
+
+    /**
+     * @typedef {Object.<string, string | number | boolean | string[]>} pair
      * 
-     * @returns {{_: [string], {}}}
+     * 
+     * @returns {pair[]}}
      */
     args() {
-        /** @type {{}} */
+        /** @type {{_: {}[]}} */
         const args = this.ns.flags(this.nsFlags);
         const params = args._;
 
@@ -52,6 +72,7 @@ export class Flags {
             throw "Usage:\n" + this.toString();
         }
 
+        // @ts-ignore fix type
         return args;
     }
 
@@ -65,6 +86,10 @@ export class Flags {
         return lines.join("\n");
     }
 
+    /**
+     * @param {*} defaultValue 
+     * @returns {string}
+     */
     defaultToString(defaultValue = undefined) {
         if (typeof defaultValue === undefined || defaultValue === "") {
             return "";
@@ -73,6 +98,10 @@ export class Flags {
         return `[${defaultValue}] `;
     }
 
+    /**
+     * @param {string} desc 
+     * @returns {string}
+     */
     descriptionToString(desc = undefined) {
         if (typeof desc === "undefined") {
             return "";

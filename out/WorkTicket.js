@@ -1,3 +1,5 @@
+// @ts-check
+import { Deployer } from "./Deployer.js";
 import { Zerver } from "./Zerver.js";
 
 /** @typedef {import(".").NS} NS */
@@ -40,13 +42,13 @@ export class WorkTicket {
             this.priority = priority;
         else
             switch (script) {
-                case Zerver.Scripts.hack:
+                case Deployer.Scripts.hack:
                     this.priority = WorkTicket.Priority.hack;
                     break;
-                case Zerver.Scripts.grow:
+                case Deployer.Scripts.grow:
                     this.priority = WorkTicket.Priority.grow;
                     break;
-                case Zerver.Scripts.weaken:
+                case Deployer.Scripts.weaken:
                     this.priority = WorkTicket.Priority.weaken;
                     break;
                 default:
@@ -56,7 +58,7 @@ export class WorkTicket {
 
     /**
      * 
-     * @param {WorkTicket.Status} status 
+     * @param {string} status 
      */
     setStatus(status) {
         this.status = status;
@@ -76,5 +78,21 @@ export class WorkTicket {
      */
     isDone() {
         return this.status === WorkTicket.Status.Done;
+    }
+
+    /**
+     * 
+     * @returns {boolean}
+     */
+    isInitaiting() {
+        return this.status === WorkTicket.Status.Initiating;
+    }
+
+    /**
+     * 
+     * @returns {boolean}
+     */
+     isRunning() {
+        return this.status === WorkTicket.Status.Running;
     }
 }

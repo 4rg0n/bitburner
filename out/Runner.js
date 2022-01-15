@@ -1,6 +1,20 @@
+// @ts-check
 /** @typedef {import(".").NS} NS */
-
 import { asArray } from "./lib.js";
+import { Flags } from "./Flags.js";
+
+/**
+ * 
+ * 
+ * @param {NS} ns 
+ */
+ export async function main(ns) {
+    const flags = new Flags(ns, [
+        ["_", "", ``],
+        ["help", false, ""]
+    ]);
+    const args = flags.args();
+ }
 
 /**
  * For controlling scripts on a host server attacking another target
@@ -18,9 +32,12 @@ export class Runner {
         this.targetHost = targetHost;
         this.defaultArgs = defaultArgs;
         this.ramMinFree = ramMinFree;
-        this.running = {} 
     }
 
+    /**
+     * @param {string} script 
+     * @returns {number}
+     */
     threads(script) {
         const free = this.calcRamFree();
         const need = this.ns.getScriptRam(script) + .01;
@@ -46,7 +63,6 @@ export class Runner {
      * @returns min thread count of all given scripts
      */
     minThreads(scripts, threads = 0) {
-
         scripts = asArray(scripts);
         const allThreads = [];
 
@@ -60,11 +76,21 @@ export class Runner {
         return  Math.min(...allThreads);
     }
 
+    /**
+     * 
+     * @param {string} script 
+     * @param {string} args 
+     * @returns 
+     */
     isRunning(script, args = this.defaultArgs) {
-        this.running[script + " " + args] = this.ns.isRunning(script, this.targetHost, args);
-        return this.running[script];
+        return this.ns.isRunning(script, this.targetHost, args);
     }
 
+    /**
+     * 
+     * @param {string|string[]} scripts 
+     * @param {string} args 
+     */
     async await(scripts, args = this.defaultArgs) {
         scripts = asArray(scripts);
 
@@ -80,6 +106,12 @@ export class Runner {
         }
     }
 
+    /**
+     * 
+     * @param {string|string[]} scripts 
+     * @param {number} threads 
+     * @param {string} args
+     */
     async start(scripts, threads = 1, args = this.defaultArgs) {
         if (threads < 1) return;
 
@@ -96,7 +128,13 @@ export class Runner {
             }
         }
     }
-
+    
+    /**
+     * 
+     * @param {string|string[]} scripts 
+     * @param {number} threads 
+     * @param {string} args
+     */
     async finish(scripts, threads = 1, args = this.defaultArgs) {
         scripts = asArray(scripts);
 
@@ -104,6 +142,11 @@ export class Runner {
         await this.await(scripts, args);
     }
 
+    /**
+     * 
+     * @param {string|string[]} scripts 
+     * @param {string} args
+     */
     async kill(scripts, args = this.defaultArgs) {
         scripts = asArray(scripts);
 

@@ -1,4 +1,5 @@
-/** @typedef {import("../").NS} NS */
+// @ts-check
+/** @typedef {import("./").NS} NS */
 import { Flags } from "./Flags.js";
 
 const fileEndings = ["js", "ns", "script"];
@@ -13,11 +14,12 @@ export async function main(ns) {
     const flags = new Flags(ns, [
 		["_", "", "Part of file name or path to delete"],
 		["host", ns.getHostname(), "Name of the server to delete files from"],
-		["help", false]
+		["help", false, ""]
 	]);
 	const args = flags.args();
+    // @ts-ignore
     const grep = args._[0];
-    const host = args.host;
+    const host = args["host"];
     
 	const files = ns.ls(host, grep);
     

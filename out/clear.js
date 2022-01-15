@@ -1,4 +1,5 @@
-/** @typedef {import("..").NS} NS */
+// @ts-check
+/** @typedef {import(".").NS} NS */
 import { Zerver } from "./Zerver.js";
 import { Flags } from "./Flags.js";
 
@@ -10,10 +11,11 @@ import { Flags } from "./Flags.js";
 export async function main(ns) {
 	const flags = new Flags(ns, [
         ["_", "", `Hostname to delete files from`],
-        ["help", false]
+        ["help", false, ""]
     ]);
     const args = flags.args();
 	
+	// @ts-ignore
 	const host = args._[0];
 	let servers = Zerver.get(ns);
 

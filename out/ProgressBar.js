@@ -1,4 +1,4 @@
- // @ts-check 
+// @ts-check 
 /** @typedef {import(".").NS} NS */
 import { asFormat, asFormatGB, asPercent } from "./utils.js";
 

@@ -1,3 +1,4 @@
+// @ts-check
 /** @typedef {import(".").NS} NS */
 import { Flags } from "./Flags.js";
 import { TestConst, Test } from "./test2.js";
@@ -8,7 +9,7 @@ export async function main(ns) {
 		["_", "muh", "Part of file name or path to delete"],
 		["_", "muh", "Part of file name or path to delete"],
 		["host", "", "Name of the server to delete files from"],
-		["help", false]
+		["help", false, ""]
 	]);
     const args = flags.args();
 

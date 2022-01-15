@@ -1,46 +1,8 @@
+// @ts-check
 /** @typedef {import(".").NS} NS */
 /** @typedef {import(".").Server} Server */
-import { Flags } from "./Flags.js";
 import { Zerver } from "./Zerver.js";
 import { toPrintableString } from "./utils.js";
-
-
-/** 
- * For seacrhing and anylizing servers
- * 
- * @example run Scanner.js Runner,run4 // will search in all fields with contains for given values
- * @example run Scanner.js =The Runners,=run4theh111z // will search in all fields with equals
- * @example run Scanner.js moneyMax >1000000000 // will only show servers with max money above
- * @example run Scanner.js requiredHackingSkill <=getPlayer().hacking // will only show servers with hacking skill under or equal current (parametered functions are not supported)
- * @example run Scanner.js hostname n00dles,foodnstuff --filter moneyMax // will return only the moneyMax of n00dles and foodnstuff
- * @example run Scanner.js moneyMax >1000000000 --cat moneyfarm --sort moneyMax --desc // will look for servers above max money with category moneyfarm and sort by max money desc
- * 
- * @param {NS} ns
- */
-export async function main(ns) {
-	const flags = new Flags(ns, [
-		["_", "", "Key of field to search in. When no second argument, it will search in evey key."],
-		["_", "", "When given, first argument will be they key and this will be the value to search for (e.g. moneyMax >=1000000; hostname n00dles,foodnstuff)"],
-		["cat", "all", `Will only display servers of a certain category: ${Object.values(Zerver.ServerType).join(", ")}`],
-		["sort", "", "Will sort by given (e.g. moneyMax) value asc"],
-		["desc", false, "Sort desc"],
-		["filter", "", "Show only key (e.g. hostname) on output"],
-		["help", false]
-	]);
-
-	const args = flags.args();
-	const keySearch = args._[0];
-	let valueSearch = args._[1];
-	let category = args.cat;
-	const sort = args.sort;
-	const filterBy = args.filter;
-	const sortDesc = args.desc;
-
-	const scanner = new Scanner(ns);
-	const serverInfos = scanner.scan({key: keySearch, value: valueSearch}, category, {by: sort, desc: sortDesc});
-
-	scanner.display(serverInfos, filterBy);
-}
 
 /**
  * For seacrhing and anylizing servers
@@ -94,7 +56,9 @@ export class Scanner {
 		}
 
 		servers = this.filterByCatebory(servers, category);
+		// @ts-ignore
 		servers = this.searchFor(servers, search.key, search.value);
+		// @ts-ignore
 		servers = this.sortBy(servers, sort.by, sort.desc);
 
 		return servers;
@@ -102,7 +66,7 @@ export class Scanner {
 
 	/**
 	 * 
-	 * @param {string[]} hosts 
+	 * @param {ServerInfo[]} servers 
 	 * @param {{key: string, value: string}} search 
 	 * @param {string} category 
 	 * @param {{by: string, desc: boolean}} sort 
@@ -123,9 +87,11 @@ export class Scanner {
 
 	/**
 	 * 
-	 * @param {Server[]} serverInfos
+	 * @param {ServerInfo[]} serverInfos
 	 * @param {string} sort 
 	 * @param {boolean} sortDesc 
+	 * 
+	 * @returns {ServerInfo[]}
 	 */
 	sortBy(serverInfos, sort = "", sortDesc = false) {
 		if (sort === "" || serverInfos.length === 0) {
@@ -143,9 +109,11 @@ export class Scanner {
 
 	/**
 	 * 
-	 * @param {Server[]} serverInfos
+	 * @param {ServerInfo[]} serverInfos
 	 * @param {string} sort 
 	 * @param {boolean} sortDesc 
+	 * 
+	 * @returns {ServerInfo[]}
 	 */
 	sortByString(serverInfos, sort = "", sortDesc = false) {
 		if (sort === "" || serverInfos.length === 0) {
@@ -168,9 +136,11 @@ export class Scanner {
 
 	/**
 	 * 
-	 * @param {Server[]} serverInfos
+	 * @param {ServerInfo[]} serverInfos
 	 * @param {string} sort 
-	 * @param {boolean} sortDesc 
+	 * @param {boolean} sortDesc
+	 * 
+	 * @returns {ServerInfo[]} 
 	 */
 	sortByNumber(serverInfos, sort, sortDesc = false) {
 		if (sort === "" || serverInfos.length === 0) {
@@ -189,11 +159,26 @@ export class Scanner {
 	/**
 	 * 
 	 * @param {Server[]} serverInfos 
-	 * @param {string} filterKey 
+	 * @param {string[]} filterKeys 
 	 */
-	display(serverInfos, filterKey = "") {
+	display(serverInfos, filterKeys = []) {
 		for (let server of serverInfos) {
-			this.ns.tprintf(`${server.hostname}: ${(filterKey !== "") ? toPrintableString(server[filterKey]) : "\n" + toPrintableString(server)}`);
+			if (filterKeys.length === 1) {
+				// display single key
+				this.ns.tprintf(`${server.hostname}: ${toPrintableString(server[filterKeys[0]])}\n`);
+			} else if (filterKeys.length > 1) {
+				// display multiple keys
+				this.ns.tprintf(`${server.hostname}:`);
+
+				for (const filterKey of filterKeys) {
+					this.ns.tprintf(`  ${filterKey}: ${toPrintableString(server[filterKey])}\n`);
+				}
+
+				this.ns.tprintf("\n");
+			} else {
+				// display everything
+				this.ns.tprintf(`${toPrintableString(server)}`);
+			}
 		}
 		
 		this.ns.tprintf("Found %s result(s)", serverInfos.length);
@@ -203,6 +188,8 @@ export class Scanner {
 	 * 
 	 * @param {ServerInfo[]} serverInfos 
 	 * @param {string} category 
+	 * 
+	 * @returns {ServerInfo[]}
 	 */
 	filterByCatebory(serverInfos, category = Scanner.Comparator.none) {
 		switch (category.toLowerCase()) {
@@ -229,13 +216,13 @@ export class Scanner {
 
 	/**
 	 * 
-	 * @param {Server[]} serverInfos 
+	 * @param {ServerInfo[]} serverInfos 
 	 * @param {string} keySearch 
 	 * @param {string} valueSearch 
+	 * 
+	 * @returns {ServerInfo[]}
 	 */
 	searchFor(serverInfos, keySearch = "", valueSearch = "") {
-		// todo add < > <= >= for values
-
 		if (keySearch !== "" && valueSearch !== "") {
 			const searches = this.parseValue(valueSearch);
 			
@@ -441,6 +428,7 @@ export class Scanner {
 			parsedValues.push(parsed);
 		}
 
+		// @ts-ignore
 		return parsedValues;
 	}
 }
@@ -455,6 +443,7 @@ export class ServerInfo {
 	 * @param {Server} nsServer 
 	 * @param {Zerver} zerver 
 	 */
+	// @ts-ignore
 	constructor(nsServer, zerver = {}) {
 		this.cpuCores = nsServer.cpuCores;
 		this.ftpPortOpen = nsServer.ftpPortOpen;

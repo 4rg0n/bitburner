@@ -1,3 +1,4 @@
+// @ts-check
 /** @typedef {import(".").NS} NS */
 
 /**
