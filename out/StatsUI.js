@@ -1,6 +1,6 @@
 // @ts-check
 import { Progression, ProgressBar } from "./ProgressBar.js";
-import { asFormat } from "./utils.js";
+import { asFormat, NumberStack } from "./utils.js";
 
 /** @typedef {import(".").NS} NS */
 
@@ -146,69 +146,4 @@ class ValueTimeUnit {
 
 		return text;
 	}
-}
-
-class NumberStack {
-	/**
-	 * @param {number[]} elements
-	 * @param {number} maxSize
-	 */
-	constructor(elements, maxSize) {
-		this.elements = elements;
-		this.maxSize = maxSize;
-	}
-
-	push(element) {
-		if (this.elements.length >= this.maxSize) {
-			this.elements.shift();
-		}
-
-		this.elements.push(element);
-	}
-
-	pop() {
-		return this.elements.pop();
-	}
-
-	avg(elements = []) {
-		elements = elements || this.elements;
-
-		if (elements.length == 0) {
-			return 0;
-		}
-
-		let sum = 0;
-		for (let num of elements) {
-			sum += num;
-		}
-
-		return sum / elements.length;
-	}
-
-	diff() {
-		return this.last() - this.first(); 
-	}
-
-	increasements() {
-		return this.elements.map((currVal, index) => {
-			if (index === 0) {
-				return;
-			}
-
-			const prevVal = this.elements[index - 1];
-			return currVal - prevVal;
-		}).filter(Boolean);
-	}
-
-	avgIncrement() {
-		return this.avg(this.increasements());
-	}
-
-	first() {
-        return this.elements[0];
-    }
-
-    last() {
-        return this.elements[this.elements.length - 1];
-    }
 }

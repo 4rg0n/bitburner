@@ -38,15 +38,26 @@ export class Purchaser {
 	}
 
 	canUpgradeServers() {
-		if (this.getRamMin() >= Purchaser.RamMaxPurchasable) {
+		const curRamMin = this.getRamMin();
+
+		if (curRamMin >= Purchaser.RamMaxPurchasable) {
+			return false;
+		}
+		const ramMaxUpgrade = this.getRamMaxUpgrade();
+
+		if (curRamMin >= ramMaxUpgrade) {
 			return false;
 		}
 
-		return this.canBuyServers(this.getRamMaxUpgrade());
+		return this.canBuyServers(ramMaxUpgrade);
 	}
 
 	getUpgradeCosts() {
 		return this.getCostTotal(this.getRamMaxUpgrade());
+	}
+
+	getNextUpgradeCosts() {
+		return this.getCostTotal(this.getRamNextUpgrade());
 	}
 
 	/**
@@ -97,7 +108,8 @@ export class Purchaser {
 		}
 
 		const moneyLimit = this.getAvailableMoney();
-		if (this.getCostTotal(ram) > moneyLimit) {
+		const totalCost = this.getCostTotal(ram);
+		if (totalCost > moneyLimit) {
 			return false;
 		}
 
@@ -228,6 +240,9 @@ export class Purchaser {
 			nextRam = this.getRamNextUpgrade(nextRam);
 		}
 
+		// we always do 1 iteration too much :x
+		nextRam = nextRam / this.multi;
+
 		if (nextRam >= Purchaser.RamMaxPurchasable) {
 			return Purchaser.RamMaxPurchasable;
 		}
@@ -248,6 +263,10 @@ export class Purchaser {
 			curRamMax = this.minRam;
 		} else {
 			curRamMax = curRamMax * this.multi;
+		}
+
+		if (curRamMax >= Purchaser.RamMaxPurchasable) {
+			return Purchaser.RamMaxPurchasable;
 		}
 
 		return curRamMax;

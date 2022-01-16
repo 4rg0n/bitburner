@@ -13,7 +13,7 @@ import { Deployer } from "./Deployer.js";
  */
  export async function main(ns) {
     const flags = new Flags(ns, [
-        ["_", "", `Servers to deploy scripts: ${Object.values(Deployer.Scripts).join(", ")} to. When empty, will deploy to all deployable`],
+        ["_", "", `Servers to deploy scripts: ${Object.values(Zerver.Scripts).join(", ")} to. When empty, will deploy to all deployable`],
         ["help", false, ""]
     ]);
     const args = flags.args();

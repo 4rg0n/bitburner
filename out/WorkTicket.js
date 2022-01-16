@@ -42,13 +42,13 @@ export class WorkTicket {
             this.priority = priority;
         else
             switch (script) {
-                case Deployer.Scripts.hack:
+                case Zerver.Scripts.hack:
                     this.priority = WorkTicket.Priority.hack;
                     break;
-                case Deployer.Scripts.grow:
+                case Zerver.Scripts.grow:
                     this.priority = WorkTicket.Priority.grow;
                     break;
-                case Deployer.Scripts.weaken:
+                case Zerver.Scripts.weaken:
                     this.priority = WorkTicket.Priority.weaken;
                     break;
                 default:

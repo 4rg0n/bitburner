@@ -18,6 +18,50 @@ export function toPrintableString(thing, blacklist = ["ns"]) {
 }
 
 /**
+ * 
+ * @param {string} string 
+ * @returns {string}
+ */
+export function capatalize(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+}
+
+/**
+ * 
+ * @param {number} value 
+ * @param {string[]} ranks 
+ * @param {number} valueMax
+ * 
+ * @returns {string} found rank or undefined if nothing was found 
+ */
+export function rankValue(value, ranks, valueMax) {
+    const rankCount = ranks.length;
+    const step = Math.round(valueMax / rankCount);
+    let i = 0;
+    
+    for (let currValue = 1; currValue <= valueMax; currValue += step) {
+        if (value >= currValue && value < (currValue + step)) {
+            return ranks[i];
+        }
+
+        i++;
+    }
+
+    return undefined;
+}
+
+/**
+ * 
+ * @param {string} string 
+ * @param {number} width 
+ * @returns {string}
+ */
+export function asLabel(string, width = 0) {
+    const spacer = (width > 0) ? " ".repeat(width - string.length) : "";
+    return  `${capatalize(string)}:${spacer}`;
+}
+
+/**
  * Given percentage(s) in decimal format (i.e 1 => 100%)
  * 
  * @param {number|number[]} numbers
@@ -126,6 +170,11 @@ export function fromFormatGB(text) {
     return gigabyte * Math.pow(1024,pow);
 }
 
+/**
+ * 
+ * @param {number[]} numbers 
+ * @returns {number}
+ */
 export function median(numbers) {
     const sorted = numbers.slice().sort((a, b) => a - b);
     const middle = Math.floor(sorted.length / 2);
@@ -135,4 +184,81 @@ export function median(numbers) {
     }
 
     return sorted[middle];
+}
+
+export class NumberStack {
+	/**
+	 * @param {number[]} numbers
+	 * @param {number} maxSize
+	 */
+	constructor(numbers = [], maxSize = 0) {
+		this.numbers = numbers;
+		this.maxSize = maxSize;
+	}
+
+    /**
+     * 
+     * @param {number} number 
+     */
+	push(number) {
+		if (this.numbers.length >= this.maxSize) {
+			this.numbers.shift();
+		}
+
+		this.numbers.push(number);
+	}
+
+	pop() {
+		return this.numbers.pop();
+	}
+
+	avg(numbers = []) {
+		numbers = numbers || this.numbers;
+
+		if (numbers.length == 0) {
+			return 0;
+		}
+
+		let sum = 0;
+		for (let num of numbers) {
+			sum += num;
+		}
+
+		return sum / numbers.length;
+	}
+
+	diff() {
+		return this.last() - this.first(); 
+	}
+
+	increasements() {
+		return this.numbers.map((currVal, index) => {
+			if (index === 0) {
+				return;
+			}
+
+			const prevVal = this.numbers[index - 1];
+			return currVal - prevVal;
+		}).filter(Boolean);
+	}
+
+	avgIncrement() {
+		return this.avg(this.increasements());
+	}
+
+	first() {
+        return this.numbers[0];
+    }
+
+    last() {
+        return this.numbers[this.numbers.length - 1];
+    }
+
+    get length() {
+        return this.numbers.length;
+    }
+
+    isFull() {
+        return this.numbers.length === this.maxSize;
+    }
 }

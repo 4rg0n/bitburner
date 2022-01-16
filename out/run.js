@@ -30,7 +30,6 @@ export async function main(ns) {
 	const servers = Zerver.get(ns);
     const targets = servers.filter(s => {
 		const matches = targetNames.filter(name => s.name.toLowerCase().indexOf(name.toLowerCase()) >= 0);
-		console.log(matches);
 		return matches.length > 0;
 	});
    
@@ -48,17 +47,13 @@ export async function main(ns) {
 
 	ns.tprintf(`\n${targets.map(s => s.name).join(", ")}`);
 
-	const workQueues = targets.map(target => new WorkQueue(ns, target));
 	const cracker = new Cracker(ns);
     const deployer = new Deployer(ns, cracker);
-	const workers = Scheduler.filterByWorkType(servers, workerType);
-    const scheduler = new Scheduler(ns, workQueues, workers, deployer);
+    const scheduler = new Scheduler(ns,targets, deployer, workerType);
 
-	for (const workQueue of scheduler.scheduledWorks) {
+	for (const workQueue of scheduler.scheduledQueue) {
 		workQueue.queueWork(threads);
 	}
 
 	await scheduler.run();
-
-
 }

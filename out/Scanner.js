@@ -29,36 +29,37 @@ export class Scanner {
 	/**
 	 * 
 	 * @param {{key: string, value: string}} search 
-	 * @param {string} category 
+	 * @param {string[]} categories 
+	 * @param {string[]} moneyRanks 
 	 * @param {{by: string, desc: boolean}} sort 
 	 * 
 	 * @returns {ServerInfo[]}
 	 */
-	scan(search = {key: "", value: ""}, category = "", sort = {by: "", desc: false}) {
+	scan(search = {key: "", value: ""}, categories = [], moneyRanks = [], sort = {by: "", desc: false}) {
 		/** @typedef {ServerInfo[]} serverInfos */
 		let serverInfos = ServerInfo.get(this.ns);
 
-		return this.scanServers(serverInfos, search, category, sort);
+		return this.scanServers(serverInfos, search, categories, moneyRanks, sort);
 	}
 
 	/**
 	 * 
 	 * @param {ServerInfo[]} servers 
 	 * @param {{key: string, value: string}} search 
-	 * @param {string} category 
+	 * @param {string[]} categories 
+	 * @param {string[]} moneyRanks 
 	 * @param {{by: string, desc: boolean}} sort 
 	 * 
 	 * @returns {ServerInfo[]}
 	 */
-	scanServers(servers, search = {key: "", value: ""}, category = "", sort = {by: "", desc: false}) {
+	scanServers(servers, search = {key: "", value: ""}, categories = [], moneyRanks = [], sort = {by: "", desc: false}) {
 		if (servers.length === 0) {
 			return servers;
 		}
 
-		servers = this.filterByCatebory(servers, category);
-		// @ts-ignore
+		servers = this.filterByCategories(servers, categories);
+		servers = this.filterByMoneyRanks(servers, moneyRanks);
 		servers = this.searchFor(servers, search.key, search.value);
-		// @ts-ignore
 		servers = this.sortBy(servers, sort.by, sort.desc);
 
 		return servers;
@@ -68,17 +69,17 @@ export class Scanner {
 	 * 
 	 * @param {ServerInfo[]} servers 
 	 * @param {{key: string, value: string}} search 
-	 * @param {string} category 
+	 * @param {string[]} categories 
 	 * @param {{by: string, desc: boolean}} sort 
 	 * 
 	 * @returns {ServerInfo[]}
 	 */
-	 scanHosts(servers, search = {key: "", value: ""}, category = "", sort = {by: "", desc: false}) {
+	 scanHosts(servers, search = {key: "", value: ""}, categories = [], sort = {by: "", desc: false}) {
 		if (servers.length === 0) {
 			return servers;
 		}
 		
-		servers = this.filterByCatebory(servers, category);
+		servers = this.filterByCategories(servers, categories);
 		servers = this.searchFor(servers, search.key, search.value);
 		servers = this.sortBy(servers, sort.by, sort.desc);
 
@@ -177,7 +178,7 @@ export class Scanner {
 				this.ns.tprintf("\n");
 			} else {
 				// display everything
-				this.ns.tprintf(`${toPrintableString(server)}`);
+				this.ns.tprintf(`${toPrintableString(server, ["zerver"])}`);
 			}
 		}
 		
@@ -187,11 +188,52 @@ export class Scanner {
 	/**
 	 * 
 	 * @param {ServerInfo[]} serverInfos 
+	 * @param {string[]} categories 
+	 * @returns 
+	 */
+	filterByCategories(serverInfos, categories = []) {
+		if (categories.length === 0) {
+			return serverInfos;
+		}
+
+		let filteredServers = [];
+
+		for (const category of categories) {
+			filteredServers = filteredServers.concat(this.filterByCategory(serverInfos, category));
+		}
+
+		return filteredServers;
+	}
+
+	/**
+	 * 
+	 * @param {ServerInfo[]} serverInfos 
+	 * @param {string[]} moneyRanks 
+	 * @returns 
+	 */
+	 filterByMoneyRanks(serverInfos, moneyRanks = []) {
+		if (moneyRanks.length === 0) {
+			return serverInfos;
+		}
+
+		let filteredServers = [];
+
+        for (const rank of moneyRanks) {
+            filteredServers = filteredServers.concat(serverInfos.filter(s => s.moneyRank.toLowerCase() === rank.toLowerCase()))
+        }
+
+        return filteredServers;
+	}
+
+
+	/**
+	 * 
+	 * @param {ServerInfo[]} serverInfos 
 	 * @param {string} category 
 	 * 
 	 * @returns {ServerInfo[]}
 	 */
-	filterByCatebory(serverInfos, category = Scanner.Comparator.none) {
+	filterByCategory(serverInfos, category = Scanner.Comparator.none) {
 		switch (category.toLowerCase()) {
 			case Zerver.ServerType.MoneyFarm.toLowerCase():
 				serverInfos = serverInfos.filter(s => s.type === Zerver.ServerType.MoneyFarm);
@@ -277,6 +319,11 @@ export class Scanner {
 		return typeof funcValue === "string" && funcValue.indexOf("()") >= 0;
 	}
 
+	/**
+	 * 
+	 * @param {string} funcPath 
+	 * @returns {*}
+	 */
 	execNsFunction(funcPath) {
 		const parts = this.parseFunctionPath(funcPath);
 		let position = this.ns;
@@ -445,6 +492,7 @@ export class ServerInfo {
 	 */
 	// @ts-ignore
 	constructor(nsServer, zerver = {}) {
+		this.zerver = zerver;
 		this.cpuCores = nsServer.cpuCores;
 		this.ftpPortOpen = nsServer.ftpPortOpen;
 		this.hasAdminRights = nsServer.hasAdminRights;
@@ -470,17 +518,23 @@ export class ServerInfo {
 		this.requiredHackingSkill = nsServer.requiredHackingSkill;	   
 		this.serverGrowth = nsServer.serverGrowth;
 
-		this.path = zerver.path;
-		this.type = zerver.type;
-		this.securityRank = zerver.securityRank;
-		this.moneyRank = zerver.moneyRank;
-		this.isHackable = zerver.isHackable;
-		this.isTargetable = zerver.isTargetable;
+		this.path = this.zerver.path;
+		this.type = this.zerver.type;
+		this.securityRank = this.zerver.securityRank;
+		this.moneyRank = this.zerver.moneyRank;
+		this.isHackable = this.zerver.isHackable;
+		this.isTargetable = this.zerver.isTargetable;
+		this.levelNeeded = this.zerver.levelNeeded;
+		this.depth = this.zerver.depth;
+		this.areScriptsDeployed = this.zerver.areScriptsDeployed;
+		this.parent = (this.zerver.parent) ? this.zerver.parent.name : undefined;
 	}
 
 	/**
 	 * 
-	 * @param {NS} ns 
+	 * @param {NS} ns
+	 * @param {string[]} whitelist
+	 * 
 	 * @returns {ServerInfo[]} 
 	 */
 	static get(ns, whitelist = []) {

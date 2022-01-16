@@ -22,7 +22,8 @@ export async function main(ns) {
 	const flags = new Flags(ns, [
 		["_", "", "Key of field to search in. When no second argument, it will search in evey key."],
 		["_", "", "When given, first argument will be they key and this will be the value to search for (e.g. moneyMax >=1000000; hostname n00dles,foodnstuff)"],
-		["cat", "all", `Will only display servers of a certain category: ${Object.values(Zerver.ServerType).join(", ")}`],
+		["cat", [], `Will only display servers of a certain category: ${Object.values(Zerver.ServerType).join(", ")}`],
+		["money", [], `Will only display server with a certain money rank: ${Object.values(Zerver.MoneyRank).join(", ")}`],
 		["sort", "", "Will sort by given (e.g. moneyMax) value asc"],
 		["desc", false, "Sort desc"],
 		["filter", [], "Show only key (e.g. hostname) on output"],
@@ -33,8 +34,9 @@ export async function main(ns) {
 	// @ts-ignore
 	const keySearch = args._[0];
 	// @ts-ignore
-	let valueSearch = args._[1];
-	let category = args["cat"];
+	const valueSearch = args._[1];
+	const categories = args["cat"];
+	const moneyRanks = args["money"];
 	/** @type {string} */
 	// @ts-ignore
 	const sortBy = args["sort"];
@@ -45,7 +47,7 @@ export async function main(ns) {
 
 	const scanner = new Scanner(ns);
     /** @type {ServerInfo[]} */
-	const serverInfos = scanner.scan({key: keySearch, value: valueSearch}, category, {by: sortBy, desc: sortDesc});
+	const serverInfos = scanner.scan({key: keySearch, value: valueSearch}, categories, moneyRanks, {by: sortBy, desc: sortDesc});
 
 	scanner.display(serverInfos, filterBy);
 }

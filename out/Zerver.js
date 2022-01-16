@@ -1,10 +1,18 @@
 // @ts-check
 /** @typedef {import(".").NS} NS */
 
+import { rankValue } from "./utils.js"
+
 /**
  * Custom representation of a server
  */
 export class Zerver {
+    static Scripts = {
+        hack: "hack.script",
+        grow: "grow.script",
+        weaken: "weaken.script"
+    }
+
     static ServerType = {
         Own: 'Own',
         Shop: 'Shop',
@@ -23,9 +31,11 @@ export class Zerver {
     static MoneyRank = {
         None: "None",
         Lowest: "Lowest",
+        Lower: "Lower",
         Low: "Low",
         Med: "Med",
         High: "High",
+        Higher: "Higher",
         Highest: "Highest"
     }
 
@@ -43,6 +53,7 @@ export class Zerver {
         this.name = name;
         this.depth = depth
         this.parent = parent;
+        this.moneyRank = Zerver.MoneyRank.None;
     }
     
     /**
@@ -68,7 +79,29 @@ export class Zerver {
             });
         }
 
+        servers = Zerver.injectServersMoneyRanks(servers);
+
         return servers;
+    }
+
+    /**
+     * 
+     * @param {Zerver[]} servers 
+     * @param {string[]} ranks 
+     * @returns 
+     */
+     static filterByMoneyRanks(servers, ranks = []) {
+        if (ranks.length === 0) {
+            return servers;
+        } 
+
+        let targets = [];
+
+        for (const rank of ranks) {
+            targets = targets.concat(servers.filter(t => t.moneyRank.toLowerCase() === rank.toLowerCase()))
+        }
+
+        return targets;
     }
 
     /**
@@ -103,7 +136,38 @@ export class Zerver {
                 return Zerver.ServerType.MoneyFarm;
         }
     };
-  
+
+    /**
+     * 
+     * @param {Zerver[]} servers 
+     * @returns 
+     */
+    static injectServersMoneyRanks(servers) {
+        if (servers.length === 0) {
+            return servers;
+        }
+
+        const overallMoneyMax = Math.max(...servers.map(s => s.moneyMax));
+        const moneyRanks = Object.keys(Zerver.MoneyRank).filter(r => r !== Zerver.MoneyRank.None);
+
+        servers.forEach(server => {
+            if (typeof server.moneyMax !== "number" || server.moneyMax <= 0) {
+                server.moneyRank = Zerver.MoneyRank.None;
+                return;
+            }
+
+            const rank = rankValue(server.moneyMax, moneyRanks, overallMoneyMax);
+
+            if (typeof rank === "string") {
+                server.moneyRank = rank;
+            } else {
+                console.warn("Could not determine moneyRank for server " + server.name);
+            }
+        })
+
+        return servers;
+    }
+
     /**
      * @returns {number}
      */
@@ -210,27 +274,27 @@ export class Zerver {
         }
     }
 
-    /**
-     * @returns {string}
-     */
-    get moneyRank() {
-        const moneyMax = this.moneyMax;
+    // /**
+    //  * @returns {string}
+    //  */
+    // get moneyRank() {
+    //     const moneyMax = this.moneyMax;
 
-        if (moneyMax === 0) {
-            return Zerver.MoneyRank.None;
-        }
-        if (moneyMax <= 50000000) {
-            return Zerver.MoneyRank.Lowest;
-        } else if (moneyMax > 50000000 && moneyMax <= 1000000000) {
-            return Zerver.MoneyRank.Low;
-        } else if (moneyMax > 1000000000 && moneyMax <= 15000000000) {
-            return Zerver.MoneyRank.Med;
-        } else if (moneyMax > 15000000000 && moneyMax <= 50000000000) {
-            return Zerver.MoneyRank.High;
-        } else {
-            return Zerver.MoneyRank.Highest;
-        }
-    }
+    //     if (moneyMax === 0) {
+    //         return Zerver.MoneyRank.None;
+    //     }
+    //     if (moneyMax <= 50000000) {
+    //         return Zerver.MoneyRank.Lowest;
+    //     } else if (moneyMax > 50000000 && moneyMax <= 1500000000) {
+    //         return Zerver.MoneyRank.Low;
+    //     } else if (moneyMax > 1500000000 && moneyMax <= 20000000000) {
+    //         return Zerver.MoneyRank.Med;
+    //     } else if (moneyMax > 20000000000 && moneyMax <= 30000000000) {
+    //         return Zerver.MoneyRank.High;
+    //     } else if (moneyMax > 30000000000) {
+    //         return Zerver.MoneyRank.Highest;
+    //     }
+    // }
 
     get isHackable() {
         return this.hasRoot 
@@ -246,6 +310,22 @@ export class Zerver {
         return this.type === Zerver.ServerType.MoneyFarm 
             && this.isHackable 
             && this.grow > 1 
+    }
+
+    get isHackDeployed() {
+        return this.ns.fileExists(Zerver.Scripts.hack, this.name);
+    }
+
+    get isGrowDeployed() {
+        return this.ns.fileExists(Zerver.Scripts.grow, this.name);
+    }
+
+    get isWeakenDeployed() {
+        return this.ns.fileExists(Zerver.Scripts.weaken, this.name);
+    }
+
+    get areScriptsDeployed() {
+        return this.isHackDeployed && this.isGrowDeployed && this.isWeakenDeployed;
     }
 
     /**
@@ -314,13 +394,13 @@ export class Zerver {
      * @param {number} taking 
      * @returns 
      */
-    analyzeInitThreads(taking, booster = 1) {
+    analyzeInitThreads(taking) {
         // has nearly max money?
         if (this.moneyFreePercent <= 0.1) {
            return {
                hack: 0,
                grow: 0,
-               weaken: 5
+               weaken: 0
            }
         }
 
@@ -332,13 +412,6 @@ export class Zerver {
             grow = 0;
         }
 
-        if (grow > 0) {
-            // harder to grow servers will get more grow threads (obsolete?)
-            grow = grow * (grow / (grow * (this.grow / 100)));
-        }
-
-        grow *= booster;
-
         const threads = {
             hack: 0,
             grow: Math.ceil(grow),
@@ -348,7 +421,12 @@ export class Zerver {
         return threads;
     }
 
-    analyzeAttackThreads(taking, booster = 1) {
+    /**
+     * 
+     * @param {number} taking 
+     * @returns 
+     */
+    analyzeAttackThreads(taking) {
         let hackAmount = this.moneyMax * taking;
         // has nearly max money?
         if (this.moneyFreePercent <= 0.1) {
@@ -370,8 +448,8 @@ export class Zerver {
         }
 
         const threads = {
-            hack: Math.floor(hack * booster),
-            grow: Math.ceil(grow * booster),
+            hack: Math.floor(hack),
+            grow: Math.ceil(grow),
             weaken: (Math.ceil((.004 * grow + .002 * hack) / .05) + 5),
         };
         

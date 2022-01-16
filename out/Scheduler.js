@@ -6,8 +6,9 @@ import { Runner } from "./Runner.js";
 import { WorkQueue } from "./WorkQueue.js";
 import { Deployer } from "./Deployer.js";
 import { Cracker } from "./Cracker.js";
+import { NumberStack } from "./utils.js";
 
-/** @typedef {{total: number, hack: number, grow: number, weaken: number}} distribution */
+/** @typedef {{total: number, hack: number, grow: number, weaken: number}} threadDist */
 
 /**
  * Schedules and controlls distribution of hack / grow / weaken to different targets
@@ -23,19 +24,23 @@ export class Scheduler {
     /**
      * 
      * @param {NS} ns
-     * @param {Zerver[]} servers 
-     * @param {Zerver[]} workers 
+     * @param {Zerver[]} targetPool 
      * @param {Deployer} deployer
+     * @param {string} workerType
      * @param {number} taking
-     * @param {number} boostFactor
+     * @param {boolean} doBoost
      * @param {number} homeMinRamFree  
      */
-    constructor(ns, servers, workers, deployer = undefined, taking = .5, boostFactor = 1, homeMinRamFree = 0) {
+    constructor(ns, targetPool, deployer = undefined, workerType = Scheduler.WorkerType.All, taking = .5, doBoost = false, homeMinRamFree = 0) {
         this.ns = ns;
-        this.servers = servers;
-        this.targets = [];
-        this.workers = workers;
+        this.targetPool = targetPool;
+        this.workerType = workerType;
         this.deployer = deployer || new Deployer(ns, new Cracker(ns));
+
+        /** @type {Zerver[]} */
+        this.workers = [];
+        /** @type {Zerver[]} */
+        this.targets = [];
 
         /** @type {WorkQueue[]} */
         this.scheduledQueue = [];
@@ -49,14 +54,9 @@ export class Scheduler {
         this.scripts = {};
         
         this.taking = taking;
-        this.boostFactor = boostFactor;
+        this.doBoost = doBoost;
         this.homeMinRamFree = homeMinRamFree;
-    }
-
-    async init() {
-        await this.deployer.deployHacksToServers(this.servers);
-        this.targets = this.servers.filter(t => t.isTargetable);
-        this.scheduledQueue = Scheduler.createWorkQueues(this.ns, this.targets, this.taking, this.boostFactor);
+        this.ramUsageHistory = new NumberStack([], 10);
     }
 
     /**
@@ -64,12 +64,11 @@ export class Scheduler {
      * @param {NS} ns 
      * @param {Zerver[]} targets 
      * @param {number} taking 
-     * @param {number} boostFactor
      * 
      * @returns {WorkQueue[]}
      */
-    static createWorkQueues(ns, targets, taking, boostFactor) {
-        return targets.map(target => new WorkQueue(ns, target, taking, boostFactor));
+    static createWorkQueues(ns, targets, taking) {
+        return targets.map(target => new WorkQueue(ns, target, taking));
     }
 
     /**
@@ -92,26 +91,22 @@ export class Scheduler {
         })
         .filter(server => server.hasRoot); 
     }
-
     
-    /**
-     * 
-     * @param {Zerver[]} servers 
-     * @param {string[]} ranks 
-     * @returns 
-     */
-     static filterByMoneyRanks(servers, ranks = []) {
-        if (ranks.length === 0) {
-            return servers;
-        }
+    async init() {
+        await this.cleanup();
+        
+        delete this.targets;
+        delete this.workers;
+        delete this.scheduledQueue;
 
-        let targets = [];
+        const servers = Zerver.get(this.ns);
 
-        for (const rank of ranks) {
-            targets = targets.concat(servers.filter(t => t.moneyRank.toLowerCase() === rank.toLowerCase()))
-        }
+        this.workers = Scheduler.filterByWorkType(servers, this.workerType);
+        this.targets = this.targetPool.filter(t => t.isTargetable);
+        this.scheduledQueue = Scheduler.createWorkQueues(this.ns, this.targets, this.taking);
 
-        return targets;
+        await this.deployer.deployHacksToServers(servers);
+        await this.ns.sleep(100);
     }
 
     /**
@@ -161,10 +156,6 @@ export class Scheduler {
     }
 
     async cleanup() {
-        if (typeof this.ns === "undefined") {
-            return;
-        }
-
         const servers =  this.workers;
         const promises = [];
 
@@ -196,8 +187,8 @@ export class Scheduler {
                 const maxThreads = server.threads(work.script);
 
                 if (maxThreads < 1) break;
-                if (runner.isRunning(work.script)) {
-                    console.log(`Script ${work.script} ${work.threads} still running on ${runner.targetHost} -> ${runner.defaultArgs}`);
+                if (runner.isRunning(work.script) && (!this.doBoost && !this.canBoost())) {
+                    console.info(`Script ${work.script} ${work.threads} still running on ${runner.targetHost} -> ${runner.defaultArgs}`);
                     continue;
                 } 
 
@@ -206,12 +197,14 @@ export class Scheduler {
 
                 this.saveScript(work, server.name, threads);
                 work.progress += threads;
+                // update queue
+                this.initQueue[j] = work;
 
-                console.log(`Started ${work.script} ${work.progress}/${work.threads} on ${runner.targetHost} -> ${runner.defaultArgs}`);
-
+                console.info(`Started ${work.script} ${work.progress}/${work.threads} on ${runner.targetHost} -> ${runner.defaultArgs}`);
+                
                 if (work.progress >= work.threads) {
                     work.setStatus(WorkTicket.Status.Running);
-                    console.log(`Waiting for work done ${work.script} ${work.progress}/${work.threads} ${work.target.name}`);
+                    console.info(`Waiting for work done ${work.script} ${work.progress}/${work.threads} ${work.target.name}`);
                     this.waitingQueue.push(work);
                 }
             }
@@ -225,7 +218,7 @@ export class Scheduler {
             works.workQueue
                 .filter(work => work.isNew())
                 .forEach(work => {
-                    console.log(`Polled work ${work.script} ${work.threads} ${work.target.name}`);
+                    console.info(`Polled work ${work.script} ${work.threads} ${work.target.name}`);
                     work.setStatus(WorkTicket.Status.Initiating);
                     this.initQueue.push(work);
                 });
@@ -252,7 +245,7 @@ export class Scheduler {
 
             return servers.every(server => !this.runner(server, work.target.name).isRunning(work.script));
         }).forEach(work => {
-            console.log(`Done work ${work.script} ${work.progress}/${work.threads} ${work.target.name}`);
+            console.info(`Done work ${work.script} ${work.progress}/${work.threads} ${work.target.name}`);
             work.setStatus(WorkTicket.Status.Done);
         });
 
@@ -284,10 +277,36 @@ export class Scheduler {
         return Object.keys(tickets).map(k => tickets[k]).reduce((a, b) => a + b, 0);
     }
 
+    recordRamUsage() {
+        this.ramUsageHistory.push(this.totalWorkersRamUsed());
+    }
+
+    canBoost() {
+        // not enough usages collected?
+        if (!this.ramUsageHistory.isFull()) {
+            return false;
+        }
+
+        const avgRamFreePercent = (this.totalWorkersRamMax() - this.ramUsageHistory.avg()) / this.totalWorkersRamMax();
+
+        if (avgRamFreePercent < .1) {
+            return false;
+        }
+
+        const currRamFreePercent = (this.totalWorkersRamMax() - this.ramUsageHistory.last()) / this.totalWorkersRamMax();
+
+        if (currRamFreePercent < .1) {
+            return false;
+        }
+
+        return true;
+    }
+
     async run() {
         this.pollWork();
         await this.startWork();
         this.pushWork();
+        this.recordRamUsage();
     }
 
     /**
@@ -302,12 +321,12 @@ export class Scheduler {
 
     /**
      * 
-     * @returns {distribution} working tickets waiting to be finished
+     * @returns {threadDist} working tickets waiting to be finished
      */
     distWaitingTickets() {
-        const hack = this.waitingQueue.filter(work => work.script === Deployer.Scripts.hack).length;
-        const grow = this.waitingQueue.filter(work => work.script === Deployer.Scripts.grow).length;
-        const weaken = this.waitingQueue.filter(work => work.script === Deployer.Scripts.weaken).length;
+        const hack = this.waitingQueue.filter(work => work.script === Zerver.Scripts.hack).length;
+        const grow = this.waitingQueue.filter(work => work.script === Zerver.Scripts.grow).length;
+        const weaken = this.waitingQueue.filter(work => work.script === Zerver.Scripts.weaken).length;
         const total = this.waitingQueue.length;
 
         return {
@@ -320,20 +339,19 @@ export class Scheduler {
 
     /**
      * 
-     * @returns {distribution} working threads waiting to be finished
+     * @returns {threadDist} working threads waiting to be finished
      */
     distWaitingThreads() {
-        const hack = this.waitingQueue.filter(work => work.script === Deployer.Scripts.hack)
+        const hack = this.waitingQueue.filter(work => work.script === Zerver.Scripts.hack)
             .map(work => work.threads)
             .reduce((a, b) => a + b, 0);
-        const grow = this.waitingQueue.filter(work => work.script === Deployer.Scripts.grow)
+        const grow = this.waitingQueue.filter(work => work.script === Zerver.Scripts.grow)
             .map(work => work.threads)
             .reduce((a, b) => a + b, 0);
-        const weaken = this.waitingQueue.filter(work => work.script === Deployer.Scripts.weaken)
+        const weaken = this.waitingQueue.filter(work => work.script === Zerver.Scripts.weaken)
             .map(work => work.threads)
             .reduce((a, b) => a + b, 0);
-        const total = this.waitingQueue.map(work => work.threads)
-            .reduce((a, b) => a + b, 0);
+        const total = hack + grow + weaken;
 
         return {
             total: total,
@@ -343,35 +361,66 @@ export class Scheduler {
         }
     }
 
-    distInitiatingThreads() {
-        const hack = this.initQueue.filter(work => work.script === Deployer.Scripts.hack)
+    /**
+     * 
+     * @returns {threadDist} progress of inititiating threads
+     */
+    distInitiatingProgressThreads() {
+        const hack = this.initQueue.filter(work => work.script === Zerver.Scripts.hack)
             .filter(work => work.isInitaiting())
             .map(work => work.progress)
             .reduce((a, b) => a + b, 0);
-        const grow = this.initQueue.filter(work => work.script === Deployer.Scripts.grow)
+        const grow = this.initQueue.filter(work => work.script === Zerver.Scripts.grow)
             .filter(work => work.isInitaiting())
             .map(work => work.progress)
             .reduce((a, b) => a + b, 0);
-        const weaken = this.initQueue.filter(work => work.script === Deployer.Scripts.weaken)
+        const weaken = this.initQueue.filter(work => work.script === Zerver.Scripts.weaken)
             .filter(work => work.isInitaiting())
             .map(work => work.progress)
             .reduce((a, b) => a + b, 0);
         const total = hack + grow + weaken;
 
-            return {
-                total: total,
-                hack: hack,
-                grow: grow,
-                weaken: weaken
-            }
+        return {
+            total: total,
+            hack: hack,
+            grow: grow,
+            weaken: weaken
+        }
+    }
+
+    /**
+     * 
+     * @returns {threadDist} total of inititiating threads needed
+     */
+    distInitiatingTotalThreads() {
+        const hack = this.initQueue.filter(work => work.script === Zerver.Scripts.hack)
+            .filter(work => work.isInitaiting())
+            .map(work => work.threads)
+            .reduce((a, b) => a + b, 0);
+        const grow = this.initQueue.filter(work => work.script === Zerver.Scripts.grow)
+            .filter(work => work.isInitaiting())
+            .map(work => work.threads)
+            .reduce((a, b) => a + b, 0);
+        const weaken = this.initQueue.filter(work => work.script === Zerver.Scripts.weaken)
+            .filter(work => work.isInitaiting())
+            .map(work => work.threads)
+            .reduce((a, b) => a + b, 0);
+        const total = hack + grow + weaken;
+
+        return {
+            total: total,
+            hack: hack,
+            grow: grow,
+            weaken: weaken
+        }
     }
 
     distInitiatingTickets() {
-        const hack = this.initQueue.filter(work => work.script === Deployer.Scripts.hack)
+        const hack = this.initQueue.filter(work => work.script === Zerver.Scripts.hack)
             .filter(work => work.isInitaiting()).length;
-        const grow = this.initQueue.filter(work => work.script === Deployer.Scripts.grow)
+        const grow = this.initQueue.filter(work => work.script === Zerver.Scripts.grow)
             .filter(work => work.isInitaiting()).length
-        const weaken = this.initQueue.filter(work => work.script === Deployer.Scripts.weaken)
+        const weaken = this.initQueue.filter(work => work.script === Zerver.Scripts.weaken)
             .filter(work => work.isInitaiting()).length
         const total = hack + grow + weaken;
 
@@ -384,12 +433,12 @@ export class Scheduler {
     }
     /**
      * 
-     * @returns {distribution} scheduled tickets waiting for execution
+     * @returns {threadDist} scheduled tickets waiting for execution
      */
     distScheduledTickets() {
-        const hack = this.scheduledQueue.flatMap(queue => queue.workQueue).filter(work => work.script === Deployer.Scripts.hack).length;    
-        const grow = this.scheduledQueue.flatMap(queue => queue.workQueue).filter(work => work.script === Deployer.Scripts.grow).length;     
-        const weaken = this.scheduledQueue.flatMap(queue => queue.workQueue).filter(work => work.script === Deployer.Scripts.weaken).length;  
+        const hack = this.scheduledQueue.flatMap(queue => queue.workQueue).filter(work => work.script === Zerver.Scripts.hack).length;    
+        const grow = this.scheduledQueue.flatMap(queue => queue.workQueue).filter(work => work.script === Zerver.Scripts.grow).length;     
+        const weaken = this.scheduledQueue.flatMap(queue => queue.workQueue).filter(work => work.script === Zerver.Scripts.weaken).length;  
         const total = hack + grow + weaken;
 
         return {
@@ -402,19 +451,19 @@ export class Scheduler {
 
     /**
      * 
-     * @returns {distribution} scheduled threads waiting for execution
+     * @returns {threadDist} scheduled threads waiting for execution
      */
     distScheduledThreads() {
         const hack = this.scheduledQueue.flatMap(queue => queue.workQueue)
-            .filter(work => work.script === Deployer.Scripts.hack)
+            .filter(work => work.script === Zerver.Scripts.hack)
             .map(work => work.threads)
             .reduce((a, b) => a + b, 0);    
         const grow = this.scheduledQueue.flatMap(queue => queue.workQueue)
-            .filter(work => work.script === Deployer.Scripts.grow)
+            .filter(work => work.script === Zerver.Scripts.grow)
             .map(work => work.threads)
             .reduce((a, b) => a + b, 0);    
         const weaken = this.scheduledQueue.flatMap(queue => queue.workQueue)
-            .filter(work => work.script === Deployer.Scripts.weaken)
+            .filter(work => work.script === Zerver.Scripts.weaken)
             .map(work => work.threads)
             .reduce((a, b) => a + b, 0); 
         const total = hack + grow + weaken;
@@ -427,12 +476,12 @@ export class Scheduler {
         }
     }
 
-    totalSecurityRanks() {
-        const low = this.workers.filter(server => server.securityRank === Zerver.SecurityRank.Low).length;
-        const med = this.workers.filter(server => server.securityRank === Zerver.SecurityRank.Med).length;
-        const high = this.workers.filter(server => server.securityRank === Zerver.SecurityRank.High).length;
-        const highest = this.workers.filter(server => server.securityRank === Zerver.SecurityRank.Highest).length;
-        const total = this.workers.length;
+    distSecurityRanks() {
+        const low = this.targets.filter(server => server.securityRank === Zerver.SecurityRank.Low).length;
+        const med = this.targets.filter(server => server.securityRank === Zerver.SecurityRank.Med).length;
+        const high = this.targets.filter(server => server.securityRank === Zerver.SecurityRank.High).length;
+        const highest = this.targets.filter(server => server.securityRank === Zerver.SecurityRank.Highest).length;
+        const total = this.targets.length;
         
         return {
             total: total,
@@ -441,5 +490,47 @@ export class Scheduler {
             high: high,
             highest: highest
         }
+    }
+
+    /**
+     * @returns {number}
+     */
+    totalWorkersRamUsed() {
+        return this.workers.map(worker => worker.ramUsed).reduce((a, b) => a + b, 0);
+    }
+
+    /**
+     * @returns {number}
+     */
+    totalWorkersRamMax() {
+        return this.workers.map(worker => worker.ramMax).reduce((a, b) => a + b, 0);
+    }
+
+    /**
+     * @returns {number}
+     */
+    totalTargetsInitiating() {
+        return this.scheduledQueue.filter(master => master.status === WorkTicket.Status.Initiating).length;
+    }
+
+    /**
+     * @returns {number}
+     */
+    totalTargetsRunning() {
+        return this.scheduledQueue.filter(master => master.status === WorkTicket.Status.Running).length;
+    }
+
+    /**
+     * @returns {number}
+     */
+    totalTargetsMoneyMax() {
+        return this.scheduledQueue.map(master => master.target.moneyMax).reduce((a, b) => a + b, 0); 
+    }
+
+    /**
+     * @returns {number}
+     */
+    totalTargetsMoneyAvail() {
+        return this.scheduledQueue.map(master => master.target.moneyAvail).reduce((a, b) => a + b, 0);
     }
 }

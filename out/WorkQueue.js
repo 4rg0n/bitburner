@@ -16,16 +16,14 @@ export class WorkQueue {
      * @param {NS} ns 
      * @param {Zerver} target 
      * @param {number} taking 
-     * @param {number} booster
      */
-    constructor(ns, target, taking = .5, booster = 1) {
+    constructor(ns, target, taking = .5) {
         this.ns = ns;
         this.target = target;
         this.taking = isNaN(taking) ? .5 : Math.min(.9, Math.max(0, taking));
         this.status = WorkTicket.Status.Created;
         /** @type {WorkTicket[]} */
         this.workQueue = [];
-        this.booster = booster;
     }
 
     /**
@@ -57,9 +55,9 @@ export class WorkQueue {
      * @param {threads} threads 
      */
     queueWork(threads) {
-        this.addWork(Deployer.Scripts.hack, threads.hack);
-        this.addWork(Deployer.Scripts.grow, threads.grow);
-        this.addWork(Deployer.Scripts.weaken, threads.weaken);
+        this.addWork(Zerver.Scripts.hack, threads.hack);
+        this.addWork(Zerver.Scripts.grow, threads.grow);
+        this.addWork(Zerver.Scripts.weaken, threads.weaken);
     }
 
     queueInitialize() {
@@ -68,16 +66,19 @@ export class WorkQueue {
 
         let taking = (1 - (this.target.moneyAvail / this.target.moneyMax));
         
-        const threads = this.target.analyzeInitThreads(taking, this.booster);
-        const diff = Math.round((this.target.securityCurr - this.target.securityMin) / .05);
+        const threads = this.target.analyzeInitThreads(taking);
+        const diff = Math.round((this.target.securityCurr - this.target.securityMin) / .1);
 
-        console.log(`Init ${this.target.name} calculated threads for taking ${taking}`, threads);
-
-        if (threads.grow > 0 || diff > 0) {
-            this.addWork(Deployer.Scripts.weaken, diff, WorkTicket.Priority.grow);
-            this.addWork(Deployer.Scripts.grow, threads.grow);
-            this.addWork(Deployer.Scripts.weaken, threads.weaken);
+        if (threads.grow > 0) {
+            this.addWork(Zerver.Scripts.grow, threads.grow);
+            this.addWork(Zerver.Scripts.weaken, threads.weaken);
         }
+
+        if (diff > 0) { 
+            this.addWork(Zerver.Scripts.weaken, diff, WorkTicket.Priority.grow);
+        }
+
+        console.info(`Init ${this.target.name} with grow: ${threads.grow}, weaken: ${threads.weaken}, security weaken: ${diff}`);
     }
 
     /**
@@ -87,11 +88,12 @@ export class WorkQueue {
     queueAttack(taking) {
         const threads = this.target.analyzeAttackThreads(taking);
 
-        console.log(`Attack ${this.target.name} calculated threads`, threads);
                 
-        this.addWork(Deployer.Scripts.hack, threads.hack);
-        this.addWork(Deployer.Scripts.grow, threads.grow);
-        this.addWork(Deployer.Scripts.weaken, threads.weaken);
+        this.addWork(Zerver.Scripts.hack, threads.hack);
+        this.addWork(Zerver.Scripts.grow, threads.grow);
+        this.addWork(Zerver.Scripts.weaken, threads.weaken);
+
+        console.info(`Attack ${this.target.name} with hack: ${threads.hack}, grow: ${threads.grow}, weaken: ${threads.weaken}`);
     }
 
     /**
@@ -116,10 +118,11 @@ export class WorkQueue {
             default:
             case WorkTicket.Status.Initiating:
                 this.queueInitialize();
+                
                 break;
 
             case WorkTicket.Status.Running:
-                this.queueAttack(taking);
+                    this.queueAttack(taking);
                 break;
         }
 

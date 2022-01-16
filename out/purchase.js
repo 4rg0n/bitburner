@@ -32,7 +32,8 @@ export async function main(ns) {
 	}
 
 	ns.tprintf(`There are ${purchaser.getFreeSlots()} free server slots`);
-	ns.tprintf(`Possible next upgrade could be from [min: ${asFormatGB(purchaser.getRamMin())}|max: ${asFormatGB(purchaser.getRamMax())}] to ${asFormatGB(purchaser.getRamNextUpgrade())} for ${asFormat(purchaser.getUpgradeCosts())}`);	
+	ns.tprintf(`Upgrade possible: ${purchaser.canUpgradeServers()}`)
+	ns.tprintf(`Possible next upgrade could be from [min: ${asFormatGB(purchaser.getRamMin())}|max: ${asFormatGB(purchaser.getRamMax())}] to ${asFormatGB(purchaser.getRamMaxUpgrade())} for ${asFormat(purchaser.getUpgradeCosts())}`);	
 
 	const prompt = await ns.prompt(`Upgrading to ${doMax ? "MAX " : ""} ${asFormatGB(ram)} will cost you ${asFormat(purchaser.getCostTotal(ram))}`);
 

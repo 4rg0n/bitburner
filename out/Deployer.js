@@ -3,6 +3,10 @@
 import { Zerver } from "./Zerver.js";
 import { Cracker } from "./Cracker.js";
 
+/**
+ * For deploying hacking scripts to servers.
+ * Will also try to crack before deploying.
+ */
 export class Deployer {
 
     /**
@@ -15,25 +19,23 @@ export class Deployer {
         this.cracker = cracker;
     }
 
-    static Scripts = {
-        hack: "hack.script",
-        grow: "grow.script",
-        weaken: "weaken.script"
-    }
-    
     /**
      * 
      * @param {Zerver[]} servers 
      */
     async deployHacksToServers(servers) {
         for (const server of servers) {
-            if (!server.hasRoot && !this.cracker.crackServer(server)) {
-                this.ns.print("WARN Could not deploy to " + server.name);
+            if (server.areScriptsDeployed) {
                 continue;
             }
 
-            await this.ns.sleep(100);
+            if (!server.hasRoot && !this.cracker.crackServer(server)) {
+                this.ns.print("INFO Could not deploy to " + server.name);
+                continue;
+            }
+            
             await this.deployHacks(server.name);
+            await this.ns.sleep(100);
         }
     }
 
@@ -42,6 +44,6 @@ export class Deployer {
      * @param {string} host 
      */
     async deployHacks(host) {
-        await this.ns.scp(Object.values(Deployer.Scripts), this.ns.getHostname(), host);
+        await this.ns.scp(Object.values(Zerver.Scripts), this.ns.getHostname(), host);
     }
 }

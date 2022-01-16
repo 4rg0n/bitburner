@@ -2,9 +2,12 @@
 /** @typedef {import(".").NS} NS */
 import { Zerver } from "./Zerver.js";
 
+/**
+ * For cracking / gainging root access to servers
+ */
 export class Cracker {
 
-    static Scripts = [
+    static Programs = [
         "BruteSSH.exe",
         "FTPCrack.exe",
         "HTTPWorm.exe",
@@ -48,11 +51,11 @@ export class Cracker {
     }
 
     getAvailCracks() {
-        return Cracker.Scripts.filter(s => this.ns.fileExists(s));
+        return Cracker.Programs.filter(s => this.ns.fileExists(s));
     }
 
     getMissingCracks() {
-        return Cracker.Scripts.filter(s => !this.ns.fileExists(s));
+        return Cracker.Programs.filter(s => !this.ns.fileExists(s));
     }
 
     buyCracks() {

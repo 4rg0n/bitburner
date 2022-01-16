@@ -22,7 +22,7 @@ export async function main(ns) {
         ["host", Scheduler.WorkerType.NotHome, `Category of hosts to deploy: ${Object.values(Scheduler.WorkerType).join(", ")}`],
         ["take", 0.5, "Percentage of money, wich should be hacked between 0 and 1"],
         ["free", 0, "Amount of GB ram to not use on home server when distributing"],
-        ["boost", 1, "Factor for boosting calculated threads and therefor load"],
+        ["boost", 1, "Multiplikator for generated work"],
         ["help", false, ""]
     ]);
     const args = flags.args();
@@ -36,9 +36,8 @@ export async function main(ns) {
 
     const cracker = new Cracker(ns);
     const deployer = new Deployer(ns, cracker);
-    const targets = Scheduler.filterByMoneyRanks(servers, targetCategories);
-    const workers = Scheduler.filterByWorkType(servers, workerType);
-    const scheduler = new Scheduler(ns, targets, workers, deployer, taking, boostFactor, homeRamMinFree);
+    const targets = Zerver.filterByMoneyRanks(servers, targetCategories);
+    const scheduler = new Scheduler(ns, targets, deployer, workerType, taking, boostFactor, homeRamMinFree);
     
     await scheduler.init();
     await scheduler.cleanup();    
