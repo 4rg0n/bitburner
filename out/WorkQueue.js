@@ -99,9 +99,20 @@ export class WorkQueue {
     /**
      * @returns {boolean} whether any work was queued or not
      */
-    queue() {
-        if (this.waitingForQueue())
-            return false;
+    queue(boost = false) {
+        if (this.waitingForQueue()) {
+            if (!boost) {
+                console.info(`Queueing work for ${this.target.name} skipped. Waiting for queue.`);
+                return false;
+            } else {
+                if (this.target.moneyRank === Zerver.MoneyRank.Lowest) {
+                    // do not boost lowest servers
+                    return false;
+                }
+
+                console.info(`Boosting work for ${this.target.name}.`);
+            }
+        }   
 
         const taking = this.taking;
 
@@ -122,7 +133,7 @@ export class WorkQueue {
                 break;
 
             case WorkTicket.Status.Running:
-                    this.queueAttack(taking);
+                this.queueAttack(taking);
                 break;
         }
 

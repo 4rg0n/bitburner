@@ -19,18 +19,13 @@ const TargetType = {
 /**
  * For distributing hack / grow / weaken threads to attack a set of targets
  * 
- * @todo Fine tune distribution: higher available money means easier grow? 
- *       So it would be good to keep servers as near as max money as possible?
- * 
- * @todo When there's alot of RAM available, distirbution only produces a 
- *       load of ~10% and does not run scripts on all servers.
- * 
  * @param {NS} ns
  */
 export async function main(ns) {
     ns.disableLog('ALL');
 
     const flags = new Flags(ns, [
+        ["_", "", `Hostname of server to attack`],
         ["target", [], `Category of targets to attack: ${Object.values(Zerver.MoneyRank).join(", ")}`],
         ["host", Scheduler.WorkerType.All, `Category of hosts to deploy: ${Object.values(Scheduler.WorkerType).join(", ")}`],
         ["take", 0.5, "Percentage of money, wich should be hacked between 0 and 1"],
@@ -44,6 +39,9 @@ export async function main(ns) {
     const args = flags.args();
     ns.tprintf(`\n${flags.cmdLine()} --tail`)
 
+    /** @type {string} */
+    // @ts-ignore
+    const targetName = args._[0];
     const taking = args["take"] - 0;
     const scale = args["scale"] - 0;
     const homeRamMinFree = args["free"];
@@ -58,14 +56,19 @@ export async function main(ns) {
     const deployer = new Deployer(ns, cracker);
     await deployer.deployHacksToServers(servers);
 
-    const targets = Zerver.filterByMoneyRanks(servers, targetCategories);
+    const targets = (targetName === "") ? 
+        Zerver.filterByMoneyRanks(servers, targetCategories) : 
+        servers.filter(s => s.name.toLowerCase().indexOf(targetName.toLowerCase()) !== -1);
+
     const scheduler = new Scheduler(ns, targets, deployer, workerType, taking, doBoost, homeRamMinFree);
 
     await scheduler.init();
 
     const monitorTemplate = [
         DistributionMonitor.Templates.Targets,
+        DistributionMonitor.Templates.Line,
         DistributionMonitor.Templates.DistSecurity,
+        DistributionMonitor.Templates.Line,
         DistributionMonitor.Templates.DistThreadsScheduled,
         DistributionMonitor.Templates.DistThreadsInit,
         DistributionMonitor.Templates.ThreadsInitProgress,

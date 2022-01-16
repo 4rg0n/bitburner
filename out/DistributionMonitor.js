@@ -124,7 +124,10 @@ export class DistributionMonitor {
             case DistributionMonitor.Templates.ThreadsInitProgress:
                 this.views[DistributionMonitor.Templates.ThreadsInitProgress] = {
                     title: "Threads Progress",
-                    content: new Progressions(10, 0, ["total", "hack", "grow", "weaken"], 2)
+                    content: new Progressions(10, 0, ["total", "hack", "grow", "weaken"], 2, [
+                        Progression.Templates.Bar, 
+                        Progression.Templates.Ratio, 
+                        Progression.Templates.Percent])
                 };
                 break;
 
@@ -220,7 +223,7 @@ export class DistributionMonitor {
                 break;    
                 
             case DistributionMonitor.Templates.Line:
-                this.log.add("----------------------------------------------------");   
+                this.log.add("---------------------------------------------------------");   
                 break; 
             default:
                 console.warn(`Unknown template ${template} to add to display.`);

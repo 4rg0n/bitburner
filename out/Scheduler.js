@@ -187,7 +187,7 @@ export class Scheduler {
                 const maxThreads = server.threads(work.script);
 
                 if (maxThreads < 1) break;
-                if (runner.isRunning(work.script) && (!this.doBoost && !this.canBoost())) {
+                if (runner.isRunning(work.script) && !this.canBoost()) {
                     console.info(`Script ${work.script} ${work.threads} still running on ${runner.targetHost} -> ${runner.defaultArgs}`);
                     continue;
                 } 
@@ -260,8 +260,7 @@ export class Scheduler {
         let works = scheduledWorks || this.scheduledQueue;
 
         for (const work of works) {
-            work.queue();
-            work.queue();
+            work.queue(this.canBoost());
         }
     }
 
@@ -282,6 +281,10 @@ export class Scheduler {
     }
 
     canBoost() {
+        if (!this.doBoost) {
+            return false;
+        }
+
         // not enough usages collected?
         if (!this.ramUsageHistory.isFull()) {
             return false;
