@@ -81,6 +81,8 @@ export class Zerver {
 
         servers = Zerver.injectServersMoneyRanks(servers);
 
+        ns.getPlayer().hacking
+
         return servers;
     }
 
@@ -274,28 +276,6 @@ export class Zerver {
         }
     }
 
-    // /**
-    //  * @returns {string}
-    //  */
-    // get moneyRank() {
-    //     const moneyMax = this.moneyMax;
-
-    //     if (moneyMax === 0) {
-    //         return Zerver.MoneyRank.None;
-    //     }
-    //     if (moneyMax <= 50000000) {
-    //         return Zerver.MoneyRank.Lowest;
-    //     } else if (moneyMax > 50000000 && moneyMax <= 1500000000) {
-    //         return Zerver.MoneyRank.Low;
-    //     } else if (moneyMax > 1500000000 && moneyMax <= 20000000000) {
-    //         return Zerver.MoneyRank.Med;
-    //     } else if (moneyMax > 20000000000 && moneyMax <= 30000000000) {
-    //         return Zerver.MoneyRank.High;
-    //     } else if (moneyMax > 30000000000) {
-    //         return Zerver.MoneyRank.Highest;
-    //     }
-    // }
-
     get isHackable() {
         return this.hasRoot 
             && (this.levelNeeded <= this.ns.getHackingLevel()) 
@@ -415,7 +395,7 @@ export class Zerver {
         const threads = {
             hack: 0,
             grow: Math.ceil(grow),
-            weaken: (Math.ceil((.004 * growAnalyzeThreads + .002 * 0) / .05) + 5),
+            weaken: (Math.ceil((.004 * grow + .002 * 0) / .05) + 5),
         };
 
         return threads;

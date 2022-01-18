@@ -31,7 +31,8 @@ export async function main(ns) {
         ["take", 0.5, "Percentage of money, wich should be hacked between 0 and 1"],
         ["scale", 0, "Percante of available money between 0 and 1 to regularly buy new servers. 0 means no servers will be bought"],
         ["free", 0, "Amount of GB ram to not use on home server when distributing"],
-        ["boost", false, "?"],
+        ["boost", false, "This will produce new work as long as there's free ram. May cause game crash."],
+        ["aggro", false, "Another method of distribution where each ticket starts it's own set of script instead of scripts per target. May cause game crash."],
         ["silent", false, "Will not produce any output"],
         ["help", false, ""]
     ]);
@@ -49,6 +50,7 @@ export async function main(ns) {
     const silent = args["silent"];
     const targetCategories = args["target"];
     const doBoost = args["boost"];
+    const doAggro = args["aggro"];
 
     const purchaser = new Purchaser(ns, scale, 4);
     const servers = Zerver.get(ns);
@@ -60,7 +62,7 @@ export async function main(ns) {
         Zerver.filterByMoneyRanks(servers, targetCategories) : 
         servers.filter(s => s.name.toLowerCase().indexOf(targetName.toLowerCase()) !== -1);
 
-    const scheduler = new Scheduler(ns, targets, deployer, workerType, taking, doBoost, homeRamMinFree);
+    const scheduler = new Scheduler(ns, targets, deployer, workerType, taking, doBoost, doAggro, homeRamMinFree);
 
     await scheduler.init();
 

@@ -15,7 +15,7 @@ export class AdvCracker extends Cracker {
     }
 
     buyCracks() {
-        let missingCracks = this.getMissingCracks();
+        let missingCracks = super.getMissingCracks();
 
         try {
             missingCracks.forEach(prog => {
@@ -25,7 +25,7 @@ export class AdvCracker extends Cracker {
             this.ns.print("Could not buy any crack: " + err);
         }
 
-        return this.getAvailCracks();
+        return super.getAvailCracks();
     }
 
     buyTor() {

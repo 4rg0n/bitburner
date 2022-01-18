@@ -160,7 +160,7 @@ export class DistributionMonitor {
             case DistributionMonitor.Templates.Boost:
                 this.views[DistributionMonitor.Templates.Boost] = {
                     title: undefined,
-                    content: false
+                    content: "Disabled"
                 }
                 break;
             case DistributionMonitor.Templates.Line:
@@ -223,15 +223,13 @@ export class DistributionMonitor {
                 break;    
                 
             case DistributionMonitor.Templates.Line:
-                this.log.add("---------------------------------------------------------");   
+                this.log.add("----------------------------------------------------");   
                 break; 
             default:
                 console.warn(`Unknown template ${template} to add to display.`);
                 break;                                                
         }
     }
-
-    
 
     /**
      * 
@@ -459,6 +457,6 @@ export class DistributionMonitor {
             return;
         }
 
-        view.content = this.scheduler.canBoost();
+        view.content = (this.scheduler.canBoost()) ? "Enabled" : "Disabled";
     }
 }

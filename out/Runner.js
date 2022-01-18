@@ -1,20 +1,6 @@
 // @ts-check
 /** @typedef {import(".").NS} NS */
 import { asArray } from "./lib.js";
-import { Flags } from "./Flags.js";
-
-/**
- * 
- * 
- * @param {NS} ns 
- */
- export async function main(ns) {
-    const flags = new Flags(ns, [
-        ["_", "", ``],
-        ["help", false, ""]
-    ]);
-    const args = flags.args();
- }
 
 /**
  * For controlling scripts on a host server attacking another target
@@ -24,7 +10,7 @@ export class Runner {
     /**
      * @param {NS} ns
      * @param {string} targetHost
-     * @param {string} defaultArgs
+     * @param {string|string[]} defaultArgs
      * 
      */
     constructor(ns, targetHost = ns.getHostname(), defaultArgs = '', ramMinFree = 0) {
@@ -79,26 +65,27 @@ export class Runner {
     /**
      * 
      * @param {string} script 
-     * @param {string} args 
+     * @param {string|string[]} args 
      * @returns 
      */
     isRunning(script, args = this.defaultArgs) {
-        return this.ns.isRunning(script, this.targetHost, args);
+        return this.ns.isRunning(script, this.targetHost, ...args);
     }
 
     /**
      * 
      * @param {string|string[]} scripts 
-     * @param {string} args 
+     * @param {string|string[]} args 
      */
     async await(scripts, args = this.defaultArgs) {
         scripts = asArray(scripts);
+        args = asArray(args);
 
         for (let i in scripts) {
             const script = scripts[i];
             this.ns.print(`Waiting for ${script} (${args}) to finish...`);
 
-            while (this.ns.isRunning(script, this.targetHost, args)) {
+            while (this.ns.isRunning(script, this.targetHost, ...args)) {
                 await this.ns.sleep(1000);
             }
 
@@ -110,20 +97,21 @@ export class Runner {
      * 
      * @param {string|string[]} scripts 
      * @param {number} threads 
-     * @param {string} args
+     * @param {string|string[]} args
      */
     async start(scripts, threads = 1, args = this.defaultArgs) {
         if (threads < 1) return;
 
         let ns = this.ns;
-        scripts = asArray(scripts);   
+        scripts = asArray(scripts);
+        args = asArray(args);   
         threads = this.minThreads(scripts, threads);
 
         if (threads < 1) return;
 
         for (let i in scripts) {
-            while (ns.exec(scripts[i], this.targetHost, threads, args) === 0 && 
-                    ns.isRunning(scripts[i], this.targetHost, args) === false) {
+            while (ns.exec(scripts[i], this.targetHost, threads, ...args) === 0 && 
+                    ns.isRunning(scripts[i], this.targetHost, ...args) === false) {
                 await ns.sleep(1000);
             }
         }
@@ -133,10 +121,11 @@ export class Runner {
      * 
      * @param {string|string[]} scripts 
      * @param {number} threads 
-     * @param {string} args
+     * @param {string|string[]} args
      */
     async finish(scripts, threads = 1, args = this.defaultArgs) {
         scripts = asArray(scripts);
+        args = asArray(args);
 
         await this.start(scripts, threads, args);
         await this.await(scripts, args);
@@ -145,13 +134,14 @@ export class Runner {
     /**
      * 
      * @param {string|string[]} scripts 
-     * @param {string} args
+     * @param {string|string[]} args
      */
     async kill(scripts, args = this.defaultArgs) {
         scripts = asArray(scripts);
+        args = asArray(args);
 
         for (let i in scripts) {
-            this.ns.kill(scripts[i], this.targetHost, args);
+            this.ns.kill(scripts[i], this.targetHost, ...args);
         }
            
         await this.await(scripts, args);

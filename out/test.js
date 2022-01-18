@@ -15,5 +15,8 @@ export async function main(ns) {
 
 	const test = new Test(ns);
 
-    ns.tprint(TestConst.test + ": " +  ns.getScriptRam("test.js"));
+    ns.tprint(TestConst.test + ": " +  ns.getScriptRam("test.js"));	
+
+	ns.hacknet.getNodeStats(0);
+	
 }

@@ -40,7 +40,7 @@ export function rankValue(value, ranks, valueMax) {
     let i = 0;
     
     for (let currValue = 1; currValue <= valueMax; currValue += step) {
-        if (value >= currValue && value < (currValue + step)) {
+        if (value >= currValue && value < (currValue + step) || i === rankCount - 1) {
             return ranks[i];
         }
 
@@ -122,6 +122,35 @@ export function asFormat(numbers, decimals = 2, usePadding = true) {
     }
 
     return isArray ? formatted : formatted[0];
+}
+
+/**
+ * 
+ * @param {string|number} format e.g. 1k 10m 100b 
+ * @returns {number}
+ */
+export function fromFormat(format) {
+    if (typeof format === "number") {
+        return format;
+    }
+
+    let unit = format.slice(-1);
+    let unitIdx = units.indexOf(unit);
+    let valueString = format.slice(0, -1);
+    let num;
+    let multi = 1;
+
+    if (unitIdx !== -1) {
+        multi = Math.pow(100, unitIdx + 1);
+    }
+
+    num = Number(valueString);
+
+    if (typeof num !== "number" || Number.isNaN(num)) {
+        return 0;
+    }
+
+    return num * multi;
 }
 
 

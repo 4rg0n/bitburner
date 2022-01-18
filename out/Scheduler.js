@@ -18,7 +18,8 @@ export class Scheduler {
     static WorkerType = {
         All: "all",
         Own: "own",
-        NotHome: "nothome"
+        NotHome: "nothome",
+        Home: "home"
     }
 
     /**
@@ -29,9 +30,10 @@ export class Scheduler {
      * @param {string} workerType
      * @param {number} taking
      * @param {boolean} doBoost
+     * @param {boolean} doAggro
      * @param {number} homeMinRamFree  
      */
-    constructor(ns, targetPool, deployer = undefined, workerType = Scheduler.WorkerType.All, taking = .5, doBoost = false, homeMinRamFree = 0) {
+    constructor(ns, targetPool, deployer = undefined, workerType = Scheduler.WorkerType.All, taking = .5, doBoost = false, doAggro = false, homeMinRamFree = 0) {
         this.ns = ns;
         this.targetPool = targetPool;
         this.workerType = workerType;
@@ -55,6 +57,7 @@ export class Scheduler {
         
         this.taking = taking;
         this.doBoost = doBoost;
+        this.doAggro = doAggro;
         this.homeMinRamFree = homeMinRamFree;
         this.ramUsageHistory = new NumberStack([], 10);
     }
@@ -87,6 +90,8 @@ export class Scheduler {
                 default:
                 case Scheduler.WorkerType.NotHome:
                     return !server.isHome;
+                case Scheduler.WorkerType.Home:
+                    return server.isHome; 
             }
         })
         .filter(server => server.hasRoot); 
@@ -140,19 +145,29 @@ export class Scheduler {
     /**
      * 
      * @param {Zerver} server 
-     * @param {string} target 
+     * @param {string} target
+     * @param {number} id 
      * @returns {Runner}
      */
-    runner(server, target) {
-        if (!this.runners[`${server.name}|${target}`]) {
+    runner(server, target, id = undefined) {
+        let args;
+
+        // add an id to each runner: will result in spawning more scripts
+        if (this.doAggro) {
+            args = (id) ? [target, "" + id]  : [target];
+        } else {
+            args = [target];
+        }
+
+        if (!this.runners[`${server.name}|${args}`]) {
             if (server.isHome) {
-                this.runners[`${server.name}|${target}`] = new Runner(this.ns, server.name, target, this.homeMinRamFree);
+                this.runners[`${server.name}|${args}`] = new Runner(this.ns, server.name, args, this.homeMinRamFree);
             } else {
-                this.runners[`${server.name}|${target}`] = new Runner(this.ns, server.name, target);
+                this.runners[`${server.name}|${args}`] = new Runner(this.ns, server.name, args);
             }
         }
 
-        return this.runners[`${server.name}|${target}`];
+        return this.runners[`${server.name}|${args}`];
     }
 
     async cleanup() {
@@ -183,11 +198,11 @@ export class Scheduler {
                 if (work.status !== WorkTicket.Status.Initiating)
                     continue;
 
-                const runner = this.runner(server, work.target.name);
+                const runner = this.runner(server, work.target.name, work.id);
                 const maxThreads = server.threads(work.script);
 
                 if (maxThreads < 1) break;
-                if (runner.isRunning(work.script) && !this.canBoost()) {
+                if (runner.isRunning(work.script)) {
                     console.info(`Script ${work.script} ${work.threads} still running on ${runner.targetHost} -> ${runner.defaultArgs}`);
                     continue;
                 } 
@@ -208,6 +223,8 @@ export class Scheduler {
                     this.waitingQueue.push(work);
                 }
             }
+
+            if (this.canBoost()) await this.ns.sleep(10);
         }
 
         this.initQueue = this.initQueue.filter(work => work.progress < work.threads);
@@ -215,7 +232,7 @@ export class Scheduler {
 
     pollWork() {
         this.scheduledQueue.forEach(works => {
-            works.workQueue
+            works.workQueue.tickets
                 .filter(work => work.isNew())
                 .forEach(work => {
                     console.info(`Polled work ${work.script} ${work.threads} ${work.target.name}`);
@@ -439,9 +456,9 @@ export class Scheduler {
      * @returns {threadDist} scheduled tickets waiting for execution
      */
     distScheduledTickets() {
-        const hack = this.scheduledQueue.flatMap(queue => queue.workQueue).filter(work => work.script === Zerver.Scripts.hack).length;    
-        const grow = this.scheduledQueue.flatMap(queue => queue.workQueue).filter(work => work.script === Zerver.Scripts.grow).length;     
-        const weaken = this.scheduledQueue.flatMap(queue => queue.workQueue).filter(work => work.script === Zerver.Scripts.weaken).length;  
+        const hack = this.scheduledQueue.flatMap(queue => queue.workQueue.tickets).filter(work => work.script === Zerver.Scripts.hack).length;    
+        const grow = this.scheduledQueue.flatMap(queue => queue.workQueue.tickets).filter(work => work.script === Zerver.Scripts.grow).length;     
+        const weaken = this.scheduledQueue.flatMap(queue => queue.workQueue.tickets).filter(work => work.script === Zerver.Scripts.weaken).length;  
         const total = hack + grow + weaken;
 
         return {
@@ -457,15 +474,15 @@ export class Scheduler {
      * @returns {threadDist} scheduled threads waiting for execution
      */
     distScheduledThreads() {
-        const hack = this.scheduledQueue.flatMap(queue => queue.workQueue)
+        const hack = this.scheduledQueue.flatMap(queue => queue.workQueue.tickets)
             .filter(work => work.script === Zerver.Scripts.hack)
             .map(work => work.threads)
             .reduce((a, b) => a + b, 0);    
-        const grow = this.scheduledQueue.flatMap(queue => queue.workQueue)
+        const grow = this.scheduledQueue.flatMap(queue => queue.workQueue.tickets)
             .filter(work => work.script === Zerver.Scripts.grow)
             .map(work => work.threads)
             .reduce((a, b) => a + b, 0);    
-        const weaken = this.scheduledQueue.flatMap(queue => queue.workQueue)
+        const weaken = this.scheduledQueue.flatMap(queue => queue.workQueue.tickets)
             .filter(work => work.script === Zerver.Scripts.weaken)
             .map(work => work.threads)
             .reduce((a, b) => a + b, 0); 

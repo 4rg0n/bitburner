@@ -236,16 +236,16 @@ export class Purchaser {
 	getRamMaxUpgrade() {
 		let nextRam = this.getRamNextUpgrade();
 		
-		while(this.canBuyServers(nextRam)) {
+		while(this.canBuyServers(nextRam) && nextRam < Purchaser.RamMaxPurchasable) {
 			nextRam = this.getRamNextUpgrade(nextRam);
 		}
-
-		// we always do 1 iteration too much :x
-		nextRam = nextRam / this.multi;
 
 		if (nextRam >= Purchaser.RamMaxPurchasable) {
 			return Purchaser.RamMaxPurchasable;
 		}
+
+		// we always do 1 iteration too much :x
+		nextRam = nextRam / this.multi;
 
 		return nextRam;
 	}
