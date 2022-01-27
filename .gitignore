@@ -1,2 +1,3 @@
-todos.txt
-.vscode/
+node_modules/
+dist/
+NetscriptDefinitions.d.ts

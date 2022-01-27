@@ -8,8 +8,9 @@ run dist.js --take 0.9 --host all --target high --target med --scale 0.5 --free 
 
 run dist.js --take 0.9 --host all --target highest --target high --target med --free 128 --tail
 
-run Scanner.js moneyMax >1000000000 --cat moneyfarm --sort moneyMax --desc
-run Scanner.js requiredHackingSkill <=getPlayer().hacking --cat moneyfarm --filter moneyMax --sort moneyMax --desc
+run scan.js moneyMax >1000000000 --cat moneyfarm --sort moneyMax --desc
+run scan.js requiredHackingSkill <=getPlayer().hacking --cat moneyfarm --filter moneyMax --sort moneyMax --desc
+run scan.js run4 --filter path
 
 buy BruteSSH.exe 
 buy FTPCrack.exe 
@@ -20,3 +21,5 @@ buy ServerProfiler.exe
 buy DeepscanV1.exe 
 buy DeepscanV2.exe 
 buy AutoLink.exe
+
+npm run watch
