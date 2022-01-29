@@ -55,7 +55,7 @@ export class Scheduler {
     }
 
     static createWorkQueues(ns : NS, targets : Zerver[], taking : number | undefined = undefined) : WorkQueue[] {
-        return targets.map(target => new WorkQueue(ns, target, taking, 20));
+        return targets.map(target => new WorkQueue(ns, target, taking, 100));
     }
 
     static filterByWorkType(servers : Zerver[], workerType : string) : Zerver[] {
@@ -237,11 +237,10 @@ export class Scheduler {
 
         const ramUsage = works.map(w => w.getRamUsage()).reduce((a, b) => a + b, 0);
         const ramAvail = this.totalWorkersRamMax() - ramUsage;
-        const ramPerWorker = Math.floor((ramAvail / works.length));
 
         for (const work of works) {
             if (work.workQueue.isFull() || work.status !== WorkTicket.Status.Running) continue;
-            work.queueShare(ramPerWorker)
+            work.queueShare(ramAvail)
         }
     }
 

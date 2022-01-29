@@ -11,20 +11,7 @@ Factions:
         Hack run4theh111z manually
         Home RAM of 128 GB
 
-harakiri-sushi/nectar-net/omega-net/netlink/rothman-uni/aevum-police/aerocorp/deltaone/zeus-med/taiyang-digital/run4theh111z
-
-harakiri-sushi/nectar-net/omega-net/netlink/rothman-uni/aevum-police/aerocorp/deltaone/solaris/infocomm/microdyne/vitalife/omnitek/b-and-a/The-Cave/w0r1d_d43m0n
 
 
-run.js
-
-* Ziel und Anzahl von Threads definieren
-* Ausmachen der benötigten server zum deployen
-* Deploy scripts
-* Run scripts
-* Monitor scripts
-
-
--2.2399892354854174
 
 

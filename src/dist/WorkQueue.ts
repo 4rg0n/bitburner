@@ -52,7 +52,6 @@ export class WorkQueue {
             return false;
         }
 
-
         console.info(`Boosting work for ${this.target.name}.`);
         return true;
     }

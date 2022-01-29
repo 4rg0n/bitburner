@@ -377,6 +377,7 @@ export class DistributionMonitor {
             hack: {value: initProgressThreads.hack , total: initTotalThreads.hack },
             grow: {value: initProgressThreads.grow , total: initTotalThreads.grow },
             weaken: {value: initProgressThreads.weaken , total: initTotalThreads.weaken },
+            share: {value: initProgressThreads.share , total: initTotalThreads.share },
         });
     }
 
