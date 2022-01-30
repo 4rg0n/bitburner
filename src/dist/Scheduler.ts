@@ -38,9 +38,22 @@ export class Scheduler {
    doBoost: boolean
    doAggro: boolean
    homeMinRamFree: number
+   ramCap: number
+   ramMap: {[key: string]: number}
    ramUsageHistory: NumberStack
 
-     constructor(ns : NS, targetPool : Zerver[], deployer : Deployer | undefined = undefined, workerType = Scheduler.WorkerType.All, taking = .5, doShare = false, doBoost = false, doAggro = false, homeMinRamFree = 0) {
+     constructor(
+        ns : NS, 
+        targetPool : Zerver[], 
+        deployer : Deployer | undefined = undefined, 
+        workerType = Scheduler.WorkerType.All, 
+        taking = .5, 
+        doShare = false, 
+        doBoost = false, 
+        doAggro = false, 
+        homeMinRamFree = 0,
+        ramCap = 0
+    ) {
         this.ns = ns;
         this.targetPool = targetPool;
         this.workerType = workerType;
@@ -51,6 +64,7 @@ export class Scheduler {
         this.doBoost = doBoost;
         this.doAggro = doAggro;
         this.homeMinRamFree = homeMinRamFree;
+        this.ramCap = ramCap;
         this.ramUsageHistory = new NumberStack([], 10);
     }
 
@@ -72,7 +86,8 @@ export class Scheduler {
                     return server.isHome; 
             }
         })
-        .filter(server => server.hasRoot); 
+        .filter(server => server.hasRoot)
+        .filter(server => server.ramMax > 0); 
     }
     
     async init(): Promise<void> {
@@ -84,12 +99,43 @@ export class Scheduler {
 
         const servers = Zerver.get(this.ns);
         this.workers = Scheduler.filterByWorkType(servers, this.workerType);
-
+        this.ramMap = this.createRamMap(this.workers, this.getTotalRamCapacity(), this.homeMinRamFree);
         this.targets = this.targetPool.filter(t => t.isTargetable);
         this.scheduledQueue = Scheduler.createWorkQueues(this.ns, this.targets, this.taking);
 
         await this.deployer.deployScriptsToServers(servers);
         await this.ns.sleep(100);
+    }
+
+    createRamMap(servers : Zerver[], ramCap = 0, homeMinRamFree = 0) : {[key: string]: number} {
+        const ramMap : {[key: string]: number} = {};
+
+        if (servers.length === 0) return ramMap;
+        
+        // lowest ram first
+        servers = servers.sort((a, b) => a.ramMax - b.ramMax);
+        let ramAvail = ramCap;
+
+        for (const server of servers) {
+            const serverRamMax = server.ramMax;
+            const name = server.name;
+            
+            if (ramAvail <= 0) {
+                ramMap[name] = 0;
+            } else if (ramAvail >= serverRamMax) {
+                ramMap[name] = serverRamMax;
+                ramAvail = ramAvail - serverRamMax;
+            } else {
+                ramMap[name] = ramAvail;
+                ramAvail = ramAvail - ramAvail;
+            }
+        }
+
+        if (typeof servers[Zerver.Home] !== "undefined") {
+            servers[Zerver.Home] = servers[Zerver.Home] - homeMinRamFree;
+        }
+        
+        return ramMap;
     }
 
     saveScript(ticket : WorkTicket, host : string, threads : number) : void {
@@ -117,11 +163,8 @@ export class Scheduler {
         }
 
         if (!this.runners[`${server.name}|${args}`]) {
-            if (server.isHome) {
-                this.runners[`${server.name}|${args}`] = new Runner(this.ns, server.name, args, this.homeMinRamFree);
-            } else {
-                this.runners[`${server.name}|${args}`] = new Runner(this.ns, server.name, args);
-            }
+            const ramCap = this.ramMap[server.name];
+            this.runners[`${server.name}|${args}`] = new Runner(this.ns, server.name, args, ramCap);
         }
 
         return this.runners[`${server.name}|${args}`];
@@ -235,9 +278,10 @@ export class Scheduler {
 
         if (!this.doShare) return;
 
-        const ramUsage = works.map(w => w.getRamUsage()).reduce((a, b) => a + b, 0);
-        const ramAvail = this.totalWorkersRamMax() - ramUsage;
+        const ramAvail = this.getTotalRamAvail(this.totalWorkersRamMax());
 
+        if (ramAvail <= 0) return;
+        
         for (const work of works) {
             if (work.workQueue.isFull() || work.status !== WorkTicket.Status.Running) continue;
             work.queueShare(ramAvail)
@@ -295,6 +339,28 @@ export class Scheduler {
         servers = servers || this.scheduledQueue.map(workQueue => workQueue.target);
 
         await this.deployer.deployScriptsToServers(servers);
+    }
+
+    getTotalRamCapacity() : number {
+        const totalRamMax = this.totalWorkersRamMax();
+        if (this.ramCap !== 0 && this.ramCap < totalRamMax) {
+            return this.ramCap;
+        }
+
+        return totalRamMax;
+    }
+
+    getTotalRamAvail(capacity : number | undefined) : number {
+        capacity = capacity || this.getTotalRamCapacity();
+
+        const ramUsage = works.map(w => w.getRamUsage()).reduce((a, b) => a + b, 0);
+        const ramAvail = -capacity - -ramUsage;
+
+        if (ramAvail < 0) {
+            return 0;
+        }
+
+        return ramAvail;
     }
 
     distWaitingTickets() : { total: number; hack: number; grow: number; weaken: number; share: number; } {

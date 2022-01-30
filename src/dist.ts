@@ -6,6 +6,7 @@ import { Cracker } from "dist/Cracker";
 import { Deployer } from "dist/Deployer";
 import { DistributionMonitor } from "dist/DistributionMonitor";
 import { NS } from "@ns";
+import { fromFormatGB } from "/lib/utils";
 
 /**
  * For distributing hack / grow / weaken threads to attack a set of targets
@@ -20,6 +21,7 @@ export async function main(ns : NS): Promise<void> {
         ["take", 0.5, "Percentage of money, wich should be hacked between 0 and 1"],
         ["scale", 0, "Percante of available money between 0 and 1 to regularly buy new servers. 0 means no servers will be bought"],
         ["free", 0, "Amount of GB ram to not use on home server when distributing"],
+        ["cap", "", "Amount of ram to use as maximum (e.g. 1PB, 960TB)"],
         ["share", false, "Wether free ram capacity shall be shared or not"],
         ["boost", false, "This will produce new work as long as there's free ram. May cause game crash."],
         ["aggro", false, "Another method of distribution where each ticket starts it's own set of script instead of scripts per target. May cause game crash."],
@@ -34,6 +36,7 @@ export async function main(ns : NS): Promise<void> {
     const taking = args["take"] - 0;
     const scale = args["scale"] - 0;
     const homeRamMinFree = args["free"];
+    let ramCap = fromFormatGB(args["cap"]);
     const workerType = args["host"];
     const silent : boolean = args["silent"];
     const targetCategories = args["target"];
@@ -56,8 +59,19 @@ export async function main(ns : NS): Promise<void> {
     } else {
         targets = Zerver.filterByMoneyRanks(servers, targetCategories);
     }
-       
-    const scheduler = new Scheduler(ns, targets, deployer, workerType, taking, doShare, doBoost, doAggro, homeRamMinFree);
+
+    if (Number.isNaN(ramCap)) {
+        ramCap = 0;
+    }
+
+    // todo implement ramCap
+    /*
+    Runners are currently responsiple for calculating the threads based on ram available. 
+    Runners can currently hold a certain amount of ram free on its host. 
+        Solution: "Remove" some Workers by setting the minFree Ram to total ram when runner inits
+    */
+
+    const scheduler = new Scheduler(ns, targets, deployer, workerType, taking, doShare, doBoost, doAggro, homeRamMinFree, ramCap);
 
     await scheduler.init();
 

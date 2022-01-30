@@ -1,5 +1,6 @@
 import { asArray } from "lib/lib";
 import { NS } from "@ns";
+import { Zerver } from "/server/Zerver";
 
 /**
  * For controlling scripts on a host server attacking another target
@@ -9,30 +10,48 @@ export class Runner {
     ns: NS
     targetHost: string
     defaultArgs: string | string[]
-    ramMinFree: number
+    ramCap: number | undefined
 
-    constructor(ns : NS, targetHost = ns.getHostname(), defaultArgs : string | string[] = '', ramMinFree = 0) {
+    constructor(ns : NS, targetHost = ns.getHostname(), defaultArgs : string | string[] = '', ramCap : number | undefined) {
         this.ns = ns;
         this.targetHost = targetHost;
         this.defaultArgs = defaultArgs;
-        this.ramMinFree = ramMinFree;
+        this.ramCap = ramCap;
     }
 
     threads(script : string) : number {
-        const free = this.calcRamFree();
+        let free;
+
+        // todo ugly: Share Scripts are not bound to ramCap?
+        if (script === Zerver.Scripts.share) {
+            free = this.calcRamFree(this.ns.getServerMaxRam(this.targetHost));
+        } else {
+            free = this.calcRamFree();
+        }
+        
         const need = this.ns.getScriptRam(script) + .01;
 
         return Math.floor(free / need);
     }
 
-    calcRamFree() : number {
-        const free = this.ns.getServerMaxRam(this.targetHost) - this.ns.getServerUsedRam(this.targetHost) - this.ramMinFree;
+    calcRamFree(capacity : number | undefined) : number {
+        capacity = capacity || this.getRamCapacity();
+        const free = capacity - this.ns.getServerUsedRam(this.targetHost);
 
         if (free < 0) {
             return 0;
         }
 
         return free;
+    }
+
+    getRamCapacity() : number {
+        const ramMax = this.ns.getServerMaxRam(this.targetHost);
+        if (typeof this.ramCap === "number" && this.ramCap < ramMax) {
+            return this.ramCap;
+        }
+
+        return ramMax;
     }
 
     /**

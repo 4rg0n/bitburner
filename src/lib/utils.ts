@@ -72,6 +72,8 @@ export function asLabel(string : string, width = 0) : string {
 const units = ['', 'k', 'm', 'b', 't', 'q', 'Q', 's', 'S'];
 
 /**
+ * todo there is: ns.nFormat() *cough*
+ * 
  * Given big numbers convert to readable, defaults to 2 decimals
  * Fx 1.400.000 => 1.40m
  * If given array converts according to biggest number in array
@@ -149,7 +151,15 @@ export function asFormatGB(number : number, decimals = 2) : string {
     return number.toFixed(decimals) + unit;
 }
 
-export function fromFormatGB(text : string) : number {
+/**
+ * @param text e.g. 1PB, 4096TB
+ * @returns amount of GB or NaN when text can not be parsed
+ */
+export function fromFormatGB(text : string | undefined) : number {
+    if (typeof text !== "string" || text === "") {
+        return NaN;
+    }
+
     let pow = 1;
     let gigabyte = 0;
 

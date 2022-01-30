@@ -55,6 +55,7 @@ export class NodePurchaser {
         nodes = (nodes.length > 0) ? nodes : HackNode.get(this.ns);
         nodes = nodes.filter(n => !n.isUpgradedMax);
 
+        // buy new node
         if (nodes.length === 0) {
             if (!this.canBuyNode()) {
                 return;
@@ -68,8 +69,7 @@ export class NodePurchaser {
         }
 
         // expensive first
-        nodes.sort((a, b) => a.getUpgradeCost() - b.getUpgradeCost());
-        nodes = nodes.reverse();
+        nodes = nodes.sort((a, b) => a.getUpgradeCost() - b.getUpgradeCost()).reverse();
 
         for (const idx in nodes) {
             const node = nodes[idx];

@@ -38,10 +38,12 @@ export async function main(ns : NS): Promise<void>  {
     if (upgradeCycles === 0) {
         while(true) {
             purchaser.upgradeNodes();
+            await ns.sleep(10);
         }
     } else {
         for (let i = 0; i < upgradeCycles; i++) {
             purchaser.upgradeNodes();
+            await ns.sleep(10);
         }
     }
 }
