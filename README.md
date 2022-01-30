@@ -4,7 +4,6 @@
 All of the `.js` scripts are executables and can be run ingame with e.g. `run scan.js --help`.
 Each of the scripts has a `--help` flag for explaination on how to use it.
 
-
 ## Some usefull commands
 
 `run dist.js n00dles foodnstuff --take 0.1 --tail`
@@ -17,9 +16,24 @@ And it will display a monitor with `--tail`.
 
 Will display all `isHackable` servers `moneyMax` and `moneyRank` value only and sort by highest `moneyMax` first.
 
+`run scan.js files .cct --filter files`
+
+Will show servers with certain `files`.
+
+`run scan.js hostname cave --filter path`
+
+Will show you where to look for `The Cave`
+
+`run scan.js requiredHackingSkill <=getPlayer().hacking`
+
+Will look for servers where `requiredHackingSkill` is lower or equal `ns.getPlayer().hacking`.
+All ns functions without an argument are supported (also other namespaces). 
+
 `run pruchase.js --max`
 
 Will buy or upgrade private servers with the `maximum` amount ram you can afford.
+
+
 # Development and Installation
 
 ## Official VS Code Template for Bitburner

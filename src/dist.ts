@@ -106,7 +106,7 @@ export async function main(ns : NS): Promise<void> {
             await scheduler.init();
         }
 
-        scheduler.queueWork();
+        scheduler.scheduleWork();
         await scheduler.run();
         await ns.sleep(500);
 

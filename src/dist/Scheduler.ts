@@ -72,6 +72,9 @@ export class Scheduler {
         return targets.map(target => new WorkQueue(ns, target, taking));
     }
 
+    /**
+     * For knowing how much ram is available on each server when there is a overall ram capacity 
+     */
     static createRamMap(servers : Zerver[], ramCap = 0, homeMinRamFree = 0) : {[key: string]: number} {
         const ramMap : {[key: string]: number} = {};
 
@@ -120,6 +123,9 @@ export class Scheduler {
         .filter(server => server.isWorkable);
     }
     
+    /**
+     * Needs to be executed first to make the Scheduler do it's work
+     */
     async init(): Promise<void> {
         await this.cleanup();
         
@@ -151,6 +157,9 @@ export class Scheduler {
         delete this.scripts[ticket.id][host];
     }
 
+    /**
+     * Creates runners for scripts execution
+     */
     runner(server : Zerver, target : string, id : number | string | undefined = undefined) : Runner {
         let args;
 
@@ -169,6 +178,9 @@ export class Scheduler {
         return this.runners[`${server.name}|${args}`];
     }
 
+    /**
+     * Kill all running scripts
+     */
     async cleanup(): Promise<void> {
         const servers =  this.workers;
         const promises = [];
@@ -186,6 +198,9 @@ export class Scheduler {
             await promises[i];
     }
 
+    /**
+     * Execute scripts
+     */
     async startWork(): Promise<void> {
         const servers = this.workers;
         
@@ -229,6 +244,9 @@ export class Scheduler {
         this.initQueue = this.initQueue.filter(work => work.progress < work.threads);
     }
 
+    /**
+     * Move scheduled work into initialisation
+     */
     pollWork(): void {
         this.scheduledQueue.forEach(works => {
             works.workQueue.tickets
@@ -246,6 +264,9 @@ export class Scheduler {
         })
     }
 
+    /**
+     * Removes work when it's done
+     */
     pushWork(): void {
         this.waitingQueue.forEach(work => {
             this.workers.forEach(server => {
@@ -268,7 +289,10 @@ export class Scheduler {
         this.waitingQueue = this.waitingQueue.filter(work => !work.isDone());
     }
 
-    queueWork(scheduledWorks : WorkQueue[] | undefined = undefined): void {
+    /**
+     * Creates new work tickets
+     */
+    scheduleWork(scheduledWorks : WorkQueue[] | undefined = undefined): void {
         const works = scheduledWorks || this.scheduledQueue;
 
         for (const work of works) {
@@ -298,6 +322,9 @@ export class Scheduler {
         this.ramUsageHistory.push(this.totalWorkersRamUsed());
     }
 
+    /**
+     * Will allow scheduling of more work when there's enough ram
+     */
     canBoost(): boolean {
         if (!this.doBoost) {
             return false;
@@ -330,10 +357,6 @@ export class Scheduler {
         this.recordRamUsage();
     }
 
-    /**
-     * 
-     * @param {Zerver[]} servers 
-     */
     async deployHacksToServers(servers : Zerver[] | undefined = undefined): Promise<void> {
         servers = servers || this.scheduledQueue.map(workQueue => workQueue.target);
 
