@@ -1,3 +1,27 @@
+
+# About
+
+All of the `.js` scripts are executables and can be run ingame with e.g. `run scan.js --help`.
+Each of the scripts has a `--help` flag for explaination on how to use it.
+
+
+## Some usefull commands
+
+`run dist.js n00dles foodnstuff --take 0.1 --tail`
+
+Will start attacking `n00dles` and `foodnstuff`. 
+It will grow and take 10% of the the servers `moneyMax`.
+And it will display a monitor with `--tail`.
+
+`run scan.js isHackable true --filter moneyMax --filter moneyRank --sort moneyMax --desc`
+
+Will display all `isHackable` servers `moneyMax` and `moneyRank` value only and sort by highest `moneyMax` first.
+
+`run pruchase.js --max`
+
+Will buy or upgrade private servers with the `maximum` amount ram you can afford.
+# Development and Installation
+
 ## Official VS Code Template for Bitburner
 
 https://github.com/bitburner-official/vscode-template

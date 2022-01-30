@@ -18,7 +18,7 @@ export async function main(ns : NS): Promise<void> {
         ["money", [], `Will only display server with a certain money rank: ${Object.values(Zerver.MoneyRank).join(", ")}`],
 		["sort", "", "Will sort by given (e.g. moneyMax) value asc"],
 		["desc", false, "Sort desc"],
-		["help", false, ""]
+		["help", false, "For displaying various information about servers"]
 	]);
 
 	const args = flags.args();

@@ -11,7 +11,7 @@ export async function main(ns : NS): Promise<void>  {
     const flags = new Flags(ns, [
 		["_", "", "Part of file name or path to delete"],
 		["host", ns.getHostname(), "Name of the server to delete files from"],
-		["help", false, ""]
+		["help", false, "For deleting a bunch of files / folders"]
 	]);
 	const args = flags.args();
     const grep = args._[0];

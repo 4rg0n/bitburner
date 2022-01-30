@@ -72,42 +72,7 @@ export class Scheduler {
         return targets.map(target => new WorkQueue(ns, target, taking));
     }
 
-    static filterByWorkType(servers : Zerver[], workerType : string) : Zerver[] {
-        return servers.filter(server => {
-            switch (workerType) {
-                case Scheduler.WorkerType.All:
-                    return true;
-                case Scheduler.WorkerType.Own:
-                    return server.type === Zerver.ServerType.Own;
-                default:
-                case Scheduler.WorkerType.NotHome:
-                    return !server.isHome;
-                case Scheduler.WorkerType.Home:
-                    return server.isHome; 
-            }
-        })
-        .filter(server => server.hasRoot)
-        .filter(server => server.ramMax > 0); 
-    }
-    
-    async init(): Promise<void> {
-        await this.cleanup();
-        
-        this.targets = [];
-        this.workers = [];
-        this.scheduledQueue = [];
-
-        const servers = Zerver.get(this.ns);
-        this.workers = Scheduler.filterByWorkType(servers, this.workerType);
-        this.ramMap = this.createRamMap(this.workers, this.getTotalRamCapacity(), this.homeMinRamFree);
-        this.targets = this.targetPool.filter(t => t.isTargetable);
-        this.scheduledQueue = Scheduler.createWorkQueues(this.ns, this.targets, this.taking);
-
-        await this.deployer.deployScriptsToServers(servers);
-        await this.ns.sleep(100);
-    }
-
-    createRamMap(servers : Zerver[], ramCap = 0, homeMinRamFree = 0) : {[key: string]: number} {
+    static createRamMap(servers : Zerver[], ramCap = 0, homeMinRamFree = 0) : {[key: string]: number} {
         const ramMap : {[key: string]: number} = {};
 
         if (servers.length === 0) return ramMap;
@@ -136,6 +101,40 @@ export class Scheduler {
         }
         
         return ramMap;
+    }
+
+    static filterByWorkType(servers : Zerver[], workerType : string) : Zerver[] {
+        return servers.filter(server => {
+            switch (workerType) {
+                case Scheduler.WorkerType.All:
+                    return true;
+                case Scheduler.WorkerType.Own:
+                    return server.type === Zerver.ServerType.Own;
+                default:
+                case Scheduler.WorkerType.NotHome:
+                    return !server.isHome;
+                case Scheduler.WorkerType.Home:
+                    return server.isHome; 
+            }
+        })
+        .filter(server => server.isWorkable);
+    }
+    
+    async init(): Promise<void> {
+        await this.cleanup();
+        
+        this.targets = [];
+        this.workers = [];
+        this.scheduledQueue = [];
+
+        const servers = Zerver.get(this.ns);
+        this.workers = Scheduler.filterByWorkType(servers, this.workerType);
+        this.ramMap = Scheduler.createRamMap(this.workers, this.getTotalRamCapacity(), this.homeMinRamFree);
+        this.targets = this.targetPool.filter(t => t.isTargetable);
+        this.scheduledQueue = Scheduler.createWorkQueues(this.ns, this.targets, this.taking);
+
+        await this.deployer.deployScriptsToServers(servers);
+        await this.ns.sleep(100);
     }
 
     saveScript(ticket : WorkTicket, host : string, threads : number) : void {

@@ -23,7 +23,7 @@ export async function main(ns : NS): Promise<void> {
 		["sort", "", "Will sort by given (e.g. moneyMax) value asc"],
 		["desc", false, "Sort desc"],
 		["filter", [], "Show only key (e.g. hostname) on output"],
-		["help", false, ""]
+		["help", false, "For searching through servers by various filters and criterias"]
 	]);
 
 	const args = flags.args();

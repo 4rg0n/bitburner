@@ -19,7 +19,7 @@ import { Equipment } from "/gang/Equipment";
         ["work", "", `Do work ${Object.values(TaskQueue.Work).join(", ")}`],
         ["train", "", `Do train for task: ${Object.values(Task.Names).join(", ")}`],
         ["gang", false, "Show gang information"],
-		["help", false, ""]
+		["help", false, "For managing your gang (WIP)"]
 	]);
 	const args = flags.args();
 

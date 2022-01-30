@@ -13,7 +13,7 @@ export async function main(ns : NS): Promise<void> {
 		["grow", 0, "Number of grow threads"],
 		["weaken", 0, "Number of weaken threads"],
 		["host", Scheduler.WorkerType.All, `Category of hosts to deploy: ${Object.values(Scheduler.WorkerType).join(", ")}`],
-		["help", false, ""]
+		["help", false, "For executing a single run against a server. For testing purposes."]
 	]);
 
 	const args = flags.args();

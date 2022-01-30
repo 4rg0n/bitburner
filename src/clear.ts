@@ -8,7 +8,7 @@ import { NS } from "@ns";
 export async function main(ns : NS): Promise<void>  {
 	const flags = new Flags(ns, [
         ["_", "", `Hostname to delete files from`],
-        ["help", false, ""]
+        ["help", false, "For deleting all files on a target host"]
     ]);
     const args = flags.args();
 	

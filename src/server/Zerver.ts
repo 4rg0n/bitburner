@@ -235,6 +235,10 @@ export class Zerver {
             && this.securityCurr <= 100;
     }
 
+    get isWorkable() : boolean {
+        return this.hasRoot && this.ramMax > 0;
+    }
+
     get isHome() : boolean {
         return this.name == Zerver.Home;
     }

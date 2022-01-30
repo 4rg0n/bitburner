@@ -13,7 +13,7 @@ export async function main(ns : NS): Promise<void>  {
 		["max", false, "When given, the max possible amount of servers will be bought"],
 		["scale", 1, "Defines the percent between 0 and 1 to buy max possible amount of servers with"],
 		["multi", 2, "Multiplikator for next possible ram upgrade"],
-		["help", false, ""]
+		["help", false, "For purchasing private servsers"]
 	]);
 	const args = flags.args();
 

@@ -26,7 +26,7 @@ export async function main(ns : NS): Promise<void> {
         ["boost", false, "This will produce new work as long as there's free ram. May cause game crash."],
         ["aggro", false, "Another method of distribution where each ticket starts it's own set of script instead of scripts per target. May cause game crash."],
         ["silent", false, "Will not produce any output"],
-        ["help", false, ""]
+        ["help", false, `For distributing ${Object.keys(Zerver.Scripts)} executions to a range of servers`]
     ]);
     
     const args = flags.args();

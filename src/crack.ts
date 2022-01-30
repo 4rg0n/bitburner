@@ -10,7 +10,7 @@ import { NS } from "@ns";
 export async function main(ns : NS): Promise<void>  {
     const flags = new Flags(ns, [
         ["loop", false, `Will run continuosly and try to crack servers`],
-        ["help", false, ""]
+        ["help", false, "Tries to crack all servers with available methods"]
     ]);
     const args = flags.args();
 

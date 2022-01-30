@@ -12,8 +12,8 @@ import { NS } from "@ns";
  */
  export async function main(ns : NS): Promise<void> {
     const flags = new Flags(ns, [
-        ["_", "", `Servers to deploy scripts: ${Object.values(Zerver.Scripts).join(", ")} to. When empty, will deploy to all deployable`],
-        ["help", false, ""]
+        ["...", "", `Servers to deploy scripts: ${Object.values(Zerver.Scripts).join(", ")} to. When empty, will deploy to all deployable`],
+        ["help", false, "For deploying defined scripts to targeted servers"]
     ]);
     const args = flags.args();
 

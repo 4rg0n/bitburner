@@ -3,6 +3,9 @@ import { StatsUI, UIModel } from "ui/StatsUI";
 import { NumberStack } from "lib/utils";
 
 export async function main(ns : NS): Promise<void> {
+	const flags = new Flags(ns, [
+		["help", false, "For displaying some information in the right hand site overview panel"]
+	]);
 	ns.disableLog("ALL");
 
 	const moneyBuffer = new NumberStack([], 60);

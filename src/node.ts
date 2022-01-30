@@ -13,7 +13,7 @@ export async function main(ns : NS): Promise<void>  {
 		["scale", 0.5, "How much of available money shall be used in percent from 0 to 1"],
 		["max", 23, "How many nodes to buy max. 0 is infinite."],
 		["money", "", "Will not go under this amount of money when purchasing. Can be formatted in: e.g. 100b or 1t"],
-		["help", false, ""]
+		["help", false, "For automatically upgrading Hacknet"]
 	]);
 	const args = flags.args();
     ns.tprintf(`\n${flags.cmdLine()}`)
