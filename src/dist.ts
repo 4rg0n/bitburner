@@ -14,7 +14,7 @@ export async function main(ns : NS): Promise<void> {
     ns.disableLog('ALL');
 
     const flags = new Flags(ns, [
-        ["_", "", `Hostname of server to attack`],
+        ["...", "", `Hostnames of server to attack seperated by spaces`],
         ["target", [], `Category of targets to attack: ${Object.values(Zerver.MoneyRank).join(", ")}`],
         ["host", Scheduler.WorkerType.All, `Category of hosts to deploy: ${Object.values(Scheduler.WorkerType).join(", ")}`],
         ["take", 0.5, "Percentage of money, wich should be hacked between 0 and 1"],
@@ -30,7 +30,7 @@ export async function main(ns : NS): Promise<void> {
     const args = flags.args();
     ns.tprintf(`\n${flags.cmdLine()} --tail`);
 
-    const targetName : string = args._[0];
+    const targetNames : string[] = args._;
     const taking = args["take"] - 0;
     const scale = args["scale"] - 0;
     const homeRamMinFree = args["free"];
@@ -47,10 +47,16 @@ export async function main(ns : NS): Promise<void> {
     const deployer = new Deployer(ns, cracker);
     await deployer.deployScriptsToServers(servers);
 
-    const targets = (typeof targetName !== "string" && targetName === "") ? 
-        Zerver.filterByMoneyRanks(servers, targetCategories) : 
-        servers.filter(s => s.name.toLowerCase().indexOf(targetName.toLowerCase()) !== -1);
+    let targets;
 
+    if (Array.isArray(targetNames) && targetNames.length > 0) {
+        targets = servers.filter(
+            s => targetNames.filter(
+                name => s.name.toLowerCase().indexOf(name.toLowerCase()) !== -1).length > 0);
+    } else {
+        targets = Zerver.filterByMoneyRanks(servers, targetCategories);
+    }
+       
     const scheduler = new Scheduler(ns, targets, deployer, workerType, taking, doShare, doBoost, doAggro, homeRamMinFree);
 
     await scheduler.init();

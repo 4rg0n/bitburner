@@ -5,9 +5,8 @@ import { NS } from "@ns";
  */
 export class Flags {
 
-    static ParamsFlag = "_";
-
-    /** @typedef {[string, (string | number | boolean | string[]), (string | undefined)]} flagSchema */
+    static ParamFlag = "_";
+    static ParamAllFlag = "...";
 
     ns: NS
     script: string
@@ -28,7 +27,7 @@ export class Flags {
         this.paramDefaults = [];
 
         for (const flag of this.flagSchemas) {
-            if (flag[0] === Flags.ParamsFlag) {
+            if (flag[0] === Flags.ParamFlag || flag[0] === Flags.ParamAllFlag) {
                 this.paramDefaults.push([flag[0], flag[1]]);
             } else {
                 this.nsFlags.push([flag[0], flag[1]]);
