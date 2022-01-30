@@ -33,23 +33,15 @@ export async function main(ns : NS): Promise<void>  {
         ns.tprintf(`${node.idx}: Level: ${node.stats.level} RAM: ${asFormatGB(node.stats.ram)} Core: ${node.stats.cores} Upgradable: ${node.canUpgrade(purchaser.getAvailableMoney())}`)
     }
 
-    const prompt = await ns.prompt(`Do you want to proceed?`);
-
-	if (!prompt) {
-        return;
-	}
-
     ns.disableLog("ALL");
 
     if (upgradeCycles === 0) {
         while(true) {
             purchaser.upgradeNodes();
-            await ns.sleep(100);
         }
     } else {
         for (let i = 0; i < upgradeCycles; i++) {
             purchaser.upgradeNodes();
-            await ns.sleep(100);
         }
     }
 }

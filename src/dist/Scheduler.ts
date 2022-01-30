@@ -55,7 +55,7 @@ export class Scheduler {
     }
 
     static createWorkQueues(ns : NS, targets : Zerver[], taking : number | undefined = undefined) : WorkQueue[] {
-        return targets.map(target => new WorkQueue(ns, target, taking, 100));
+        return targets.map(target => new WorkQueue(ns, target, taking));
     }
 
     static filterByWorkType(servers : Zerver[], workerType : string) : Zerver[] {

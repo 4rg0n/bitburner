@@ -9,7 +9,7 @@ import { Babo } from "/gang/Babo";
 import { Equipment } from "/gang/Equipment";
 
 /**
- * For displaying player information
+ * For managing your Gang (WIP) o.O
  */
  export async function main(ns : NS): Promise<void> {
     const flags = new Flags(ns, [

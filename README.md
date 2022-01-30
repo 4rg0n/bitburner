@@ -1,3 +1,7 @@
+## Official VS Code Template for Bitburner
+
+https://github.com/bitburner-official/vscode-template
+
 ## Extension Recommendations
 [vscode-bitburner-connector](https://github.com/bitburner-official/bitburner-vscode) ([vscode extension marketplace](https://marketplace.visualstudio.com/items?itemName=bitburner.bitburner-vscode-integration)) to upload your files into the game
 
@@ -12,12 +16,12 @@ There is a workspace file in `.vscode` which contains the recommended settings f
 
 ## Installation
 ```
-git clone https://github.com/bitburner-official/vscode-template
+git clone https://github.com/4rg0n/bitburner.git
 npm install
 npm run defs
 ```
 
-## How to use this template
+## Getting Started
 Write all your typescript source code in the `/src` directory
 
 To autocompile as you save, run `npm run watch` in a terminal
@@ -55,9 +59,12 @@ To import `someFunction` from the file `main.ts` located in the `src/` directory
 import { someFunction } from 'main'
 ```
 
-## Deugging
+## Debugging
 
 For debugging bitburner on Steam you will need to enable a remote debugging port. This can be done by rightclicking bitburner in your Steam library and selecting properties. There you need to add `--remote-debugging-port=9222` [Thanks @DarkMio]
+
+In VS Code press `F5` or goto `Run -> Start Debugging` to connect VS Code with Bitburner.
+You can then set (breakpoints in VS Code)[https://code.visualstudio.com/docs/editor/debugging#_breakpoints] as usual.
 
 When debugging you see errors like the following:
 
