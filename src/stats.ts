@@ -1,6 +1,7 @@
 import { NS } from "@ns";
 import { StatsUI, UIModel } from "ui/StatsUI";
 import { NumberStack } from "lib/utils";
+import { Flags } from "/lib/Flags";
 
 export async function main(ns : NS): Promise<void> {
 	const flags = new Flags(ns, [

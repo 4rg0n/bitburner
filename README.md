@@ -6,17 +6,29 @@ Each of the scripts has a `--help` flag for explaination on how to use it.
 
 ## Some usefull commands
 
-`run dist.js n00dles foodnstuff --take 0.1 --tail`
+`run dist.js n00dles foodnstuff --take 0.1 --scale 0.5 --tail`
 
+Good for starting.
 Will start attacking `n00dles` and `foodnstuff`. 
-It will grow and take 10% of the the servers `moneyMax`.
+It will grow servers to `moneyMax` and `take` `10%` of the the servers `moneyMax`.
+Will automatically buy / upgrade servers with `scale` `50%` of your current money as available money (optional).
+And it will display a monitor with `--tail`.
+
+`run dist.js --take 0.9 --boost --aggro --cap 2PB --share --free 64 --tail`
+
+Good for mid / late game.
+Will `boost` scheduled work, so more work is produced.
+By using `aggro` a more aggressive distribution method is used, where more script instances are spawned. 
+The `cap` is a safety mechanism so a maximum of `2PB` will be used, because `boost` and `aggro` with a lot of available ram capacity can crash the game.
+Any unused ram (ignores `cap`) will be used for `ns.share()` scripts.
+At your home computer there will be minimum of `64`GB `free` ram. 
 And it will display a monitor with `--tail`.
 
 `run scan.js isHackable true --filter moneyMax --filter moneyRank --sort moneyMax --desc`
 
 Will display all `isHackable` servers `moneyMax` and `moneyRank` value only and sort by highest `moneyMax` first.
 
-`run scan.js files .cct --filter files`
+`run scan.js files .cct --filter files --filter path`
 
 Will show servers with certain `files`.
 
@@ -28,6 +40,10 @@ Will show you where to look for `The Cave`
 
 Will look for servers where `requiredHackingSkill` is lower or equal `ns.getPlayer().hacking`.
 All ns functions without an argument are supported (also other namespaces). 
+
+`run scan.js isHackable true --cat moneyfarm --filter moneyMax --filter moneyRank --filter serverGrowth --filter minDifficulty --sort moneyMax --desc`
+
+Look for viable targets to attack.
 
 `run pruchase.js --max`
 

@@ -19,6 +19,8 @@ export class Scanner {
 		none: "",
 	}
 
+	static QueryDelimiter = ":"
+
 	ns: NS
 
 	constructor(ns : NS) {
@@ -34,6 +36,25 @@ export class Scanner {
 		const serverInfos = ServerInfo.get(this.ns);
 
 		return this.scanServers(serverInfos, search, categories, moneyRanks, sort);
+	}
+
+	queryZervers(servers : Zerver[], scanQuery : string) : Zerver[] {
+		if (servers.length === 0) {
+			return [];
+		}
+
+	
+		const parts = scanQuery.split(Scanner.QueryDelimiter);
+
+		if (parts.length === 1) {
+			return this.scanServers(ServerInfo.map(this.ns, servers), {key: parts[0], value: undefined}).map(s => s.zerver);
+		}
+
+		if (parts.length === 2) {
+			return this.scanServers(ServerInfo.map(this.ns, servers), {key: parts[0], value: parts[1]}).map(s => s.zerver);
+		}
+
+		return servers;
 	}
 
 	scanServers(

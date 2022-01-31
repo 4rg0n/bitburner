@@ -65,6 +65,7 @@ export class Scheduler {
         this.doAggro = doAggro;
         this.homeMinRamFree = homeMinRamFree;
         this.ramCap = ramCap;
+        this.ramMap = {};
         this.ramUsageHistory = new NumberStack([], 10);
     }
 
@@ -99,8 +100,8 @@ export class Scheduler {
             }
         }
 
-        if (typeof servers[Zerver.Home] !== "undefined") {
-            servers[Zerver.Home] = servers[Zerver.Home] - homeMinRamFree;
+        if (typeof ramMap[Zerver.Home] !== "undefined") {
+            ramMap[Zerver.Home] = ramMap[Zerver.Home] - homeMinRamFree;
         }
         
         return ramMap;
@@ -299,7 +300,7 @@ export class Scheduler {
             work.queue(this.canBoost());
         }
 
-        if (!this.doShare) return;
+        if (!this.canShare()) return;
 
         const ramAvail = this.getTotalRamAvail(this.totalWorkersRamMax());
 
@@ -311,7 +312,7 @@ export class Scheduler {
         }
     }
 
-    getTicketProgress(ticket : WorkTicket) : number {
+    getTicketProgress(ticket : WorkTicket): number {
         const tickets = this.getScript(ticket);
         if (!tickets) return ticket.threads;
 
@@ -323,6 +324,17 @@ export class Scheduler {
     }
 
     /**
+     * todo this could interfer with boost :x
+     */
+    canShare(): boolean {
+        if (!this.doShare) {
+            return false;
+        }
+
+        return this.isEnoughRamFree(0.1, this.totalWorkersRamMax());
+    }
+
+    /**
      * Will allow scheduling of more work when there's enough ram
      */
     canBoost(): boolean {
@@ -330,20 +342,24 @@ export class Scheduler {
             return false;
         }
 
-        // not enough usages collected?
-        if (!this.ramUsageHistory.isFull()) {
+       return this.isEnoughRamFree();
+    }
+
+    isEnoughRamFree(minPercent = 0.1, ramCap = this.getTotalRamCapacity()): boolean {
+         // not enough usages collected?
+         if (!this.ramUsageHistory.isFull()) {
             return false;
         }
 
-        const avgRamFreePercent = (this.totalWorkersRamMax() - this.ramUsageHistory.avg()) / this.totalWorkersRamMax();
+        const avgRamFreePercent = (ramCap - this.ramUsageHistory.avg()) / ramCap;
 
-        if (avgRamFreePercent < .1) {
+        if (avgRamFreePercent < minPercent) {
             return false;
         }
 
-        const currRamFreePercent = (this.totalWorkersRamMax() - this.ramUsageHistory.last()) / this.totalWorkersRamMax();
+        const currRamFreePercent = (ramCap - this.ramUsageHistory.last()) / ramCap;
 
-        if (currRamFreePercent < .1) {
+        if (currRamFreePercent < minPercent) {
             return false;
         }
 
@@ -372,11 +388,13 @@ export class Scheduler {
         return totalRamMax;
     }
 
-    getTotalRamAvail(capacity : number | undefined) : number {
-        capacity = capacity || this.getTotalRamCapacity();
+    getTotalRamAvail(capacity : number | undefined = undefined) : number {
+        if (typeof capacity === "undefined") {
+            capacity = this.getTotalRamCapacity();
+        }
 
-        const ramUsage = works.map(w => w.getRamUsage()).reduce((a, b) => a + b, 0);
-        const ramAvail = -capacity - -ramUsage;
+        const ramUsage = this.scheduledQueue.map(w => w.getRamUsage()).reduce((a, b) => a + b, 0);
+        const ramAvail = capacity - ramUsage;
 
         if (ramAvail < 0) {
             return 0;

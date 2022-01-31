@@ -269,6 +269,14 @@ export class Zerver {
         return this.ns.ls(this.name);
     }
 
+    get contracts() : string[] {
+        return this.ns.ls(this.name, ".cct");
+    }
+
+    get hasContract() : boolean {
+        return this.contracts.length > 0;
+    }
+
     canCrack(crackingScriptsCount : number) : boolean {
         if (this.hasRoot)
             return false;

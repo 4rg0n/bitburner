@@ -34,8 +34,11 @@ export class Runner {
         return Math.floor(free / need);
     }
 
-    calcRamFree(capacity : number | undefined) : number {
-        capacity = capacity || this.getRamCapacity();
+    calcRamFree(capacity: number | undefined = undefined) : number {
+        if (typeof capacity === "undefined") {
+            capacity = this.getRamCapacity();
+        }
+        
         const free = capacity - this.ns.getServerUsedRam(this.targetHost);
 
         if (free < 0) {
