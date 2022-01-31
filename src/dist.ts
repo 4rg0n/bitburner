@@ -75,7 +75,6 @@ export async function main(ns : NS): Promise<void> {
     }
 
     const scheduler = new Scheduler(ns, targets, deployer, workerType, taking, doShare, doBoost, doAggro, homeRamMinFree, ramCap);
-
     await scheduler.init();
 
     const monitorTemplate = [
@@ -94,11 +93,9 @@ export async function main(ns : NS): Promise<void> {
 
     if (doBoost) monitorTemplate.push(DistributionMonitor.Templates.Boost);
     if (scale > 0) monitorTemplate.push(DistributionMonitor.Templates.Scale);
-    
+    if (doShare) monitorTemplate.push(DistributionMonitor.Templates.Share);
 
     const monitor = new DistributionMonitor(ns, scheduler, purchaser, monitorTemplate);
-
-
 
     while (true) {
         await ns.sleep(500);

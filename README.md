@@ -127,3 +127,9 @@ Could not read source map for file:///path/to/Steam/steamapps/common/Bitburner/r
 ```
 
 These errors are to be expected, they are referring to the game's files and the game does not come packaged with sourcemaps.
+
+# Credits to
+
+[OrangeDragon](https://github.com/OrangeDrangon) for his [Contract Solver](https://gist.github.com/OrangeDrangon/8a08d2d7d425fddd2558e1c0c5fae78b)
+[zc](https://steamcommunity.com/profiles/76561198062278367) for his [Contract Guide](https://steamcommunity.com/sharedfiles/filedetails/?id=2712741294/)
+[Baizey](https://github.com/Baizey) for his [Distribution Scripts](https://github.com/Baizey/BitBurner/tree/master/old)  

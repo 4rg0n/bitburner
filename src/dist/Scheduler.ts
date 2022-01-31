@@ -345,6 +345,10 @@ export class Scheduler {
        return this.isEnoughRamFree();
     }
 
+    getSharePower() : number {
+        return this.ns.getSharePower();
+    }
+
     isEnoughRamFree(minPercent = 0.1, ramCap = this.getTotalRamCapacity()): boolean {
          // not enough usages collected?
          if (!this.ramUsageHistory.isFull()) {

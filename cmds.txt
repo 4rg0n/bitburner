@@ -12,6 +12,8 @@ run scan.js moneyMax >1000000000 --cat moneyfarm --sort moneyMax --desc
 run scan.js requiredHackingSkill <=getPlayer().hacking --cat moneyfarm --filter moneyMax --sort moneyMax --desc
 run scan.js run4 --filter path
 
+for (let i = 0; i <= 1000; i++) document.querySelector("#root > div > div.MuiBox-root.css-1ik4laa > div.jss3.MuiBox-root.css-0 > button:nth-child(5)").click();
+
 buy BruteSSH.exe 
 buy FTPCrack.exe 
 buy relaySMTP.exe 

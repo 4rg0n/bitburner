@@ -21,6 +21,7 @@ export class DistributionMonitor {
         Tickets: "tickets",
         Scale: "scale",
         Boost: "boost",
+        Share: "share",
         Line: "line",
         Space: "space"
     }
@@ -157,7 +158,13 @@ export class DistributionMonitor {
                     title: undefined,
                     content: "Disabled"
                 }
-                break;            
+                break;
+            case DistributionMonitor.Templates.Share:
+                this.views[DistributionMonitor.Templates.Share] = {
+                    title: undefined,
+                    content: 0
+                }
+                break;                 
             case DistributionMonitor.Templates.Line:
             case DistributionMonitor.Templates.Space:
                 break;
@@ -212,6 +219,10 @@ export class DistributionMonitor {
             case DistributionMonitor.Templates.Boost:
                 this.addBoost();
                 break;
+
+            case DistributionMonitor.Templates.Share:
+                this.addShare();
+                break;    
 
             case DistributionMonitor.Templates.Space:
                 this.log.add("");  
@@ -440,10 +451,6 @@ export class DistributionMonitor {
     }
 
     addBoost(): void {
-        if (typeof this.purchaser === "undefined") {
-            return;
-        }
-
         const view = this.addView(DistributionMonitor.Templates.Boost);
 
         if (typeof view === "undefined") {
@@ -451,5 +458,15 @@ export class DistributionMonitor {
         }
 
         view.content = (this.scheduler.canBoost()) ? "Enabled" : "Disabled";
+    }
+
+    addShare(): void {
+        const view = this.addView(DistributionMonitor.Templates.Share);
+
+        if (typeof view === "undefined") {
+            return;
+        }
+
+        view.content = `${this.scheduler.getSharePower().toFixed(3)}x`;
     }
 }
