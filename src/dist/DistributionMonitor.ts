@@ -158,16 +158,42 @@ export class DistributionMonitor {
             case DistributionMonitor.Templates.Boost:
                 this.views[DistributionMonitor.Templates.Boost] = {
                     title: undefined,
-                    content: "Disabled"
+                    content: new UIContainer([
+                        new Animation([
+                            "▶‣ ‣ ‣ ‣ ‣ ‣ ‣", 
+                            "‣ ▶‣ ‣ ‣ ‣ ‣ ‣", 
+                            "‣ ‣ ▶‣ ‣ ‣ ‣ ‣", 
+                            "‣ ‣ ‣ ▶‣ ‣ ‣ ‣", 
+                            "‣ ‣ ‣ ‣ ▶‣ ‣ ‣", 
+                            "‣ ‣ ‣ ‣ ‣ ▶‣ ‣", 
+                            "‣ ‣ ‣ ‣ ‣ ‣ ▶‣",
+                            "‣ ‣ ‣ ‣ ‣ ‣ ‣ ▶",
+                        ]),
+                        new Animation([
+                            ":...........",
+                            ".:..........",
+                            "..:.........", 
+                            "...:........", 
+                            "....:.......", 
+                            ".....:......", 
+                            "......:.....", 
+                            "......:.....", 
+                            ".......:....", 
+                            "........:...", 
+                            ".........:..", 
+                            "..........:.",
+                            "...........:"
+                        ])
+                    ])
                 }
                 break;
             case DistributionMonitor.Templates.Share:
                 this.views[DistributionMonitor.Templates.Share] = {
                     title: undefined,
                     content: new UIContainer([
-                        "0x", 
-                        new Animation(["---", " \\ ", " ¦ ", " / "], "(", ")"), 
-                        new Animation(["   ", ".  ", ".. ", "..."], "(", ")")
+                        "0x ", 
+                        new Animation(["◴", "◷", "◶", "◵"]), 
+                        new Animation(["◇", "◈", "◆", "◈"])
                     ]) 
                 }
                 break;                 
@@ -463,7 +489,22 @@ export class DistributionMonitor {
             return;
         }
 
-        view.content = (this.scheduler.canBoost()) ? "Enabled" : "Disabled";
+        if (!(view.content instanceof UIContainer)) { 
+            console.warn(`${DistributionMonitor.Templates.Share}: Could not set data, because content is not type ${UIContainer.name}, is: ${typeof view.content}`);
+            return;
+        }
+
+        const canBoost = this.scheduler.canBoost();
+
+        // idle
+        if (view.content.elements[0] instanceof Animation) { 
+            view.content.elements[0].show(canBoost);
+        }
+
+        // boosting
+        if (view.content.elements[1] instanceof Animation) { 
+            view.content.elements[1].show(!canBoost);
+        }
     }
 
     addShare(): void {
@@ -478,16 +519,17 @@ export class DistributionMonitor {
             return;
         }
 
-
         const sharePower = this.scheduler.getSharePower();
 
         // todo need kind of a container to put a ui element and other stuff in it o.o
         view.content.elements[0] = `${sharePower.toFixed(3)}x `;
 
+        // idle
         if (view.content.elements[1] instanceof Animation) { 
             view.content.elements[1].show(sharePower > 1);
         }
 
+        // sharing
         if (view.content.elements[2] instanceof Animation) { 
             view.content.elements[2].show(sharePower <= 1);
         }

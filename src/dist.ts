@@ -90,9 +90,9 @@ export async function main(ns : NS): Promise<void> {
         DistributionMonitor.Templates.Load,
         DistributionMonitor.Templates.Money,
     ];
-
-    if (doBoost) monitorTemplate.push(DistributionMonitor.Templates.Boost);
+    
     if (scale > 0) monitorTemplate.push(DistributionMonitor.Templates.Scale);
+    if (doBoost) monitorTemplate.push(DistributionMonitor.Templates.Boost);
     if (doShare) monitorTemplate.push(DistributionMonitor.Templates.Share);
 
     const monitor = new DistributionMonitor(ns, scheduler, purchaser, monitorTemplate);

@@ -6,7 +6,9 @@ Each of the scripts has a `--help` flag for explaination on how to use it.
 
 ## Some usefull commands
 
-`run dist.js n00dles foodnstuff --take 0.1 --scale 0.5 --tail`
+```
+run dist.js n00dles foodnstuff --take 0.1 --scale 0.5 --tail
+```
 
 Good for starting.
 Will start attacking `n00dles` and `foodnstuff`. 
@@ -14,7 +16,11 @@ It will grow servers to `moneyMax` and `take` `10%` of the the servers `moneyMax
 Will automatically buy / upgrade servers with `scale` `50%` of your current money as available money (optional).
 And it will display a monitor with `--tail`.
 
-`run dist.js --take 0.9 --boost --aggro --cap 2PB --share --free 64 --tail`
+```
+run dist.js --take 0.9 --boost --aggro --cap 2PB --share --free 64 --tail
+```
+
+![](doc/dist_example.png)
 
 Good for mid / late game.
 Will `boost` scheduled work, so more work is produced.
@@ -24,36 +30,54 @@ Any unused ram (ignores `cap`) will be used for `ns.share()` scripts.
 At your home computer there will be minimum of `64`GB `free` ram. 
 And it will display a monitor with `--tail`.
 
-`run scan.js isHackable true --filter moneyMax --filter moneyRank --sort moneyMax --desc`
+```
+run scan.js isHackable true --filter moneyMax --filter moneyRank --sort moneyMax --desc
+```
 
 Will display all `isHackable` servers `moneyMax` and `moneyRank` value only and sort by highest `moneyMax` first.
 
-`run scan.js files .cct --filter files --filter path`
+```
+run scan.js files .cct --filter files --filter path
+```
 
 Will show servers with certain `files`.
 
-`run scan.js hostname cave --filter path`
+```
+run scan.js hostname cave --filter path
+```
 
 Will show you where to look for `The Cave`
 
-`run scan.js requiredHackingSkill <=getPlayer().hacking`
+```
+run scan.js requiredHackingSkill <=getPlayer().hacking
+```
 
 Will look for servers where `requiredHackingSkill` is lower or equal `ns.getPlayer().hacking`.
 All ns functions without an argument are supported (also other namespaces). 
 
-`run scan.js isHackable true --cat moneyfarm --filter moneyMax --filter moneyRank --filter serverGrowth --filter minDifficulty --sort moneyMax --desc`
+```
+run scan.js isHackable true --cat moneyfarm --filter moneyMax --filter moneyRank --filter serverGrowth --filter minDifficulty --sort moneyMax --desc
+```
+
+![](doc/scan_example.png)
 
 Look for viable targets to attack.
 
-`run pruchase.js --max`
+```
+run pruchase.js --max
+```
 
 Will buy or upgrade private servers with the `maximum` amount ram you can afford.
 
-`run node.js --tail`
+```
+run node.js --tail
+```
 
 Will automatically buy or upgrade Hacknet Nodes.
 
-`run cct.js`
+```
+run cct.js
+```
 
 Will look for `Coding Contract` files `.cct` and try to solve them.
 

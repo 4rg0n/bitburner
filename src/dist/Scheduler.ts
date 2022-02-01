@@ -307,8 +307,8 @@ export class Scheduler {
         if (ramAvail <= 0) return;
         
         for (const work of works) {
-            if (work.workQueue.isFull() || work.status !== WorkTicket.Status.Running) continue;
-            work.queueShare(ramAvail)
+            if (work.workQueue.isFull()|| work.status !== WorkTicket.Status.Running) continue;
+            work.queueShare(ramAvail * 0.9, this.canBoost());
         }
     }
 

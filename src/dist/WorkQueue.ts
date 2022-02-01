@@ -52,7 +52,7 @@ export class WorkQueue {
             return false;
         }
 
-        //console.info(`Boosting work for ${this.target.name}.`);
+        console.info(`Boosting work for ${this.target.name}.`);
         return true;
     }
 
@@ -80,7 +80,7 @@ export class WorkQueue {
             this.addWork(Zerver.Scripts.weaken, diff, WorkTicket.Priority.grow);
         }
 
-        //console.info(`Init ${this.target.name} with grow: ${threads.grow}, weaken: ${threads.weaken}, security weaken: ${diff}`);
+        console.info(`Init ${this.target.name} with grow: ${threads.grow}, weaken: ${threads.weaken}, security weaken: ${diff}`);
     }
 
     queueAttack(taking : number) : void {
@@ -93,10 +93,15 @@ export class WorkQueue {
         this.addWork(Zerver.Scripts.grow, threads.grow);
         this.addWork(Zerver.Scripts.weaken, threads.weaken);
 
-        //console.info(`Attack ${this.target.name} with hack: ${threads.hack}, grow: ${threads.grow}, weaken: ${threads.weaken}`);
+        console.info(`Attack ${this.target.name} with hack: ${threads.hack}, grow: ${threads.grow}, weaken: ${threads.weaken}`);
     }
 
-    queueShare(ramAvail : number) : void {
+    queueShare(ramAvail : number, boost = false) : void {
+        if (this.waitingForQueue() && !boost) {
+            console.info(`Skipped queueing share for ${this.target.name}. Waiting for queue.`);
+            return;
+        }  
+
         const ramScript = this.ns.getScriptRam(Zerver.Scripts.share);
         const threads = Math.floor(ramAvail / ramScript);
 
@@ -106,7 +111,8 @@ export class WorkQueue {
     queue(boost = false) : boolean {
         const canBoost = this.canBoost(boost);
         if (this.waitingForQueue() && !canBoost) {
-            //console.info(`Skipped queueing work for ${this.target.name}. Waiting for queue.`);
+            console.info(`Skipped queueing work for ${this.target.name}. Waiting for queue.`);
+            return false;
         }   
 
         switch (this.status) {
