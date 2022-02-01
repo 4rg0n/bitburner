@@ -56,6 +56,9 @@ export async function main(ns : NS): Promise<void> {
         ramCap = 0;
     }
 
+    targets = targets.filter(t => t.isTargetable);
+    ns.tprintf(`Found ${targets.length} target(s)`);
+
     const scheduler = new Scheduler(ns, targets, undefined, workerType, taking, doShare, doBoost, doAggro, homeRamMinFree, ramCap);
 
     await scheduler.init();

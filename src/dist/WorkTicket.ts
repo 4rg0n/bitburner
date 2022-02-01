@@ -17,7 +17,8 @@ export class WorkTicket {
         hack: 0,
         grow: 1,
         weaken: 2,
-        other: 3
+        share: 3,
+        other: 4
     }
 
     target: Zerver
@@ -51,6 +52,9 @@ export class WorkTicket {
                 case Zerver.Scripts.weaken:
                     this.priority = WorkTicket.Priority.weaken;
                     break;
+                case Zerver.Scripts.share:
+                    this.priority = WorkTicket.Priority.share;
+                    break;    
                 default:
                     this.priority = WorkTicket.Priority.other;
             }

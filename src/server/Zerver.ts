@@ -22,10 +22,10 @@ export class Zerver {
     }
 
     static SecurityRank = {
-        Low: 25,
-        Med: 50,
-        High: 75,
-        Highest: 100
+        Low: "low",
+        Med: "med",
+        High: "high",
+        Highest: "highest"
     }
 
     static MoneyRank = {
@@ -54,6 +54,7 @@ export class Zerver {
    grow: number
    cores: number
    server: Server
+   securityRank: string
 
     constructor(ns : NS, name : string, depth : number | undefined = 0, parent : Zerver | undefined = undefined) { 
         this.ns = ns;
@@ -71,6 +72,7 @@ export class Zerver {
         this.ramMax = this.server.maxRam;
         this.grow = this.server.serverGrowth;
         this.cores = this.server.cpuCores;
+        this.securityRank = "";
     }
     
     static get(ns : NS) : Zerver[] {
@@ -98,6 +100,7 @@ export class Zerver {
         }
 
         servers = Zerver.injectServersMoneyRanks(servers);
+        servers = Zerver.injectServersSecurityRanks(servers);
 
         return servers;
     }
@@ -107,13 +110,7 @@ export class Zerver {
             return servers;
         } 
 
-        let targets : Zerver[] = [];
-
-        for (const rank of ranks) {
-            targets = targets.concat(servers.filter(t => t.moneyRank.toLowerCase() === rank.toLowerCase()))
-        }
-
-        return targets;
+        return servers.filter(s => ranks.filter(r => r.toLowerCase() === s.moneyRank.toLowerCase()).length > 0)
     }
 
     static create(ns : NS, name : string) : Zerver {
@@ -160,6 +157,27 @@ export class Zerver {
                 server.moneyRank = rank;
             } else {
                 console.warn("Could not determine moneyRank for server " + server.name);
+            }
+        })
+
+        return servers;
+    }
+
+    static injectServersSecurityRanks(servers : Zerver[]) : Zerver[] {
+        if (servers.length === 0) {
+            return servers;
+        }
+
+        const overallSecurityMax = Math.max(...servers.map(s => s.securityCurr));
+        const securityRanks = Object.values(Zerver.SecurityRank);
+
+        servers.forEach(server => {
+            const rank = rankValue(server.securityCurr, securityRanks, overallSecurityMax);
+
+            if (typeof rank === "string") {
+                server.securityRank = rank;
+            } else {
+                console.warn("Could not determine securityRank for server " + server.name);
             }
         })
 
@@ -226,9 +244,7 @@ export class Zerver {
     }
 
     get isHackable() : boolean {
-        return this.hasRoot 
-            && (this.levelNeeded <= this.ns.getHackingLevel()) 
-            && this.securityCurr <= 100;
+        return this.hasRoot && (this.levelNeeded <= this.ns.getHackingLevel());
     }
 
     get isWorkable() : boolean {

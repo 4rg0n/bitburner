@@ -56,7 +56,7 @@ export async function main(ns : NS): Promise<void> {
 
     let targets;
 
-    if (Array.isArray(targetNames) && targetNames.length > 0) {
+    if (Array.isArray(targetNames) && targetNames.length > 0 && targetNames[0] !== "") {
         targets = servers.filter(
             s => targetNames.filter(
                 name => s.name.toLowerCase().indexOf(name.toLowerCase()) !== -1).length > 0);
@@ -74,8 +74,11 @@ export async function main(ns : NS): Promise<void> {
         }
     }
 
+    targets = targets.filter(t => t.isTargetable);
     const scheduler = new Scheduler(ns, targets, deployer, workerType, taking, doShare, doBoost, doAggro, homeRamMinFree, ramCap);
     await scheduler.init();
+
+    ns.tprintf(`Found ${targets.length} target(s) and ${scheduler.workers.length} worker(s)`);
 
     const monitorTemplate = [
         DistributionMonitor.Templates.Targets,
@@ -90,7 +93,7 @@ export async function main(ns : NS): Promise<void> {
         DistributionMonitor.Templates.Load,
         DistributionMonitor.Templates.Money,
     ];
-    
+
     if (scale > 0) monitorTemplate.push(DistributionMonitor.Templates.Scale);
     if (doBoost) monitorTemplate.push(DistributionMonitor.Templates.Boost);
     if (doShare) monitorTemplate.push(DistributionMonitor.Templates.Share);
