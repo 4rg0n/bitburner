@@ -218,7 +218,7 @@ export class Scheduler {
 
                 if (maxThreads < 1) break;
                 if (runner.isRunning(work.script)) {
-                    console.info(`Script ${work.script} ${work.threads} still running on ${runner.targetHost} -> ${runner.defaultArgs}`);
+                    //console.info(`Script ${work.script} ${work.threads} still running on ${runner.targetHost} -> ${runner.defaultArgs}`);
                     continue;
                 } 
 
@@ -230,11 +230,11 @@ export class Scheduler {
                 // update queue
                 this.initQueue[j] = work;
 
-                console.info(`Started ${work.script} ${work.progress}/${work.threads} on ${runner.targetHost} -> ${runner.defaultArgs}`);
+                //console.info(`Started ${work.script} ${work.progress}/${work.threads} on ${runner.targetHost} -> ${runner.defaultArgs}`);
                 
                 if (work.progress >= work.threads) {
                     work.setStatus(WorkTicket.Status.Running);
-                    console.info(`Waiting for work done ${work.script} ${work.progress}/${work.threads} ${work.target.name}`);
+                    //console.info(`Waiting for work done ${work.script} ${work.progress}/${work.threads} ${work.target.name}`);
                     this.waitingQueue.push(work);
                 }
             }
@@ -253,7 +253,7 @@ export class Scheduler {
             works.workQueue.tickets
                 .filter(work => work.isNew())
                 .forEach(work => {
-                    console.info(`Polled work ${work.script} ${work.threads} ${work.target.name}`);
+                    //console.info(`Polled work ${work.script} ${work.threads} ${work.target.name}`);
                     work.setStatus(WorkTicket.Status.Initiating);
                     this.initQueue.push(work);
                 });
@@ -283,7 +283,7 @@ export class Scheduler {
 
             return servers.every(server => !this.runner(server, work.target.name).isRunning(work.script));
         }).forEach(work => {
-            console.info(`Done work ${work.script} ${work.progress}/${work.threads} ${work.target.name}`);
+            //console.info(`Done work ${work.script} ${work.progress}/${work.threads} ${work.target.name}`);
             work.setStatus(WorkTicket.Status.Done);
         });
 

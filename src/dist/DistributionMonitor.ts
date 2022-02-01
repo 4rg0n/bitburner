@@ -6,6 +6,8 @@ import { Distribution, ProgressBar, Progression, Progressions } from "ui/Progres
 import { asLabel } from "lib/utils";
 import { Purchaser } from "server/Purchaser";
 import { NS } from "@ns";
+import { Animation } from "/ui/Animation";
+import { UIContainer } from "/ui/UI";
 
 export class DistributionMonitor {
 
@@ -30,7 +32,7 @@ export class DistributionMonitor {
     scheduler: Scheduler
     purchaser: Purchaser | undefined
     template: string[]
-    views: {[key: string]: {title: string | undefined; content: Distribution | ProgressBar | Progression | Progressions | string | number | boolean | undefined}}  
+    views: {[key: string]: {title: string | undefined; content: UIContainer | Animation | Distribution | ProgressBar | Progression | Progressions | string | number | boolean | undefined}}  
     maxLabelWith: number  
 
     constructor(ns : NS, scheduler : Scheduler, purchaser : Purchaser | undefined = undefined, template : string[] = []) {
@@ -162,7 +164,11 @@ export class DistributionMonitor {
             case DistributionMonitor.Templates.Share:
                 this.views[DistributionMonitor.Templates.Share] = {
                     title: undefined,
-                    content: 0
+                    content: new UIContainer([
+                        "0x", 
+                        new Animation(["---", " \\ ", " ¦ ", " / "], "(", ")"), 
+                        new Animation(["   ", ".  ", ".. ", "..."], "(", ")")
+                    ]) 
                 }
                 break;                 
             case DistributionMonitor.Templates.Line:
@@ -229,7 +235,7 @@ export class DistributionMonitor {
                 break;    
                 
             case DistributionMonitor.Templates.Line:
-                this.log.add("----------------------------------------------------");   
+                this.log.add("---------------------------------------------------");   
                 break; 
             default:
                 console.warn(`Unknown template ${template} to add to display.`);
@@ -240,7 +246,7 @@ export class DistributionMonitor {
     /**
      * @returns or null when view for template does not exist found
      */
-     addView(template = "") : {title: string | undefined; content: Distribution | ProgressBar | Progression | Progressions | string | number | boolean | undefined} | undefined {
+     addView(template = "") : {title: string | undefined; content: UIContainer | Animation | Distribution | ProgressBar | Progression | Progressions | string | number | boolean | undefined} | undefined {
         const view = this.views[template];
 
         if (typeof view === "undefined") {
@@ -467,6 +473,23 @@ export class DistributionMonitor {
             return;
         }
 
-        view.content = `${this.scheduler.getSharePower().toFixed(3)}x`;
+        if (!(view.content instanceof UIContainer)) { 
+            console.warn(`${DistributionMonitor.Templates.Share}: Could not set data, because content is not type ${UIContainer.name}, is: ${typeof view.content}`);
+            return;
+        }
+
+
+        const sharePower = this.scheduler.getSharePower();
+
+        // todo need kind of a container to put a ui element and other stuff in it o.o
+        view.content.elements[0] = `${sharePower.toFixed(3)}x `;
+
+        if (view.content.elements[1] instanceof Animation) { 
+            view.content.elements[1].show(sharePower > 1);
+        }
+
+        if (view.content.elements[2] instanceof Animation) { 
+            view.content.elements[2].show(sharePower <= 1);
+        }
     }
 }

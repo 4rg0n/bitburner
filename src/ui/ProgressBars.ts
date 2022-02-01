@@ -1,5 +1,6 @@
 import { NS } from "@ns";
 import { asFormat, asFormatGB, asPercent, asLabel } from "lib/utils";
+import { UI } from "/ui/UI";
 
 /** 
  * Just a method to test the progress bar
@@ -67,7 +68,7 @@ export async function main(ns : NS): Promise<void>  {
 /**
  * For displaying a progress bar 
  */
-export class ProgressBar {
+export class ProgressBar implements UI {
     static Signs = {
         None: "_",
         Progress: "░",
@@ -148,7 +149,7 @@ export class ProgressBar {
 /**
  * Adds additional info to display from a progress bar
  */
-export class Progression {
+export class Progression implements UI {
 
     static DefaultSpacer = " ";
 
@@ -282,7 +283,7 @@ export class Progression {
     }
 }
 
-export class Progressions {
+export class Progressions implements UI {
 
     keys: string[]
     progressions: {[key: string]: Progression};
@@ -338,7 +339,7 @@ export class Progressions {
     }   
 }
 
-export class Distribution extends Progressions {
+export class Distribution extends Progressions implements UI {
 
     showTotal: boolean
 

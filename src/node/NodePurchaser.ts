@@ -16,7 +16,7 @@ export class NodePurchaser {
      * @param {number} max amount of nodes to own. 0 means infinite
      * @param {number} moneyThreashhold when given, will only purchase when more than this amount of money is available
      */
-    constructor(ns : NS, scale = .5, max = 0, moneyThreashhold = 0) {
+    constructor(ns : NS, scale = 1, max = 0, moneyThreashhold = 0) {
         this.ns = ns;
         this.scale = scale;
         this.max = max

@@ -39,7 +39,7 @@ export class Contractor {
                 } else if (solved) {
                     variant = "success";
                     logLevel = "INFO";
-                    msg =  msg + ` ${solved}`;
+                    msg =  msg + ` - ${solved}`;
                 } else {
                     variant = "error";
                     logLevel = "ERROR";
@@ -121,7 +121,8 @@ export class Contractor {
             return true;
         }
 
-        //@ts-ignore
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        //@ts-ignore result can be number[]
         return this.ns.codingcontract.attempt(result, contractFile, host, {returnReward: true})
     }
 
@@ -267,7 +268,11 @@ export class Contractor {
     
 
     maxProfit(prices : number[], days : number, transMax : number) : number {
-        const profit = Array(transMax+1).fill(0).map(x => Array(days+1).fill(0));
+        const profit : number[][] = Array(transMax + 1).fill(0)
+            .map(x => {
+                const dayArr : number[] = Array(days + 1).fill(0);
+                return dayArr;
+            });
 
         for (let i = 0; i <= transMax; i++)
             profit[i][0] = 0;
@@ -310,7 +315,9 @@ export class Contractor {
         if (arr.length === 0 || arr[0].length === 0) {
             return accum;
         }
-        // @ts-ignore
+
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore this is fine :)
         accum = accum.concat(arr.shift());
         if (arr.length === 0 || arr[0].length === 0) {
             return accum;
@@ -320,7 +327,8 @@ export class Contractor {
             return accum;
         }
 
-        // @ts-ignore
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore this is fine :)
         accum = accum.concat(...arr.pop().reverse());
         if (arr.length === 0 || arr[0].length === 0) {
             return accum;

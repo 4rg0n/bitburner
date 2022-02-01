@@ -1,4 +1,4 @@
-import { NS } from "@ns";
+import { NS, Server } from "@ns";
 
 import { rankValue } from "lib/utils.js"
 
@@ -47,14 +47,30 @@ export class Zerver {
    depth: number
    parent: Zerver | undefined
    moneyRank: string
+   moneyMax: number
+   securityMin: number
+   hasRoot: boolean
+   ramMax: number
+   grow: number
+   cores: number
+   server: Server
 
     constructor(ns : NS, name : string, depth : number | undefined = 0, parent : Zerver | undefined = undefined) { 
-        this.type = Zerver.getServerType(name);
         this.ns = ns;
+        this.type = Zerver.getServerType(name);
         this.name = name;
         this.depth = depth
         this.parent = parent;
         this.moneyRank = Zerver.MoneyRank.None;
+        
+        this.server = this.ns.getServer(this.name);
+
+        this.moneyMax = this.server.moneyMax;
+        this.securityMin = this.server.minDifficulty;
+        this.hasRoot = this.server.hasAdminRights;
+        this.ramMax = this.server.maxRam;
+        this.grow = this.server.serverGrowth;
+        this.cores = this.server.cpuCores;
     }
     
     static get(ns : NS) : Zerver[] {
@@ -154,10 +170,6 @@ export class Zerver {
         return this.ns.getServerMoneyAvailable(this.name);
     }
 
-    get moneyMax() : number {
-        return this.ns.getServerMaxMoney(this.name);
-    }
-
     get moneyFree() : number {
         return this.moneyMax - this.moneyAvail;
     }
@@ -170,10 +182,6 @@ export class Zerver {
         return this.moneyAvail === this.moneyMax;
     }
 
-    get securityMin() : number {
-        return this.ns.getServerMinSecurityLevel(this.name);
-    }
-
     get securityCurr() : number {
         return this.ns.getServerSecurityLevel(this.name);
     }
@@ -182,24 +190,12 @@ export class Zerver {
         return this.securityCurr === this.securityMin;
     }
 
-    get hasRoot() : boolean {
-        return this.ns.hasRootAccess(this.name);
-    }
-
     get levelNeeded() : number {
         return this.ns.getServerRequiredHackingLevel(this.name);
     }
 
-    get ramMax() : number {
-        return this.ns.getServerMaxRam(this.name);
-    }
-
     get ramUsed() : number {
         return this.ns.getServerUsedRam(this.name);
-    }
-
-    get grow() : number {
-        return this.ns.getServerGrowth(this.name);
     }
 
     get path() : string {
@@ -345,7 +341,7 @@ export class Zerver {
            }
         }
 
-        const growAnalyzeThreads = this.ns.growthAnalyze(this.name, 1 / (1 - taking + .001));
+        const growAnalyzeThreads = this.ns.growthAnalyze(this.name, 1 / (1 - taking + .001), this.cores);
 
         let grow = Math.ceil(growAnalyzeThreads);
 
@@ -370,7 +366,7 @@ export class Zerver {
         }
 
         const hackAnalyzeThreads = this.ns.hackAnalyzeThreads(this.name, hackAmount);
-        const growAnalyzeThreads = this.ns.growthAnalyze(this.name, 1 / (1 - taking + .001));
+        const growAnalyzeThreads = this.ns.growthAnalyze(this.name, 1 / (1 - taking + .001), this.cores);
 
         let hack = Math.floor(hackAnalyzeThreads);
         let grow = Math.ceil(growAnalyzeThreads);

@@ -6,7 +6,7 @@ import { NS } from "@ns";
 import { fromFormatGB } from "/lib/utils";
 
 /**
- * Distribution with minimal RAM 14.75GB
+ * Distribution with minimal under 16GB RAM
  * Will NOT automatically crack / deploy / purchase servers
  */
 export async function main(ns : NS): Promise<void> {
@@ -23,7 +23,7 @@ export async function main(ns : NS): Promise<void> {
         ["boost", false, "This will produce new work as long as there's free ram. May cause game crash."],
         ["aggro", false, "Another method of distribution where each ticket starts it's own set of script instead of scripts per target. May cause game crash."],
         ["silent", false, "Will not produce any output"],
-        ["help", false, `For distributing ${Object.keys(Zerver.Scripts)} executions to a range of servers`]
+        ["help", false, `Minimal ram version for distributing ${Object.keys(Zerver.Scripts)} executions to a range of servers`]
     ]);
     
     const args = flags.args();
@@ -75,6 +75,7 @@ export async function main(ns : NS): Promise<void> {
     ];
 
     if (doBoost) monitorTemplate.push(DistributionMonitor.Templates.Boost);
+    if (doShare) monitorTemplate.push(DistributionMonitor.Templates.Share);
 
     const monitor = new DistributionMonitor(ns, scheduler, undefined, monitorTemplate);
 
