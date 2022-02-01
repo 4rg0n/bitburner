@@ -64,8 +64,10 @@ run scan.js isHackable true --cat moneyfarm --filter moneyMax --filter moneyRank
 Look for viable targets to attack.
 
 ```
-run pruchase.js --max
+run purchase.js --max
 ```
+
+![](doc/purchase_prompt.png)
 
 Will buy or upgrade private servers with the `maximum` amount ram you can afford.
 
@@ -80,6 +82,14 @@ run cct.js
 ```
 
 Will look for `Coding Contract` files `.cct` and try to solve them.
+
+```
+run stats.js
+```
+
+![](doc/stats_example.png)
+
+Will display some information in the Overview panel.
 
 # Development and Installation
 

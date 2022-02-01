@@ -16,7 +16,7 @@ export async function main(ns : NS): Promise<void> {
 	const agiExpBuffer = new NumberStack([], 60);
 	const chrExpBuffer = new NumberStack([], 60);
 	const repBuffer = new NumberStack([], 60);
-	const ui = new StatsUI(12, 28);
+	const ui = new StatsUI(12, 22);
 
 	while(true) {
 		const pServers = ns.getPurchasedServers();

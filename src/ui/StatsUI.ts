@@ -15,7 +15,7 @@ export class StatsUI {
 	constructor(keyWidth = 8, valueWidth = 24) {
 		this.keyWidth = keyWidth;
 		this.valueWidth = valueWidth;
-		this.doc = document; // This is expensive! (25GB RAM) Perhaps there's a way around it? ;)
+		this.doc = eval("document");
 
 		this.keysColumn = this.doc.getElementById('overview-extra-hook-0');
 		this.valuesColumn = this.doc.getElementById('overview-extra-hook-1');
