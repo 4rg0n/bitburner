@@ -1,7 +1,9 @@
 
 # About
 
-All of the `.js` scripts are executables and can be run ingame with e.g. `run scan.js --help`.
+You can find the Javascript code in the `/dist` folder for reference.
+
+All of the ingame `.js` scripts are executables and can be run with e.g. `run scan.js --help`.
 Each of the scripts has a `--help` flag for explaination on how to use it.
 
 ## Some usefull commands
