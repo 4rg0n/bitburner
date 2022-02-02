@@ -229,20 +229,6 @@ export class Zerver {
 
     }
 
-    get securityRank() : number {
-        const securityCurr = this.securityCurr;
-
-        if (securityCurr <= Zerver.SecurityRank.Low) {
-            return Zerver.SecurityRank.Low;
-        } else if (securityCurr > Zerver.SecurityRank.Low && securityCurr <= Zerver.SecurityRank.Med) {
-            return Zerver.SecurityRank.Med;
-        } else if (securityCurr > Zerver.SecurityRank.Med && securityCurr <= Zerver.SecurityRank.High) {
-            return Zerver.SecurityRank.High;
-        } else {
-            return Zerver.SecurityRank.Highest;
-        }
-    }
-
     get isHackable() : boolean {
         return this.hasRoot && (this.levelNeeded <= this.ns.getHackingLevel());
     }

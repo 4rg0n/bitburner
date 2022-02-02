@@ -5,28 +5,25 @@ import { HackNode } from "node/HackNode";
 export class NodePurchaser {
 
     ns: NS
-    scale: number
     max: number
     moneyThreshold: number
     
     /**
      * 
      * @param {NS} ns 
-     * @param {number} scale percentage of money from available to use to purchase
      * @param {number} max amount of nodes to own. 0 means infinite
      * @param {number} moneyThreashhold when given, will only purchase when more than this amount of money is available
      */
-    constructor(ns : NS, scale = 1, max = 0, moneyThreashhold = 0) {
+    constructor(ns : NS, max = 0, moneyThreashhold = 0) {
         this.ns = ns;
-        this.scale = scale;
         this.max = max
         this.ns.disableLog("ALL");
 
         if (moneyThreashhold > 0) {
             this.moneyThreshold = moneyThreashhold;
         } else {
-            this.moneyThreshold = this.ns.getServerMoneyAvailable(this.ns.getHostname()) * this.scale;
-        }
+            this.moneyThreshold = 0;
+        } 
     }
 
     getAvailableMoney() : number {

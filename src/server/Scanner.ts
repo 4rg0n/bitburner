@@ -474,7 +474,7 @@ export class ServerInfo {
 	zerver: Zerver
 	path: string
 	type: string
-	securityRank: number
+	securityRank: string
 	moneyRank: string
 	isHackable: boolean
 	isTargetable: boolean
