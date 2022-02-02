@@ -27,6 +27,15 @@ export class TaskQueue {
         this.gang.chabos.forEach(c => c.stopWork());
     }
 
+    clear() : void {
+        this.queue =new Map<Chabo, TaskChain>();
+    }
+
+    set(chabo : Chabo, chain : TaskChain) : this {
+        this.queue.set(chabo, chain);
+        return this;
+    }
+
     filterFromChabos(tasks : ChaboTask[], chabos : Chabo[]) : Chabo[] {
         return chabos.filter(c => {
             const matched = tasks.filter(task => c.name === task.chabo.name);
@@ -61,22 +70,22 @@ export class TaskQueue {
 
         switch(workType) {
             case TaskQueue.Work.Training:
-                tasks = tasks.concat(this.queueTraining(taskArr));
+                tasks = tasks.concat(this.createTrainingTasks(taskArr));
                 break; 
             case TaskQueue.Work.Money:
                 // Money
-                tasks = tasks.concat(this.queueMoney(chabosAvail));
+                tasks = tasks.concat(this.createMoneyTasks(chabosAvail));
                 chabosAvail = this.filterFromChabos(tasks, chabosAvail);
                  // Fill rest with Respect
-                 tasks = tasks.concat(this.queueRespect(chabosAvail));
+                 tasks = tasks.concat(this.createRespectTasks(chabosAvail));
                  chabosAvail = this.filterFromChabos(tasks, chabosAvail);
                 break; 
             case TaskQueue.Work.Respect:
                 // Respect
-                tasks = tasks.concat(this.queueRespect(chabosAvail));
+                tasks = tasks.concat(this.createRespectTasks(chabosAvail));
                 chabosAvail = this.filterFromChabos(tasks, chabosAvail);
                 // Fill rest with Money
-                tasks = tasks.concat(this.queueMoney(chabosAvail));
+                tasks = tasks.concat(this.createMoneyTasks(chabosAvail));
                 chabosAvail = this.filterFromChabos(tasks, chabosAvail);
                 break; 
             case TaskQueue.Work.War:
@@ -87,7 +96,7 @@ export class TaskQueue {
         this.queue = new Map(tasks.map(task => [task.chabo, task.tasks]));
     }
 
-    queueTraining(tasks : Task[] = [], chabos : Chabo[] | undefined = undefined) : ChaboTask[] {
+    createTrainingTasks(tasks : Task[] = [], chabos : Chabo[] | undefined = undefined) : ChaboTask[] {
         if (typeof chabos === "undefined") {
             chabos = this.gang.chabos;
         }
@@ -113,14 +122,14 @@ export class TaskQueue {
         return chaboTasks;
     }
 
-    queueMoney(chabosAvail : Chabo[] = []) : ChaboTask[] {
+    createMoneyTasks(chabosAvail : Chabo[] = []) : ChaboTask[] {
         const tasks = Task.get(this.ns, Task.Categories.Money);
-        return this.queueSuitableTasks(tasks, chabosAvail);
+        return this.createSuitableTasks(tasks, chabosAvail);
     }
 
-    queueRespect(chabosAvail : Chabo[] = []) : ChaboTask[] {
+    createRespectTasks(chabosAvail : Chabo[] = []) : ChaboTask[] {
         const tasks = Task.get(this.ns, Task.Categories.Respect);
-        return this.queueSuitableTasks(tasks, chabosAvail);
+        return this.createSuitableTasks(tasks, chabosAvail);
     }
 
     /**
@@ -130,7 +139,7 @@ export class TaskQueue {
      * @param tasks to match
      * @param chabosAvail when undefined, current chabos in gang will be used
      */
-    queueSuitableTasks(tasks : Task[], chabosAvail : Chabo[] | undefined = undefined) : ChaboTask[] {
+    createSuitableTasks(tasks : Task[], chabosAvail : Chabo[] | undefined = undefined) : ChaboTask[] {
         if (typeof chabosAvail === "undefined") {
             chabosAvail = this.gang.chabos;
         }
@@ -161,7 +170,7 @@ export class TaskQueue {
      * @param tasks 
      * @param chabosAvail 
      */
-    queueTasks(tasks : Task[], chabosAvail : Chabo[] | undefined = undefined) : ChaboTask[] {
+    createTasks(tasks : Task[], chabosAvail : Chabo[] | undefined = undefined) : ChaboTask[] {
         if (typeof chabosAvail === "undefined") {
             chabosAvail = this.gang.chabos;
         }
@@ -169,13 +178,23 @@ export class TaskQueue {
         const chaboTasks : ChaboTask[] = [];
 
         for (const chabo of chabosAvail) {
+            let tasksSuitable : Task[]= [];
+
+            if (tasks.length === 1) {
+                tasksSuitable = this.gang.findSuitableTasks(chabo);
+            }
+
+            if (tasksSuitable.length > 1) {
+                tasks = [tasksSuitable[0]];
+            }
+
             chaboTasks.push({chabo: chabo, tasks: new TaskChain(tasks)});
         }
 
         return chaboTasks;
     }
 
-    peaceTask(chabos : Chabo[] = []) : ChaboTask {
+    createPeaceTask(chabos : Chabo[] = []) : ChaboTask {
         const peaceTasks = Task.get(this.ns, Task.Categories.Peace);
         const chaboPeaceTasks = new Map<Chabo, TaskChain>();
 

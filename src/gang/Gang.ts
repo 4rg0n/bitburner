@@ -66,12 +66,10 @@ export class Gang {
         return chabos.filter(chabo => chabo.isSuitableTask(task));
     }
 
-    findSuitableTasks(chabo : Chabo, currWantedGain = 0) : Task[]  {
-        // todo add wanted gain?!
-
+    findSuitableTasks(chabo : Chabo, wantedGainLimit = 10) : Task[]  {
         const tasks = Task.get(this.ns).filter(t => t.type === Task.Types.Combat || t.type === Task.Types.Hack)
             .filter(t => chabo.isSuitableTask(t))
-            .filter(t => this.calculateWantedLevelGain(chabo, t) <= currWantedGain)
+            .filter(t => this.calculateWantedLevelGain(chabo, t) <= wantedGainLimit)
             .sort((a, b) => a.stats.difficulty - b.stats.difficulty)
             .reverse();
 

@@ -1,6 +1,6 @@
 import { NS } from '@ns'
 import { Chabo } from 'gang/Chabo';
-import { Task} from 'gang/Task';
+import { Task, TaskChain} from 'gang/Task';
 import { ChaboTask, TaskQueue } from 'gang/TaskQueue';
 import { Gang } from '/gang/Gang';
 import { GangConfig } from '/gang/GangConfig';
@@ -33,7 +33,7 @@ export class Babo {
      * Queues trainings based on given gang config
      * Chabos will be trained according to their task needs
      */
-    queueTrainings() : void {
+    queueTrainingsByConfig() : void {
         if (typeof this.gangConfig === "undefined") return;
         this.taskQueue.stopAll();
         this.recruitMissing();
@@ -42,14 +42,23 @@ export class Babo {
             const chabos = this.gang.filterExistingChabos(entry.chabos);
             const tasks = entry.tasks;
 
-            this.taskQueue.queueTraining(tasks, chabos);
+            const chaboTasks = this.taskQueue.createTrainingTasks(tasks, chabos);
+            this.taskQueue.clear();
+            this.taskQueue.addTasks(chaboTasks);
         });
+    }
+
+    queueTask(chabo : Chabo | Chabo[], task : Task) : this {
+        const chabos : Chabo[] = _.toArray(chabo);
+        chabos.forEach(c => this.taskQueue.set(c, new TaskChain([task])));
+
+        return this;
     }
 
     /**
      * Queues tasks based on given gang config
      */
-    queueTasks() : void {
+    queueTasksByConfig() : void {
         if (typeof this.gangConfig === "undefined") return;
         this.taskQueue.stopAll();
         this.recruitMissing();
@@ -58,7 +67,9 @@ export class Babo {
             const chabos = this.gang.filterExistingChabos(entry.chabos);
             const tasks = entry.tasks;
 
-            this.taskQueue.queueTasks(tasks, chabos);
+            const chaboTasks = this.taskQueue.createTasks(tasks, chabos);
+            this.taskQueue.clear();
+            this.taskQueue.addTasks(chaboTasks);
         });
     }
     
@@ -104,7 +115,7 @@ export class Babo {
         // Peace task handling
         if (wantedGain >= 1 && wantedLevel >= 1) {
             // park original tasks and add one chabo to do peace task
-            const chaboPeaceTasks = this.taskQueue.peaceTask();
+            const chaboPeaceTasks = this.taskQueue.createPeaceTask();
             const originalTasks = this.taskQueue.removeTaskByChabo(chaboPeaceTasks.chabo);
 
             if (!_.isUndefined(originalTasks)) {

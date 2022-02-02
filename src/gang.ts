@@ -7,6 +7,7 @@ import { Chabo } from "/gang/Chabo";
 import { TaskQueue } from "/gang/TaskQueue";
 import { Babo } from "/gang/Babo";
 import { Equipment } from "/gang/Equipment";
+import { GangConfig, GangConfigGenerator } from "/gang/GangConfig";
 
 /**
  * For managing your Gang (WIP) o.O
@@ -16,7 +17,7 @@ import { Equipment } from "/gang/Equipment";
         ["...", [""], `Name of gang member(s) to do either --work, --train or show info via --chabo`],
         ["taskinfo", ["all"], `Show tasks information: ${Object.values(Task.Categories).join(", ")}`],
         ["equipinfo", ["all"], `Show equipment information: ${ns.gang.getEquipmentNames().join(", ")}`],
-        ["config", "", `Use configuration file for gang`],
+        ["config", GangConfigGenerator.DefaultConfigPath, `Use configuration file for gang`],
         ["work", "", `Do work by type ${Object.values(TaskQueue.Work).join(", ")}`],
         ["task", "", `Do specific task ${Object.values(Task.Names).join(", ")}`],
         ["train", "", `Do train for task: ${Object.values(Task.Names).join(", ")}`],
@@ -100,10 +101,28 @@ import { Equipment } from "/gang/Equipment";
         return;
     }
 
+    let babo : Babo;
+
+    if (flags.isFlagPresent("config") && configPath !== "") {
+        const gangConfigData = GangConfigGenerator.read(ns, configPath);
+
+        if (_.isUndefined(gangConfigData)) {
+            ns.tprintf(`ERROR Babo could not load gang config ${configPath}`);
+            return;
+        }
+
+        const gangConfig = GangConfig.fromObjectArray(gangConfigData);
+
+        babo = new Babo(ns, gangConfig);
+        ns.tprintf(`INFO Babo loaded gang config ${configPath}`);
+    } else {
+        // todo load default config
+        babo = new Babo(ns);
+    }
+
     if (workType !== "") {
         ns.disableLog("sleep");
         ns.disableLog("gang.setMemberTask");
-        const babo = new Babo(ns);
 
         babo.queueWithType(workType);
 
@@ -113,12 +132,26 @@ import { Equipment } from "/gang/Equipment";
         }
     }
 
+    if (taskName !== "") {
+        ns.disableLog("sleep");
+        ns.disableLog("gang.setMemberTask");
+
+        if (chaboNames.length > 0) {
+            chaboNames.forEach(name => babo.queueTask(new Chabo(ns, name), new Task(ns, trainTask)));
+        } else {
+            babo.queueTask(babo.gang.chabos, new Task(ns, trainTask));
+        }
+    }   
+
     if (trainTask !== "") {
         ns.disableLog("sleep");
         ns.disableLog("gang.setMemberTask");
-        const babo = new Babo(ns);
 
-        babo.queueWithType(TaskQueue.Work.Training, new Task(ns, trainTask));
+        if (chaboNames.length > 0) {
+            chaboNames.forEach(name => babo.queueTask(new Chabo(ns, name), new Task(ns, trainTask)));
+        } else {
+            babo.queueWithType(TaskQueue.Work.Training, new Task(ns, trainTask));
+        }
 
         while(true) {
             babo.poll();
@@ -126,8 +159,6 @@ import { Equipment } from "/gang/Equipment";
         }
     }
 
-    // todo add train task by chabo names
-    // add work task by chabo name
-    // add config
+    
 }
 

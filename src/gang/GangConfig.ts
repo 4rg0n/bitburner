@@ -65,6 +65,8 @@ export class GangConfig {
 
 export class GangConfigGenerator {
 
+    static DefaultConfigPath = "gang/gang.default.json";
+    static CurrentConfigPath = "gang/gang.current.json";
     static MaximumGangMembers = 12;
 
     static generateGangConfig(ns : NS, hack = 0, combat = 0) : IGangConfig[] {
@@ -137,6 +139,15 @@ export class GangConfigGenerator {
         }
 
         return configs;
+    }
+
+    static fromCurrent(ns : NS) : IGangConfig[] {
+        return Chabo.get(ns).map(c => {
+            return {
+                chabos: [c], 
+                tasks: [new Task(ns, c.getTaskName())]
+            }
+        });
     }
     
 }
