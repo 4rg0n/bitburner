@@ -10,7 +10,7 @@ import { NS } from "@ns";
 export async function main(ns : NS): Promise<void>  {
     const flags = new Flags(ns, [
 		["upgrade", 0, "Number of upgrade cycles. 0 is infinite"],
-		["scale", 0.5, "How much of available money shall be used in percent from 0 to 1"],
+		["scale", 1, "How much of available money shall be used in percent from 0 to 1"],
 		["max", 23, "How many nodes to buy max. 0 is infinite."],
 		["money", "", "Will not go under this amount of money when purchasing. Can be formatted in: e.g. 100b or 1t"],
 		["help", false, "For automatically upgrading Hacknet"]
