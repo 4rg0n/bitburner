@@ -24,7 +24,7 @@ export async function main(ns : NS): Promise<void> {
         ["scale", 0, "Percante of available money between 0 and 1 to regularly buy new servers. 0 means no servers will be bought"],
         ["free", 0, "Amount of GB ram to not use on home server when distributing"],
         ["cap", "", "Amount of ram to use as maximum (e.g. 1PB, 960TB)"],
-        ["share", false, "Wether free ram capacity shall be shared or not"],
+        ["share", Scheduler.ShareMode.None, `Wether free ram capacity shall be shared or not: ${Object.values(Scheduler.ShareMode).join(", ")}`],
         ["boost", false, "This will produce new work as long as there's free ram. May cause game crash."],
         ["aggro", false, "Another method of distribution where each ticket starts it's own set of script instead of scripts per target. May cause game crash."],
         ["silent", false, "Will not produce any output"],
@@ -44,7 +44,7 @@ export async function main(ns : NS): Promise<void> {
     const targetCategories = args["target"];
     const doBoost = args["boost"];
     const doAggro = args["aggro"];
-    const doShare = args["share"];
+    const shareMode = args["share"];
     const scanQueries = args["scan"];
 
     const purchaser = new Purchaser(ns, scale, 4);
@@ -75,7 +75,7 @@ export async function main(ns : NS): Promise<void> {
     }
 
     targets = targets.filter(t => t.isTargetable);
-    const scheduler = new Scheduler(ns, targets, deployer, workerType, taking, doShare, doBoost, doAggro, homeRamMinFree, ramCap);
+    const scheduler = new Scheduler(ns, targets, deployer, workerType, taking, shareMode, doBoost, doAggro, homeRamMinFree, ramCap);
     await scheduler.init();
 
     ns.tprintf(`Found ${targets.length} target(s) and ${scheduler.workers.length} worker(s)`);
@@ -96,7 +96,7 @@ export async function main(ns : NS): Promise<void> {
 
     if (scale > 0) monitorTemplate.push(DistributionMonitor.Templates.Scale);
     if (doBoost) monitorTemplate.push(DistributionMonitor.Templates.Boost);
-    if (doShare) monitorTemplate.push(DistributionMonitor.Templates.Share);
+    if (shareMode !== Scheduler.ShareMode.None) monitorTemplate.push(DistributionMonitor.Templates.Share);
 
     const monitor = new DistributionMonitor(ns, scheduler, purchaser, monitorTemplate);
 

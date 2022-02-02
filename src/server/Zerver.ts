@@ -168,11 +168,11 @@ export class Zerver {
             return servers;
         }
 
-        const overallSecurityMax = Math.max(...servers.map(s => s.securityCurr));
+        const overallSecurityMax = Math.max(...servers.map(s => s.securityMin));
         const securityRanks = Object.values(Zerver.SecurityRank);
 
         servers.forEach(server => {
-            const rank = rankValue(server.securityCurr, securityRanks, overallSecurityMax);
+            const rank = rankValue(server.securityMin, securityRanks, overallSecurityMax);
 
             if (typeof rank === "string") {
                 server.securityRank = rank;

@@ -196,7 +196,7 @@ export class DistributionMonitor {
                 this.views[DistributionMonitor.Templates.Share] = {
                     title: undefined,
                     content: new UIContainer([
-                        "0x ", 
+                        `0x (${this.scheduler.shareMode})`, 
                         new Animation(["◴", "◷", "◶", "◵"]), 
                         new Animation(["◇", "◈", "◆", "◈"])
                     ]) 
@@ -527,7 +527,7 @@ export class DistributionMonitor {
         const sharePower = this.scheduler.getSharePower();
 
         // todo need kind of a container to put a ui element and other stuff in it o.o
-        view.content.elements[0] = `${sharePower.toFixed(3)}x `;
+        view.content.elements[0] = `${sharePower.toFixed(3)}x (${this.scheduler.shareMode})`;
 
         // idle
         if (view.content.elements[1] instanceof Animation) { 

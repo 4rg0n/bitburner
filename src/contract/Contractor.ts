@@ -1,7 +1,6 @@
 import { NS } from '@ns'
 import { Zerver } from '/server/Zerver';
 
-
 /**
  * Mostly copied from https://gist.github.com/OrangeDrangon/8a08d2d7d425fddd2558e1c0c5fae78b 
  * and https://steamcommunity.com/sharedfiles/filedetails/?id=2712741294/, because I'm stupid and lazy...
@@ -27,6 +26,7 @@ export class Contractor {
                 const name = this.ns.codingcontract.getContractType(contractFile, server.name);
                 const data = this.ns.codingcontract.getData(contractFile, server.name);
                 const solved = this.solve(name, data, server.name, contractFile, dry);
+
                 
                 let variant;
                 let logLevel;

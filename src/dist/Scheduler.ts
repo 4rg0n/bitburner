@@ -19,36 +19,42 @@ export class Scheduler {
         Home: "home"
     }
 
-   ns: NS
-   targetPool: Zerver[]
-   workerType: string
-   deployer: Deployer
-   workers: Zerver[] = []
-   targets: Zerver[] =  []
+    static ShareMode = {
+        None: "none",
+        All: "all",
+        Balance: "balance"
+    }
 
-   scheduledQueue: WorkQueue[] = []
-   initQueue: WorkTicket[] = []
-   waitingQueue: WorkTicket[] = []
+    ns: NS
+    targetPool: Zerver[]
+    workerType: string
+    deployer: Deployer
+    workers: Zerver[] = []
+    targets: Zerver[] =  []
 
-   runners: {[key: string]: Runner} = {}
-   scripts: {[key: number]: {[key: string]: number}} = {}
-   
-   taking: number
-   doShare: boolean
-   doBoost: boolean
-   doAggro: boolean
-   homeMinRamFree: number
-   ramCap: number
-   ramMap: {[key: string]: number}
-   ramUsageHistory: NumberStack
+    scheduledQueue: WorkQueue[] = []
+    initQueue: WorkTicket[] = []
+    waitingQueue: WorkTicket[] = []
 
-     constructor(
+    runners: {[key: string]: Runner} = {}
+    scripts: {[key: number]: {[key: string]: number}} = {}
+    
+    taking: number
+    shareMode: string
+    doBoost: boolean
+    doAggro: boolean
+    homeMinRamFree: number
+    ramCap: number
+    ramMap: {[key: string]: number}
+    ramUsageHistory: NumberStack
+
+    constructor(
         ns : NS, 
         targetPool : Zerver[], 
         deployer : Deployer | undefined = undefined, 
         workerType = Scheduler.WorkerType.All, 
         taking = .5, 
-        doShare = false, 
+        shareMode = Scheduler.ShareMode.None, 
         doBoost = false, 
         doAggro = false, 
         homeMinRamFree = 0,
@@ -60,7 +66,7 @@ export class Scheduler {
         this.deployer = deployer || new Deployer(ns, new Cracker(ns));
 
         this.taking = taking;
-        this.doShare = doShare;
+        this.shareMode = shareMode;
         this.doBoost = doBoost;
         this.doAggro = doAggro;
         this.homeMinRamFree = homeMinRamFree;
@@ -296,19 +302,46 @@ export class Scheduler {
     scheduleWork(scheduledWorks : WorkQueue[] | undefined = undefined): void {
         const works = scheduledWorks || this.scheduledQueue;
 
-        for (const work of works) {
-            work.queue(this.canBoost());
+        switch(this.shareMode) {
+            case Scheduler.ShareMode.All:
+                this.scheduleShareWork(works);
+                break;
+            case Scheduler.ShareMode.Balance:
+                for (const work of works) {
+                    work.queue(this.canBoost());
+                }
+                this.scheduleShareWork(works);
+                break;
+            default:    
+            case Scheduler.ShareMode.None:
+                for (const work of works) {
+                    work.queue(this.canBoost());
+                }
+                break;    
         }
+    }
 
+    scheduleShareWork(works : WorkQueue[], ramAvail : number | undefined = undefined) : void {
+        if (works.length == 0) return;
         if (!this.canShare()) return;
 
-        const ramAvail = this.getTotalRamAvail(this.totalWorkersRamMax());
+        if (typeof ramAvail === "undefined") {
+            ramAvail = this.getTotalRamAvail(this.totalWorkersRamMax());
+        }
 
         if (ramAvail <= 0) return;
-        
+
+        const ramPerWorkQueue = ramAvail / works.length;
+
+        if (typeof ramPerWorkQueue !== "number" || Number.isNaN(ramPerWorkQueue) || !Number.isFinite(ramPerWorkQueue)) {
+            return; 
+        }
+
         for (const work of works) {
-            if (work.workQueue.isFull()|| work.status !== WorkTicket.Status.Running) continue;
-            work.queueShare(ramAvail * 0.9, this.canBoost());
+            if (work.status !== WorkTicket.Status.Running || work.workQueue.isFull()) continue;
+
+            const ram = ramPerWorkQueue - work.getRamUsage();
+            work.queueShare(ram, this.canBoost());
         }
     }
 
@@ -327,7 +360,7 @@ export class Scheduler {
      * todo this could interfer with boost :x
      */
     canShare(): boolean {
-        if (!this.doShare) {
+        if (typeof this.shareMode !== "string" || this.shareMode === "" || this.shareMode === Scheduler.ShareMode.None) {
             return false;
         }
 

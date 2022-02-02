@@ -97,10 +97,12 @@ export class WorkQueue {
     }
 
     queueShare(ramAvail : number, boost = false) : void {
+        if (ramAvail <= 0) return;
+
         if (this.waitingForQueue() && !boost) {
             console.info(`Skipped queueing share for ${this.target.name}. Waiting for queue.`);
             return;
-        }  
+        }
 
         const ramScript = this.ns.getScriptRam(Zerver.Scripts.share);
         const threads = Math.floor(ramAvail / ramScript);
