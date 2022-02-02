@@ -2,6 +2,26 @@ import { NS, GangMemberAscension, GangMemberInfo, GangTaskStats } from "@ns";
 import { capatalize, random } from "lib/utils";
 import { Equipment } from "/gang/Equipment";
 import { Task } from "/gang/Task";
+import { Flags } from "/lib/Flags";
+
+export async function main(ns : NS): Promise<void>  {
+    const flags = new Flags(ns, [
+        ["num", 10, "Amount of names to generate"],
+        ["help", false, "For testing name generation"]
+    ]);
+    const args = flags.args();
+
+    const num : number = args["num"];
+
+    const names = NameGenerator.generateMultiple(num, []).sort(function(a, b){
+        if (a.toLowerCase() < b.toLowerCase()) { return -1; }
+        if (a.toLowerCase() > b.toLowerCase()) { return 1; }
+
+        return 0;
+    });
+
+    ns.tprintf(names.join("\n"));
+}
 
 export class Chabo {
     static Roles = {
@@ -278,13 +298,11 @@ export class NameGenerator {
         "gün",
         "jür",
         "wil",
-        "schaque",
         "rei",
         "ron",
         "eli",
         "je",
         "fe",
-        "chri",
         "el",
         "an",
         "hen",
@@ -323,16 +341,16 @@ export class NameGenerator {
             const randSuffix = NameGenerator.Suffixes[random(0, NameGenerator.Suffixes.length - 1)];
             name = randPrefix + randSuffix; 
 
-            repeat = blacklist.filter(blacklisted => blacklisted.toLowerCase() === name.toLowerCase()).length > 0;
+            repeat = (blacklist.filter(blacklisted => blacklisted.toLowerCase() === name.toLowerCase()).length > 0);
         } while (repeat);
 
         return `${capatalize(name)}`
     }
 
-    static generateMultiple(blacklist : string[] = [], amount = 1) : string[] {
+    static generateMultiple(amount = 1, blacklist : string[] = []) : string[] {
         const names : string[] = [];
 
-        for (let i = 0; i <= amount; i++) {
+        for (let i = 0; i < amount; i++) {
             const name = this.generate(blacklist);
 
             names.push(name);

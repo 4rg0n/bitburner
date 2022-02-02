@@ -65,8 +65,8 @@ export class GangConfig {
 
 export class GangConfigGenerator {
 
-    static DefaultConfigPath = "gang/gang.default.json";
-    static CurrentConfigPath = "gang/gang.current.json";
+    static DefaultConfigPath = "/gang/gang.default.json";
+    static CurrentConfigPath = "/gang/gang.current.json";
     static MaximumGangMembers = 12;
 
     static generateGangConfig(ns : NS, hack = 0, combat = 0) : IGangConfig[] {
@@ -76,7 +76,7 @@ export class GangConfigGenerator {
             throw new Error(`Only ${GangConfigGenerator.MaximumGangMembers} members total are allowed got ${total}`);
         }
 
-        let names = NameGenerator.generateMultiple([], total);
+        let names = NameGenerator.generateMultiple(total, []);
         const config : IGangConfig[] = []; 
 
         for (let i = 0; i <= hack; i++) {

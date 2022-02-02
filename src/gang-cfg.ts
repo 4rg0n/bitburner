@@ -5,11 +5,11 @@ import { toPrintableString } from '/lib/utils';
 
 export async function main(ns : NS) : Promise<void> {
     const flags = new Flags(ns, [
-        ["hack", 0, `Amount of members, who would do hacking tasks. Total max: ${GangConfigGenerator.MaximumGangMembers}`],
-        ["combat", 0, `Amount of members, who would do combat tasks. Total max: ${GangConfigGenerator.MaximumGangMembers}`],
+        ["hack", 0, `Amount of members, who would do hacking tasks. Total combat and hack max: ${GangConfigGenerator.MaximumGangMembers}`],
+        ["combat", 0, `Amount of members, who would do combat tasks. Total combat and hack max: ${GangConfigGenerator.MaximumGangMembers}`],
         ["current", false, `Save current state into ${GangConfigGenerator.CurrentConfigPath}`],
         ["default", false, `Generates a default gang configuration at ${GangConfigGenerator.DefaultConfigPath}`],
-        ["save", "", `Save generated config into given file path e.g. --save gang/gang.1337.json`],
+        ["save", "", `Save generated config into given file path e.g. --save /gang/gang.1337.json`],
         ["read", "", `Read config from file and print it`],
 		["help", false, "For managing gang configurations"]
 	]);
@@ -28,7 +28,7 @@ export async function main(ns : NS) : Promise<void> {
         gangConfig = GangConfigGenerator.generateGangConfig(ns, 6, 6);
 
         await GangConfigGenerator.write(ns, gangConfig, GangConfigGenerator.DefaultConfigPath);
-        ns.tprintf(`INFO DEFAULT gang config saved to ${GangConfigGenerator.DefaultConfigPath}.txt`);
+        ns.tprintf(`INFO DEFAULT gang config saved to\nnano ${GangConfigGenerator.DefaultConfigPath}.txt`);
         return;
     }
 
@@ -36,7 +36,7 @@ export async function main(ns : NS) : Promise<void> {
         gangConfig = GangConfigGenerator.fromCurrent(ns);
 
         await GangConfigGenerator.write(ns, gangConfig, GangConfigGenerator.DefaultConfigPath);
-        ns.tprintf(`INFO CURRENT gang config saved to ${GangConfigGenerator.DefaultConfigPath}.txt`);
+        ns.tprintf(`INFO CURRENT gang config saved to\nnano ${GangConfigGenerator.DefaultConfigPath}.txt`);
         return;
     }
 
