@@ -1,13 +1,24 @@
 import { NS, GangTaskStats } from '@ns'
-import { Chabo } from '/gang/Chabo'
 
+/**
+ * Nice to know https://github.com/danielyxie/bitburner/blob/dev/src/Gang/data/tasks.ts
+ */
 export class Task {
-    static Types = {
+    static Categories = {
         Money: "money",
         Respect: "respect",
         Training: "training",
         Peace: "peace",
         War: "war",
+    }
+
+    static Types = {
+        Combat: "combat",
+        Hack: "hack",
+        Train: "train",
+        Peace: "peace",
+        War: "war",
+        None: "none"
     }
 
     static Names = {
@@ -21,56 +32,121 @@ export class Task {
         Laundering: "Money Laundering",
         Cyberterrorism: "Cyberterrorism",
         EthHacking: "Ethical Hacking",
+
         Justice: "Vigilante Justice",
-        Warfare: "Territory Warfare",
+        Mug: "Mug People",
+        Deal: "Deal Drugs",
+        Strongarm: "Strongarm Civilians",
+        Con: "Run a Con",
+        Robbery: "Armed Robbery",
+        Arms: "Traffick Illegal Arms",
+        Threaten: "Threaten & Blackmail",
+        HumanTrafficking: "Human Trafficking",
+        Terrorism: "Terrorism",
 
         TrainCombat: "Train Combat",
         TrainHacking: "Train Hacking",
-        TrainCharisma: "Train Charisma"
+        TrainCharisma: "Train Charisma",
+
+        Warfare: "Territory Warfare"
     }
 
     ns: NS
     name: string
     progress: number
     total: number
-    chabo: Chabo | undefined
+    type: string;
 
-    constructor(ns : NS, name : string = Task.Names.Unassigned, progress = 0, total = 0, chabo : Chabo | undefined = undefined) {
+    constructor(ns : NS, name : string = Task.Names.Unassigned, progress = 0, total = 0) {
+
+        if (!Task.isValidTaskName(name)) {
+            throw new Error(`Invalid task name "${name}"`);
+        }
+
         this.ns = ns;
         this.name = name;
+        this.type = Task.mapType(name);
         this.progress = progress;
         this.total = total;
-        this.chabo = chabo;
+    }
+
+    static isValidTaskName(name : string | undefined = undefined) : boolean {
+        if (typeof name === "undefined") {
+            return false;
+        }
+
+        return Object.values(Task.Names).indexOf(name) !== -1;
+    }
+
+    static mapType(taskName : string) : string {
+        switch(taskName) {
+            case Task.Names.Cyberterrorism:
+            case Task.Names.DDos:
+            case Task.Names.Laundering:
+            case Task.Names.Ransomware:
+            case Task.Names.Phishing:
+            case Task.Names.Theft:
+            case Task.Names.Virus:
+            case Task.Names.Fraud:
+                return Task.Types.Hack;    
+            
+            case Task.Names.Mug:
+            case Task.Names.Deal:
+            case Task.Names.Strongarm:
+            case Task.Names.Con:
+            case Task.Names.Robbery:
+            case Task.Names.Arms:
+            case Task.Names.Threaten:
+            case Task.Names.HumanTrafficking:
+            case Task.Names.Terrorism:
+                return Task.Types.Combat;
+
+            case Task.Names.Warfare:
+                return Task.Types.War;    
+
+            case Task.Names.EthHacking:
+            case Task.Names.Justice:
+                return Task.Types.Peace;
+
+            case Task.Names.TrainCharisma:
+            case Task.Names.TrainCombat:
+            case Task.Names.TrainHacking:
+                return Task.Types.Train;    
+            
+            default:
+            case Task.Names.Unassigned:
+                return Task.Types.None;    
+        }
     }
 
     /**
      * 
      * @param ns 
-     * @param type 
-     * @returns list of tasks filtered by type and ordered by baseWanted desc
+     * @param category 
+     * @returns list of tasks filtered by category and ordered by baseWanted desc
      */
-    static get(ns : NS, type = "") : Task[] {
+    static get(ns : NS, category = "") : Task[] {
         let tasks = Object.values(Task.Names).map(name => new Task(ns, name));
 
-        switch (type) {
-            case Task.Types.Money:
+        switch (category) {
+            case Task.Categories.Money:
                 tasks = tasks.filter(t => t.stats.baseMoney > 0);
                 break;
-            case Task.Types.Respect:
+            case Task.Categories.Respect:
                 tasks = tasks.filter(t => t.stats.baseRespect > 0);
                 break;
-            case Task.Types.Training:
+            case Task.Categories.Training:
                 tasks = [
                     new Task(ns, Task.Names.TrainHacking), 
                     new Task(ns, Task.Names.TrainCombat),
                     new Task(ns, Task.Names.TrainCharisma)];
                 break;
-            case Task.Types.Peace:
+            case Task.Categories.Peace:
                 tasks = [
                     new Task(ns, Task.Names.EthHacking), 
                     new Task(ns, Task.Names.Justice)];
                 break; 
-            case Task.Types.War:
+            case Task.Categories.War:
                 tasks = [new Task(ns, Task.Names.Warfare)];
                 break;           
             default:
@@ -109,12 +185,19 @@ export class Task {
 
 export class TaskChain {
 
-    tasks: Task[] = []
-    weights: number[] = []
+    static DefaultWeight = 100;
 
-    constructor(tasks : Task[], weights : number[]) {
+    tasks: Task[] = []
+    weights: number[] | undefined = []
+
+    constructor(tasks : Task[], weights : number[] | undefined = undefined) {
         this.tasks = tasks
-        this.weights = weights;
+
+        if (typeof weights === "undefined") {
+            this.weights = Array(tasks.length).fill(TaskChain.DefaultWeight);
+        } else {
+            this.weights = weights;
+        }
     }
 
     get hasTasks() : boolean {

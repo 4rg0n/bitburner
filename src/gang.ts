@@ -13,22 +13,28 @@ import { Equipment } from "/gang/Equipment";
  */
  export async function main(ns : NS): Promise<void> {
     const flags = new Flags(ns, [
-        ["task", ["all"], `Show tasks information: ${Object.values(Task.Types).join(", ")}`],
-        ["chabo", ["all"], `Show chabos information ${ns.gang.getMemberNames().join(", ")}`],
-        ["equip", ["all"], `Show equipment information ${ns.gang.getEquipmentNames().join(", ")}`],
-        ["work", "", `Do work ${Object.values(TaskQueue.Work).join(", ")}`],
+        ["...", [""], `Name of gang member(s) to do either --work, --train or show info via --chabo`],
+        ["taskinfo", ["all"], `Show tasks information: ${Object.values(Task.Categories).join(", ")}`],
+        ["equipinfo", ["all"], `Show equipment information: ${ns.gang.getEquipmentNames().join(", ")}`],
+        ["config", "", `Use configuration file for gang`],
+        ["work", "", `Do work by type ${Object.values(TaskQueue.Work).join(", ")}`],
+        ["task", "", `Do specific task ${Object.values(Task.Names).join(", ")}`],
         ["train", "", `Do train for task: ${Object.values(Task.Names).join(", ")}`],
+        ["chabo", false, `Show chabos information: ${ns.gang.getMemberNames().join(", ")}`],
         ["gang", false, "Show gang information"],
 		["help", false, "For managing your gang (WIP)"]
 	]);
 	const args = flags.args();
 
-    const taskTypes : string[] = args["task"];
-    const chaboNames : string[] = args["chabo"];
-    const equipNames : string[] = args["equip"];
+    const chaboNames : string[] = args._;
+    const taskTypes : string[] = args["taskinfo"];
+    const showChabo : boolean = args["chabo"];
+    const equipNames : string[] = args["equipinfo"];
     const showGang : boolean = args["gang"];
     const workType : string = args["work"];
     const trainTask : string = args["train"];
+    const taskName : string = args["task"];
+    const configPath : string = args["config"];
 
     if (flags.isFlagPresent("task")) {
         if (taskTypes.length > 0 && taskTypes[0] !== "all") {
@@ -43,8 +49,8 @@ import { Equipment } from "/gang/Equipment";
         return;
     }
 
-    if (flags.isFlagPresent("chabo")) {
-        if (chaboNames.length > 0 && chaboNames[0] !== "all") {
+    if (showChabo) {
+        if (chaboNames.length > 0 && chaboNames[0] !== "") {
             Chabo.get(ns).filter(c => {
                 const matched = chaboNames.filter(name => c.name.toLowerCase().indexOf(name.toLowerCase()) !== -1);
 
@@ -69,8 +75,6 @@ import { Equipment } from "/gang/Equipment";
                 ns.tprintf(`Blank: ${chabo.isBlank()}`);
             });
         }
-
-
        
         return;
     }
@@ -101,7 +105,7 @@ import { Equipment } from "/gang/Equipment";
         ns.disableLog("gang.setMemberTask");
         const babo = new Babo(ns);
 
-        babo.init(workType);
+        babo.queueWithType(workType);
 
         while(true) {
             babo.poll();
@@ -114,12 +118,16 @@ import { Equipment } from "/gang/Equipment";
         ns.disableLog("gang.setMemberTask");
         const babo = new Babo(ns);
 
-        babo.init(TaskQueue.Work.Training, new Task(ns, trainTask));
+        babo.queueWithType(TaskQueue.Work.Training, new Task(ns, trainTask));
 
         while(true) {
             babo.poll();
             await ns.sleep(1000);
         }
     }
+
+    // todo add train task by chabo names
+    // add work task by chabo name
+    // add config
 }
 

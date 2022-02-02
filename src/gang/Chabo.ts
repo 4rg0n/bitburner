@@ -238,19 +238,18 @@ export class Chabo {
         }
 
         const weights =  this.getMultiWeights();
-        const taskStats = task.stats;
-        let diff = 0;
+        let difference = 0;
 
         for (const key in weights) {
             const chaboWeight = weights[key as keyof StatsWeight];
-            const taskWeight = taskStats[key as keyof GangTaskStats];
+            const taskWeight = task.stats[key as keyof GangTaskStats];
 
             const weightDiff = Math.abs(-chaboWeight - -taskWeight);
 
-            diff = +diff + +weightDiff;
+            difference = +difference + +weightDiff;
         }
         
-        return diff;
+        return difference;
     }
 }
 
@@ -328,5 +327,18 @@ export class NameGenerator {
         } while (repeat);
 
         return `${capatalize(name)}`
+    }
+
+    static generateMultiple(blacklist : string[] = [], amount = 1) : string[] {
+        const names : string[] = [];
+
+        for (let i = 0; i <= amount; i++) {
+            const name = this.generate(blacklist);
+
+            names.push(name);
+            blacklist.push(name);
+        }
+
+        return names;
     }
 }

@@ -1,6 +1,8 @@
 import { NS } from "@ns";
 
 /**
+ * todo add short flag support (e.g. -h)
+ * 
  * Decorator for adding new featues to the ns.flags() method
  */
 export class Flags {
@@ -82,7 +84,7 @@ export class Flags {
     }
 
     defaultToString(defaultValue : string | number | boolean | string[] | undefined = undefined) : string {
-        if (typeof defaultValue === undefined || defaultValue === "") {
+        if (typeof defaultValue === "undefined" || defaultValue === "") {
             return "";
         }
 

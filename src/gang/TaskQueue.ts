@@ -27,25 +27,43 @@ export class TaskQueue {
         this.gang.chabos.forEach(c => c.stopWork());
     }
 
-    filterFromChabos(tasks : ChaboTasks[], chabos : Chabo[]) : Chabo[] {
+    filterFromChabos(tasks : ChaboTask[], chabos : Chabo[]) : Chabo[] {
         return chabos.filter(c => {
             const matched = tasks.filter(task => c.name === task.chabo.name);
             return matched.length > 0;
         });
     }
 
-    queueWork(workType = TaskQueue.Work.Training, task : Task | undefined = undefined) : void {
-        let chabosAvail = this.gang.chabos;
-        let tasks : ChaboTasks[] = [];
+    addTasks(chaboTasks : ChaboTask[]) : this {
+        chaboTasks.forEach(chaboTask => this.queue.set(chaboTask.chabo, chaboTask.tasks));
+        return this;
+    }
+
+    removeTaskByChabo(chabo : Chabo) : ChaboTask | undefined {
+        const chaboTasks = this.queue.get(chabo);
+
+        if (_.isUndefined(chaboTasks)) {
+            return undefined;
+        }
+
+        this.queue.delete(chabo);
+
+        return {chabo: chabo, tasks: chaboTasks};
+    }
+
+    queueWork(workType = TaskQueue.Work.Training, task : Task | undefined = undefined, chabosAvail : Chabo[] | undefined = undefined) : void {
+        if (typeof chabosAvail === "undefined") {
+            chabosAvail = this.gang.chabos;
+        }
+
+        const taskArr = _.toArray(task);
+        let tasks : ChaboTask[] = [];
 
         switch(workType) {
             case TaskQueue.Work.Training:
-                tasks = tasks.concat(this.queueTraining(task));
+                tasks = tasks.concat(this.queueTraining(taskArr));
                 break; 
             case TaskQueue.Work.Money:
-                // Peace
-                tasks = tasks.concat(this.peaceTask());
-                chabosAvail = this.filterFromChabos(tasks, chabosAvail);
                 // Money
                 tasks = tasks.concat(this.queueMoney(chabosAvail));
                 chabosAvail = this.filterFromChabos(tasks, chabosAvail);
@@ -54,9 +72,6 @@ export class TaskQueue {
                  chabosAvail = this.filterFromChabos(tasks, chabosAvail);
                 break; 
             case TaskQueue.Work.Respect:
-                // Peace
-                tasks = tasks.concat(this.peaceTask());
-                chabosAvail = this.filterFromChabos(tasks, chabosAvail);
                 // Respect
                 tasks = tasks.concat(this.queueRespect(chabosAvail));
                 chabosAvail = this.filterFromChabos(tasks, chabosAvail);
@@ -72,13 +87,17 @@ export class TaskQueue {
         this.queue = new Map(tasks.map(task => [task.chabo, task.tasks]));
     }
 
-    queueTraining(task : Task | undefined = undefined) : ChaboTasks[] {
-        const chaboTasks : ChaboTasks[] = [];
+    queueTraining(tasks : Task[] = [], chabos : Chabo[] | undefined = undefined) : ChaboTask[] {
+        if (typeof chabos === "undefined") {
+            chabos = this.gang.chabos;
+        }
 
-        this.gang.chabos.forEach(c => {
+        const chaboTasks : ChaboTask[] = [];
+
+        chabos.forEach((c) => {
             let chain : TaskChain | undefined;
-            if (typeof task !== "undefined") {
-                chain = this.trainForTask(task);
+            if (tasks.length === 0) {
+                chain = this.trainForTasks(tasks);
             } else {
                 chain = this.trainForChabo(c);
             }
@@ -94,22 +113,29 @@ export class TaskQueue {
         return chaboTasks;
     }
 
-    queueMoney(chabosAvail : Chabo[] = []) : ChaboTasks[] {
-        const tasks = Task.get(this.ns, Task.Types.Money);
-        return this.queueTasks(tasks, chabosAvail);
+    queueMoney(chabosAvail : Chabo[] = []) : ChaboTask[] {
+        const tasks = Task.get(this.ns, Task.Categories.Money);
+        return this.queueSuitableTasks(tasks, chabosAvail);
     }
 
-    queueRespect(chabosAvail : Chabo[] = []) : ChaboTasks[] {
-        const tasks = Task.get(this.ns, Task.Types.Respect);
-        return this.queueTasks(tasks, chabosAvail);
+    queueRespect(chabosAvail : Chabo[] = []) : ChaboTask[] {
+        const tasks = Task.get(this.ns, Task.Categories.Respect);
+        return this.queueSuitableTasks(tasks, chabosAvail);
     }
 
-    queueTasks(tasks : Task[], chabosAvail : Chabo[] = []) : ChaboTasks[] {
-        if (chabosAvail.length === 0) {
+    /**
+     * Will try to find the best matching task in a given set of tasks for chabos.
+     * Based on chabos multipilkator weights distribution and task weights.
+     * 
+     * @param tasks to match
+     * @param chabosAvail when undefined, current chabos in gang will be used
+     */
+    queueSuitableTasks(tasks : Task[], chabosAvail : Chabo[] | undefined = undefined) : ChaboTask[] {
+        if (typeof chabosAvail === "undefined") {
             chabosAvail = this.gang.chabos;
         }
 
-        const chaboTasks : ChaboTasks[] = [];
+        const chaboTasks : ChaboTask[] = [];
        
         for (const task of tasks) {
             const chabos = this.gang.findSuitableChabos(task, chabosAvail);
@@ -129,8 +155,28 @@ export class TaskQueue {
         return chaboTasks;
     }
 
-    peaceTask(chabos : Chabo[] = []) : ChaboTasks {
-        const peaceTasks = Task.get(this.ns, Task.Types.Peace);
+    /**
+     * Each chabo will be assigned to each task m:n
+     * 
+     * @param tasks 
+     * @param chabosAvail 
+     */
+    queueTasks(tasks : Task[], chabosAvail : Chabo[] | undefined = undefined) : ChaboTask[] {
+        if (typeof chabosAvail === "undefined") {
+            chabosAvail = this.gang.chabos;
+        }
+
+        const chaboTasks : ChaboTask[] = [];
+
+        for (const chabo of chabosAvail) {
+            chaboTasks.push({chabo: chabo, tasks: new TaskChain(tasks)});
+        }
+
+        return chaboTasks;
+    }
+
+    peaceTask(chabos : Chabo[] = []) : ChaboTask {
+        const peaceTasks = Task.get(this.ns, Task.Categories.Peace);
         const chaboPeaceTasks = new Map<Chabo, TaskChain>();
 
         for (const task of peaceTasks) {
@@ -151,12 +197,16 @@ export class TaskQueue {
         };
     }
 
+    trainForChabos(chabos : Chabo[]) : TaskChain[] {
+        return chabos.map(c => this.trainForChabo(c))
+            .filter(tc => tc instanceof TaskChain);
+    }
 
      /**
      * @param chabo 
      * @returns tasks for training or undefined when no tasks could be determined
      */
-    trainForChabo(chabo : Chabo) : TaskChain | undefined {
+    trainForChabo(chabo : Chabo) : TaskChain {
         const tasks : Task[] = [];
         const weights : number[] = [];
 
@@ -191,6 +241,51 @@ export class TaskQueue {
         return new TaskChain(tasks, weights);
     }
 
+    trainForTasks(tasks : Task[] = []) : TaskChain | undefined {
+        if (tasks.length === 0) {
+            return undefined;
+        }
+
+        const generatedTaks : Task[] = [];
+        const weights : number[] = [];
+
+        let combatWeight = tasks.map(task => +task.stats.strWeight + +task.stats.defWeight + +task.stats.dexWeight + +task.stats.agiWeight)
+            .reduce((a, b) => a + b, 0) / tasks.length;
+        let hackWeight = tasks.map(task => task.stats.hackWeight)
+            .reduce((a, b) => a + b, 0) / tasks.length;
+        let chaWeight = tasks.map(task => task.stats.chaWeight)
+            .reduce((a, b) => a + b, 0) / tasks.length;
+
+        if (!_.isNumber(combatWeight)) {
+            combatWeight = 0;
+        }   
+
+        if (!_.isNumber(hackWeight)) {
+            hackWeight = 0;
+        }   
+
+        if (!_.isNumber(chaWeight)) {
+            chaWeight = 0;
+        }   
+
+        if (hackWeight > 0) {
+            generatedTaks.push(new Task(this.ns, Task.Names.TrainHacking, 0, hackWeight));
+            weights.push(hackWeight);
+        }
+
+        if (combatWeight > 0) {
+            generatedTaks.push(new Task(this.ns, Task.Names.TrainHacking, 0, combatWeight));
+            weights.push(combatWeight);
+        }
+
+        if (chaWeight > 0) {
+            generatedTaks.push(new Task(this.ns, Task.Names.TrainCharisma, 0, chaWeight));
+            weights.push(chaWeight);
+        }    
+
+        return new TaskChain(generatedTaks, weights);
+    }
+
     trainForTask(task : Task) : TaskChain {
         const tasks : Task[] = [];
         const weights : number[] = [];
@@ -213,9 +308,10 @@ export class TaskQueue {
 
         return new TaskChain(tasks, weights);
     }
+
 }
 
-interface ChaboTasks {
+export interface ChaboTask {
     chabo: Chabo
     tasks: TaskChain
 }
