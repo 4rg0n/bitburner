@@ -85,7 +85,7 @@ export class Gang {
             chabos = this.chabos;
         }
 
-        chabos = chabos.sort((a, b) => a.getTaskDiff(task) - b.getTaskDiff(task));
+        chabos = chabos.sort((a, b) => a.getTaskDiffWeights(task) - b.getTaskDiffWeights(task));
 
         return chabos[0];
     }

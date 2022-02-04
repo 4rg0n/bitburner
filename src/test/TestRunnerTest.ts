@@ -6,10 +6,10 @@ import { TestRunner } from '/test/TestRunner';
  */
 export async function main(ns : NS) : Promise<void> {
     const runner = new TestRunner(ns);
-    runner.run(TestRunnerTest);
+    runner.run(Tests);
 }
 
-const TestRunnerTest = {
+const Tests = {
     testShouldFail: (ns : NS) : void => {
         Assert.fail(undefined, undefined, "FAILED");
     },

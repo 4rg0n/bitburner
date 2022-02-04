@@ -266,7 +266,7 @@ export class TaskQueue {
         }
 
         // We only need one peace task
-        const queue = new Map([...chaboPeaceTasks.entries()].sort((a, b) => a[0].getTaskDiff(a[1].first()) - b[0].getTaskDiff(b[1].first())));
+        const queue = new Map([...chaboPeaceTasks.entries()].sort((a, b) => a[0].getTaskDiffWeights(a[1].first()) - b[0].getTaskDiffWeights(b[1].first())));
         const first = [...queue.entries()][0]
 
         return {

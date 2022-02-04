@@ -2,15 +2,14 @@ import { NS } from '@ns'
 import { toPrintableString } from '/lib/utils';
 import { Assert } from '/test/Assert';
 import { TestRunner } from '/test/TestRunner';
-/**
- * Tests TestRunner itself
- */
+
 export async function main(ns : NS) : Promise<void> {
     const runner = new TestRunner(ns);
-    runner.run(UtilsTest);
+    runner.run(Tests);
 }
 
-const UtilsTest = {
+const Tests = {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     test_toPrintableString: (ns : NS) : void => {
         Assert.equal(toPrintableString({}), "{}");
         Assert.equal(toPrintableString([]), "[]");

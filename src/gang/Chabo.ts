@@ -213,6 +213,17 @@ export class Chabo {
         const info = this.info;
         const totalMult = +info.hack_mult + +info.str_mult + +info.def_mult + +info.dex_mult + +info.agi_mult + +info.cha_mult;
 
+        if (totalMult === 0) {
+            return {
+                hackWeight: 0,
+                strWeight: 0,
+                defWeight: 0,
+                dexWeight: 0,
+                agiWeight: 0,
+                chaWeight: 0
+            }
+        }
+
         return {
             hackWeight: (info.hack_mult / totalMult) * 100,
             strWeight: (info.str_mult / totalMult) * 100,
@@ -238,33 +249,31 @@ export class Chabo {
     }
 
     needsTraining() : boolean {
-        return this.isBlank() // + certain ascension points?
+        return this.isBlank(); // + certain ascension points?
     }
 
-    isSuitableTask(task : Task, minPercent = 80) : boolean {
-        const minDiff = 100 - minPercent;
-        return this.getTaskDiff(task) > minDiff;
-    }
+    isSuitableTask(task : Task, maxWeightDiff = 50) : boolean {
+        const chaboWeights = this.getMultiWeights();
+        const minMatches = task.getEffectedStats().length;
+        let matches = 0;
 
-    // todo not the best way =/
-    getTaskDiff(task : Task | undefined = undefined) : number {
-        if (typeof task === "undefined") {
-            return 1000;
+        for (const key in chaboWeights) {
+            const taskWeight : unknown = task.stats[key as keyof GangTaskStats];
+            const chaboWeight = chaboWeights[key as keyof StatsWeight];
+            const weightDiff = Math.abs(chaboWeight - taskWeight);
+
+            if (!_.isNumber(taskWeight) || !_.isNumber(weightDiff) || !_.isNumber(chaboWeight)) continue;
+            if (taskWeight <= 0) continue;
+            if (chaboWeight <= 0) continue;
+            
+            if (chaboWeight >= taskWeight) {
+                matches++;
+            } else if (weightDiff <= maxWeightDiff) {
+                matches++;
+            } 
         }
 
-        const weights = this.getMultiWeights();
-        let difference = 0;
-
-        for (const key in weights) {
-            const chaboWeight = weights[key as keyof StatsWeight];
-            const taskWeight = task.stats[key as keyof GangTaskStats];
-
-            const weightDiff = Math.abs(-chaboWeight - -taskWeight);
-
-            difference = +difference + +weightDiff;
-        }
-        
-        return difference;
+        return matches >= minMatches;
     }
 }
 
@@ -439,6 +448,40 @@ export class Task {
             agiWeight: stats.agiWeight,
             chaWeight: stats.chaWeight
         }
+    }
+
+    /**
+     * @returns list of stats effected by tasks in chain
+     */
+     getEffectedStats() : string[] {
+        const statWeights = this.getStatsWeight();
+        const stats = [];
+
+        if (statWeights.agiWeight > 0) {
+            stats.push(Chabo.Stats.Agi);
+        }
+
+        if (statWeights.chaWeight > 0) {
+            stats.push(Chabo.Stats.Cha);
+        }
+
+        if (statWeights.defWeight > 0) {
+            stats.push(Chabo.Stats.Def);
+        }
+
+        if (statWeights.dexWeight > 0) {
+            stats.push(Chabo.Stats.Dex);
+        }
+
+        if (statWeights.hackWeight > 0) {
+            stats.push(Chabo.Stats.Hack);
+        }
+
+        if (statWeights.strWeight > 0) {
+            stats.push(Chabo.Stats.Str);
+        }
+
+        return stats;
     }
 
     addProgress(amount = 1) : number {
