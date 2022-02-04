@@ -562,7 +562,7 @@ export class TaskChain {
         }
 
         if (combatWeight > 0) {
-            generatedTaks.push(new Task(ns, Task.Names.TrainHacking, 0, combatWeight));
+            generatedTaks.push(new Task(ns, Task.Names.TrainCombat, 0, combatWeight));
             weights.push(combatWeight);
         }
 
@@ -594,19 +594,19 @@ export class TaskChain {
         const stats = chabo.getMultiWeights();
         const combatWeight = +stats.strWeight + +stats.defWeight + +stats.dexWeight + +stats.agiWeight;
         const info = chabo.info;
-        const combatStatsMulti = (+info.agi_asc_mult + +info.def_asc_mult +info.dex_asc_mult + +info.str_asc_mult) / 4;
+        const combatStatsMulti = (+info.agi_mult + +info.def_mult +info.dex_mult + +info.str_mult) / 4;
 
-        if (info.hack_asc_mult > 1 && stats.hackWeight > 0) {
+        if (info.hack_mult > 1 && stats.hackWeight > 0) {
             tasks.push(new Task(ns, Task.Names.TrainHacking, 0, stats.hackWeight));
             weights.push(stats.hackWeight);
         }
 
         if (combatStatsMulti > 1 && combatWeight > 0) {
-            tasks.push(new Task(ns, Task.Names.TrainHacking, 0, combatWeight));
+            tasks.push(new Task(ns, Task.Names.TrainCombat, 0, combatWeight));
             weights.push(combatWeight);
         }
 
-        if (info.cha_asc_mult > 1 && stats.chaWeight > 0) {
+        if (info.cha_mult > 1 && stats.chaWeight > 0) {
             tasks.push(new Task(ns, Task.Names.TrainCharisma, 0, stats.chaWeight));
             weights.push(stats.chaWeight);
         }

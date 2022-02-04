@@ -19,7 +19,7 @@ export class Assert {
 
     static isLength(any : unknown, length : number, message : string | undefined = undefined) : void {
         if (_.isArray(any) || _.isString(any)) {
-            if(any.length !== length) this.fail(any.length, length, message, "length ==");
+            if(any.length !== length) this.fail(any, length, message, "length ==");
         } else {
             this.fail(`Expected value to be ${Array.name} or ${String.name}, but got ${typeof any}`);
         }
@@ -67,8 +67,8 @@ export class AssertionError extends Error implements IAssertionError {
 
     constructor(options : IAssertionError) {
         const operator = (!_.isUndefined(options.operator)) ? ` ${options.operator} ` : " to be ";
-        const msg = (_.isUndefined(options.message)) 
-            ? `Expected: ${toPrintableString(options.actual)}${operator}${toPrintableString(options.expected)}` : options.message;
+        const expectedMsg = `Expected: ${toPrintableString(options.actual)}${operator}${toPrintableString(options.expected)}`;
+        const msg = (_.isUndefined(options.message)) ? `${expectedMsg}` : `${options.message}\n ${expectedMsg}`;
 
         super(msg);
 
