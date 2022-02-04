@@ -42,7 +42,7 @@ export class Flags {
         return this.ns.args;
     }
 
-    isFlagPresent(name : string) : boolean {
+    isPresent(name : string) : boolean {
         return this.allArgs().indexOf(`--${name}`) !== -1;
     }
 

@@ -192,6 +192,14 @@ export function median(numbers : number[]) : number {
     return sorted[middle];
 }
 
+export function format(format : string, ...args : string[]) : string {
+    for (const k in args) {
+        format = format.replace("{" + k + "}", args[k])
+    }
+
+    return format
+}
+
 export class NumberStack {
 
     numbers: number[];

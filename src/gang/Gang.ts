@@ -1,12 +1,16 @@
 import { GangGenInfo, GangOtherInfo, NS } from '@ns'
-import { Chabo, NameGenerator } from 'gang/Chabo';
-import { Task } from 'gang/Task';
+import { Chabo, Task } from 'gang/Chabo';
+import { NameGenerator } from '/lib/NameGenerator';
+import { GangConfig } from '/gang/GangConfig';
 
 export class Gang {
-    ns: NS
 
-    constructor(ns : NS) {
+    ns: NS
+    gangConfig: GangConfig | undefined
+
+    constructor(ns : NS, gangConfig : GangConfig | undefined = undefined) {
         this.ns = ns;
+        this.gangConfig = gangConfig;
     }
 
     get chabos() : Chabo[] {

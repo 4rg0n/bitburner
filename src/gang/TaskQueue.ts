@@ -1,15 +1,14 @@
 import { NS } from '@ns'
-import { Chabo} from 'gang/Chabo';
-import { Task, TaskChain } from 'gang/Task';
+import { Chabo, Task, TaskChain, ChaboTask} from 'gang/Chabo';
 import { Gang } from '/gang/Gang';
-
-
 export class TaskQueue {
     static Work = {
         Respect: "respect",
         War: "war",
-        Training: "training",
-        Money: "money"
+        Training: "train",
+        Money: "money",
+        ConfiguredTraining: "conf-train",
+        ConfiguredTask: "conf-task"
     }
 
 
@@ -17,10 +16,15 @@ export class TaskQueue {
     queue: Map<Chabo, TaskChain>
     gang: Gang
 
-    constructor(ns : NS) {
+    constructor(ns : NS, gang : Gang | undefined = undefined) {
         this.ns = ns;
         this.queue = new Map<Chabo, TaskChain>();
-        this.gang = new Gang(ns);
+
+        if (_.isUndefined(gang)) {
+            this.gang = new Gang(ns);
+        } else {
+            this.gang = gang;
+        }
     }
 
     stopAll() : void {
@@ -60,6 +64,45 @@ export class TaskQueue {
         return {chabo: chabo, tasks: chaboTasks};
     }
 
+    /**
+     * Queues trainings based on given gang config
+     * Chabos will be trained according to their task needs
+     */
+    queueTrainingsByConfig() : void {
+        if (typeof this.gang.gangConfig === "undefined") {
+            console.warn("Queue trainings by config without any configuration was triggered.");
+            return;
+        }
+        this.clear();
+
+        this.gang.gangConfig.config.forEach(entry => {
+            const chabos = this.gang.filterExistingChabos(entry. chabos);
+            const tasks = entry.tasks;
+
+            const chaboTasks = this.createTrainingTasks(tasks, chabos);
+            this.addTasks(chaboTasks);
+        });
+    }
+
+    /**
+     * Queues tasks based on given gang config
+     */
+    queueTasksByConfig() : void {
+        if (typeof this.gang.gangConfig === "undefined") {
+            console.warn("Queue tasks by config without any configuration was triggered.");
+            return;
+        }
+        this.clear();
+
+        this.gang.gangConfig.config.forEach(entry => {
+            const chabos = this.gang.filterExistingChabos(entry.chabos);
+            const tasks = entry.tasks;
+
+            const chaboTasks = this.createTasks(tasks, chabos);
+            this.addTasks(chaboTasks);
+        });
+    }
+
     queueWork(workType = TaskQueue.Work.Training, task : Task | undefined = undefined, chabosAvail : Chabo[] | undefined = undefined) : void {
         if (typeof chabosAvail === "undefined") {
             chabosAvail = this.gang.chabos;
@@ -88,6 +131,12 @@ export class TaskQueue {
                 tasks = tasks.concat(this.createMoneyTasks(chabosAvail));
                 chabosAvail = this.filterFromChabos(tasks, chabosAvail);
                 break; 
+            case TaskQueue.Work.ConfiguredTask:
+                this.queueTasksByConfig();
+                return;
+            case TaskQueue.Work.ConfiguredTraining:
+                this.queueTrainingsByConfig();
+                return;        
             case TaskQueue.Work.War:
                 // todo
                 break;    
@@ -105,10 +154,20 @@ export class TaskQueue {
 
         chabos.forEach((c) => {
             let chain : TaskChain | undefined;
-            if (tasks.length === 0) {
-                chain = this.trainForTasks(tasks);
+            if (tasks.length > 0) {
+                let tasksSuitable : Task[]= [];
+
+                if (tasks.length === 1 && !c.isNoob()) {
+                    tasksSuitable = this.gang.findSuitableTasks(c);
+                }
+
+                if (tasksSuitable.length > 1) {
+                    tasks = [tasksSuitable[0]];
+                }
+
+                chain = TaskChain.trainFromTasks(this.ns, tasks);
             } else {
-                chain = this.trainForChabo(c);
+                chain = TaskChain.trainFromChabo(this.ns, c);
             }
 
             if (typeof chain !== "undefined") {
@@ -180,7 +239,7 @@ export class TaskQueue {
         for (const chabo of chabosAvail) {
             let tasksSuitable : Task[]= [];
 
-            if (tasks.length === 1) {
+            if (tasks.length === 1 && !chabo.isNoob()) {
                 tasksSuitable = this.gang.findSuitableTasks(chabo);
             }
 
@@ -215,122 +274,5 @@ export class TaskQueue {
             tasks: first[1]
         };
     }
-
-    trainForChabos(chabos : Chabo[]) : TaskChain[] {
-        return chabos.map(c => this.trainForChabo(c))
-            .filter(tc => tc instanceof TaskChain);
-    }
-
-     /**
-     * @param chabo 
-     * @returns tasks for training or undefined when no tasks could be determined
-     */
-    trainForChabo(chabo : Chabo) : TaskChain {
-        const tasks : Task[] = [];
-        const weights : number[] = [];
-
-        // Default training for new comers
-        if (chabo.isNoob()) {
-            tasks.push(new Task(this.ns, Task.Names.TrainHacking));
-            weights.push(0);
-
-            return new TaskChain(tasks, weights);
-        }
-
-        const stats = chabo.getMultiWeights();
-        const combatWeight = +stats.strWeight + +stats.defWeight + +stats.dexWeight + +stats.agiWeight;
-        const info = chabo.info;
-        const combatStatsMulti = (+info.agi_asc_mult + +info.def_asc_mult +info.dex_asc_mult + +info.str_asc_mult) / 4;
-
-        if (info.hack_asc_mult > 1 && stats.hackWeight > 0) {
-            tasks.push(new Task(this.ns, Task.Names.TrainHacking, 0, stats.hackWeight));
-            weights.push(stats.hackWeight);
-        }
-
-        if (combatStatsMulti > 1 && combatWeight > 0) {
-            tasks.push(new Task(this.ns, Task.Names.TrainHacking, 0, combatWeight));
-            weights.push(combatWeight);
-        }
-
-        if (info.cha_asc_mult > 1 && stats.chaWeight > 0) {
-            tasks.push(new Task(this.ns, Task.Names.TrainCharisma, 0, stats.chaWeight));
-            weights.push(stats.chaWeight);
-        }
-
-        return new TaskChain(tasks, weights);
-    }
-
-    trainForTasks(tasks : Task[] = []) : TaskChain | undefined {
-        if (tasks.length === 0) {
-            return undefined;
-        }
-
-        const generatedTaks : Task[] = [];
-        const weights : number[] = [];
-
-        let combatWeight = tasks.map(task => +task.stats.strWeight + +task.stats.defWeight + +task.stats.dexWeight + +task.stats.agiWeight)
-            .reduce((a, b) => a + b, 0) / tasks.length;
-        let hackWeight = tasks.map(task => task.stats.hackWeight)
-            .reduce((a, b) => a + b, 0) / tasks.length;
-        let chaWeight = tasks.map(task => task.stats.chaWeight)
-            .reduce((a, b) => a + b, 0) / tasks.length;
-
-        if (!_.isNumber(combatWeight)) {
-            combatWeight = 0;
-        }   
-
-        if (!_.isNumber(hackWeight)) {
-            hackWeight = 0;
-        }   
-
-        if (!_.isNumber(chaWeight)) {
-            chaWeight = 0;
-        }   
-
-        if (hackWeight > 0) {
-            generatedTaks.push(new Task(this.ns, Task.Names.TrainHacking, 0, hackWeight));
-            weights.push(hackWeight);
-        }
-
-        if (combatWeight > 0) {
-            generatedTaks.push(new Task(this.ns, Task.Names.TrainHacking, 0, combatWeight));
-            weights.push(combatWeight);
-        }
-
-        if (chaWeight > 0) {
-            generatedTaks.push(new Task(this.ns, Task.Names.TrainCharisma, 0, chaWeight));
-            weights.push(chaWeight);
-        }    
-
-        return new TaskChain(generatedTaks, weights);
-    }
-
-    trainForTask(task : Task) : TaskChain {
-        const tasks : Task[] = [];
-        const weights : number[] = [];
-        const combatWeight = +task.stats.strWeight + +task.stats.defWeight + +task.stats.dexWeight + +task.stats.agiWeight;
-
-        if (task.stats.hackWeight > 0) {
-            tasks.push(new Task(this.ns, Task.Names.TrainHacking, 0, task.stats.hackWeight));
-            weights.push(task.stats.hackWeight);
-        }
-
-        if (combatWeight > 0) {
-            tasks.push(new Task(this.ns, Task.Names.TrainHacking, 0, combatWeight));
-            weights.push(combatWeight);
-        }
-
-        if (task.stats.chaWeight > 0) {
-            tasks.push(new Task(this.ns, Task.Names.TrainCharisma, 0, task.stats.chaWeight));
-            weights.push(task.stats.chaWeight);
-        }
-
-        return new TaskChain(tasks, weights);
-    }
-
 }
 
-export interface ChaboTask {
-    chabo: Chabo
-    tasks: TaskChain
-}

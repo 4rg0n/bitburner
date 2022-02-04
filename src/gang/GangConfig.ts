@@ -1,6 +1,6 @@
 import { NS } from '@ns'
-import { Chabo, NameGenerator } from '/gang/Chabo';
-import { Task } from '/gang/Task';
+import { Chabo, Task } from '/gang/Chabo';
+import { NameGenerator } from '/lib/NameGenerator';
 import { toPrintableString } from '/lib/utils';
 
 export interface IGangConfig {
@@ -18,6 +18,10 @@ export class GangConfig {
 
     constructor(config : IGangConfig[] = []) {
         this.config = config;
+    }
+
+    get length() : number {
+        return this.config.length;
     }
 
     static fromObjectArray(config : IGangConfig[] = []) : GangConfig {
@@ -65,9 +69,11 @@ export class GangConfig {
 
 export class GangConfigGenerator {
 
-    static DefaultConfigPath = "/gang/gang.default.json";
-    static CurrentConfigPath = "/gang/gang.current.json";
+    static BasePath = "/gang/config/";
+    static ConfigPrefix = "gang.";
     static MaximumGangMembers = 12;
+    static DefaultConfigPath = GangConfigGenerator.BasePath + GangConfigGenerator.ConfigPrefix + "default";
+    static CurrentConfigPath = GangConfigGenerator.BasePath + GangConfigGenerator.ConfigPrefix + "current";
 
     static generateGangConfig(ns : NS, hack = 0, combat = 0) : IGangConfig[] {
         const total = hack + combat;
@@ -98,11 +104,21 @@ export class GangConfigGenerator {
         return config;
     }
 
-    static async write(ns : NS, config : IGangConfig[], path : string) : Promise<void> {
+    static async writeAlias(ns : NS, config : IGangConfig[], alias : string) : Promise<string> {
+        return await GangConfigGenerator.write(ns, config, GangConfigGenerator.pathForAlias(alias));
+    }
+
+    static async write(ns : NS, config : IGangConfig[], path : string) : Promise<string> {
         const simpleData = GangConfigGenerator.toSimple(config);
         const data = toPrintableString(simpleData);
 
         await ns.write(path, data, "w");
+
+        return path;
+    }
+
+    static readAlias(ns : NS, alias : string) : IGangConfig[] {
+        return GangConfigGenerator.read(ns, GangConfigGenerator.pathForAlias(alias));
     }
 
     static read(ns : NS, path : string) : IGangConfig[] {
@@ -122,7 +138,7 @@ export class GangConfigGenerator {
             configSimple.push({
                 chabos: config.chabos.map(c => c.name),
                 tasks: config.tasks.map(t => t.name)
-            })
+            });
         }
 
         return configSimple;
@@ -135,7 +151,7 @@ export class GangConfigGenerator {
             configs.push({
                 chabos: config.chabos.map(name => new Chabo(ns, name)),
                 tasks: config.tasks.map(name => new Task(ns, name))
-            })
+            });
         }
 
         return configs;
@@ -149,5 +165,15 @@ export class GangConfigGenerator {
             }
         });
     }
-    
+
+    static pathForAlias(alias : string) : string {
+        return GangConfigGenerator.BasePath + GangConfigGenerator.ConfigPrefix + alias;
+    }
+
+    static ls(ns : NS) : string[] {
+        return ns.ls(
+            ns.getHostname(), 
+            `${GangConfigGenerator.BasePath + GangConfigGenerator.ConfigPrefix}`
+        );
+    }
 }

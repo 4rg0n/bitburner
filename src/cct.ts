@@ -6,7 +6,7 @@ export async function main(ns : NS) : Promise<void> {
     const flags = new Flags(ns, [
         ["loop", false, `Will run continuosly`],
         ["dry", false, `Will run contracts without trying to solve them via the API`],
-        ["help", false, "For finding and solving contracts "]
+        ["help", false, "For finding and solving contracts"]
     ]);
 
     const args = flags.args();

@@ -241,6 +241,10 @@ export class Zerver {
         return this.name == Zerver.Home;
     }
 
+    get isOwn() : boolean {
+        return this.type == Zerver.ServerType.Own;
+    }
+
     get isTargetable() : boolean {
         return this.type === Zerver.ServerType.MoneyFarm 
             && this.isHackable 

@@ -1,7 +1,6 @@
 import { NS } from '@ns'
-import { Chabo } from 'gang/Chabo';
-import { Task, TaskChain} from 'gang/Task';
-import { ChaboTask, TaskQueue } from 'gang/TaskQueue';
+import { Chabo, Task, TaskChain, ChaboTask } from 'gang/Chabo';
+import { TaskQueue } from 'gang/TaskQueue';
 import { Gang } from '/gang/Gang';
 import { GangConfig } from '/gang/GangConfig';
 
@@ -13,64 +12,25 @@ export class Babo {
     workQueue: Map<Chabo, Task>
     parkedQueue: ChaboTask[]
     gang: Gang
-    gangConfig: GangConfig | undefined
 
     constructor(ns : NS, gangConfig : GangConfig | undefined = undefined) {
         this.ns = ns;
-        this.taskQueue = new TaskQueue(ns);
+        this.gang = new Gang(ns, gangConfig);
+        this.taskQueue = new TaskQueue(ns, this.gang);
         this.workQueue = new Map<Chabo, Task>();
         this.parkedQueue = [];
-        this.gang = new Gang(ns);
-        this.gangConfig = gangConfig;
     }
 
     queueWithType(workType : string | undefined = undefined, task : Task | undefined = undefined) : void {
         this.taskQueue.stopAll();
-        this.taskQueue.queueWork(workType, task);
-    }
-
-    /**
-     * Queues trainings based on given gang config
-     * Chabos will be trained according to their task needs
-     */
-    queueTrainingsByConfig() : void {
-        if (typeof this.gangConfig === "undefined") return;
-        this.taskQueue.stopAll();
         this.recruitMissing();
-
-        this.gangConfig.config.forEach(entry => {
-            const chabos = this.gang.filterExistingChabos(entry.chabos);
-            const tasks = entry.tasks;
-
-            const chaboTasks = this.taskQueue.createTrainingTasks(tasks, chabos);
-            this.taskQueue.clear();
-            this.taskQueue.addTasks(chaboTasks);
-        });
+        this.taskQueue.queueWork(workType, task);
     }
 
     queueTask(chabo : Chabo | Chabo[], task : Task) : this {
         const chabos : Chabo[] = _.toArray(chabo);
         chabos.forEach(c => this.taskQueue.set(c, new TaskChain([task])));
-
         return this;
-    }
-
-    /**
-     * Queues tasks based on given gang config
-     */
-    queueTasksByConfig() : void {
-        if (typeof this.gangConfig === "undefined") return;
-        this.taskQueue.stopAll();
-        this.recruitMissing();
-
-        this.gangConfig.config.forEach(entry => {
-            const chabos = this.gang.filterExistingChabos(entry.chabos);
-            const tasks = entry.tasks;
-
-            const chaboTasks = this.taskQueue.createTasks(tasks, chabos);
-            this.taskQueue.clear();
-            this.taskQueue.addTasks(chaboTasks);
-        });
     }
     
     /**
@@ -87,7 +47,7 @@ export class Babo {
                 task = chain.first();
 
                 if (task?.isTraining()) {
-                    if (chabo.shouldAscend()) {
+                    if (chabo.shouldAscend(chain.getEffectedStats())) {
                         if (typeof chabo.ascend() !== "undefined") {
                             this.ns.print(`Ascended ${chabo.name}`);
                             this.ns.toast(`Ascended ${chabo.name}`, "success", 10000);
@@ -102,7 +62,7 @@ export class Babo {
                 return;
             }
 
-            task.addProgress(0.1);
+            task.addProgress(1);
             this.ns.print(`Progress ${chabo.name}: ${task.name} -> ${task.progress.toFixed(2)} / ${task.total.toFixed(2)}`);
             chabo.work(task);
         });
@@ -140,9 +100,9 @@ export class Babo {
     }
 
     recruitMissing() : Chabo[] {
-        if (typeof this.gangConfig === "undefined") return [];
+        if (typeof this.gang.gangConfig === "undefined") return [];
 
-        const chabosMissing = this.gang.filterMissingChabos(this.gangConfig.getAllChabos());
+        const chabosMissing = this.gang.filterMissingChabos(this.gang.gangConfig.getAllChabos());
 
         return this.gang.recruitFor(chabosMissing);
     }

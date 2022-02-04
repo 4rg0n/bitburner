@@ -10,7 +10,7 @@ import { NS } from "@ns";
 export async function main(ns : NS): Promise<void>  {
     const flags = new Flags(ns, [
 		["upgrade", 0, "Number of upgrade cycles. 0 is infinite"],
-		["max", 23, "How many nodes to buy max. 0 is infinite."],
+		["max", 20, "How many nodes to buy max. 0 is infinite."],
 		["money", "", "Will not go under this amount of money when purchasing. Can be formatted in: e.g. 100b or 1t"],
 		["help", false, "For automatically upgrading Hacknet"]
 	]);
@@ -20,8 +20,6 @@ export async function main(ns : NS): Promise<void>  {
     const upgradeCycles = args["upgrade"];
     const max = args["max"];
     const moneyThreashhold = fromFormat(args["money"]);
-
-    
 
     const nodes = HackNode.get(ns);
     const purchaser = new NodePurchaser(ns, max, moneyThreashhold);
