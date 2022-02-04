@@ -29,6 +29,7 @@ export async function main(ns : NS) : Promise<void> {
     terminal.cmdHome(`alias -g stats="run /stats.js"`);
     terminal.cmdHome(`alias -g cct="run /cct.js"`);
     terminal.cmdHome(`alias -g node="run /node.js"`);
+    terminal.cmdHome(`alias -g test="run /test.js"`);
 
     // Gang
     terminal.cmdHome(`alias -g gang-train="run /gang.js --work conf-train --config default"`);

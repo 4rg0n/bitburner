@@ -6,15 +6,12 @@ import { TestRunner } from '/test/TestRunner';
 
 export async function main(ns : NS) : Promise<void> {
     const runner = new TestRunner(ns);
-
     runner.run(Tests);
 }
 
 const Tests = {
     test_findSuitableTask_hack: (ns : NS) : void => {
         const nsMock = ns;
-
-        // mock ns function
         nsMock.gang.getMemberInformation = () => {
             return {
                 name: "test",
@@ -80,8 +77,6 @@ const Tests = {
 
     test_findSuitableTask_combat: (ns : NS) : void => {
         const nsMock = ns;
-
-        // mock ns function
         nsMock.gang.getMemberInformation = () => {
             return {
                 name: "test",
@@ -144,15 +139,5 @@ const Tests = {
             Assert.equal(t.type, Task.Types.Combat);
         });
     },
-    
-    test_trainFromChabo: (ns : NS) : void => {
-        const chaboMock = new Chabo(ns, "test");
-        TaskChain.trainFromChabo(ns, chaboMock);
-    },
-    
-    test_trainFromTasks: (ns : NS) : void => {
-        const taskMock = new Task(ns, Task.Names.Phishing);
-        TaskChain.trainFromTasks(ns, [taskMock]);
-    }
 }
 

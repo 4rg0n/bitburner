@@ -7,6 +7,7 @@ export async function main(ns : NS): Promise<void> {
 	const flags = new Flags(ns, [
 		["help", false, "For displaying some information in the right hand site overview panel"]
 	]);
+	flags.args();
 	ns.disableLog("ALL");
 
 	const moneyBuffer = new NumberStack([], 60);

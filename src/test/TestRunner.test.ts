@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { NS } from '@ns'
 import { Assert } from '/test/Assert';
 import { TestRunner } from '/test/TestRunner';

@@ -34,7 +34,7 @@ export class TestRunner {
 
         try {
             func.apply(scope, [this.ns]);
-            this.ns.tprintf(`SUCCESS ${this.ns.getScriptName()}#${func.name}`);
+            this.ns.tprintf(`SUCCESS ☑ ${this.ns.getScriptName()}#${func.name}`);
         } catch (err) {
 
             const result = TestResult.fromError(func.name, err);
@@ -56,7 +56,7 @@ export class TestRunner {
             }
 
             const msg = TestRunner.errorToString(err);
-            this.ns.tprintf(`${level} ${this.ns.getScriptName()}#${func.name} test result: ${state} \n${msg}}`);
+            this.ns.tprintf(`${level} ☒ ${this.ns.getScriptName()}#${func.name} test result: ${state} \n${msg}}`);
             this.ns.tprintf("\n");
             return result;
         }
@@ -82,14 +82,15 @@ export class TestRunner {
         const errorCount = results.filter(res => res.type === TestResult.Types.Error).length;
         const failureCount = results.filter(res => res.type === TestResult.Types.Failure).length;
         const successCount = results.filter(res => res.type === TestResult.Types.Success).length;
-        let level = "INFO";
+        let passed = "☑";
 
         if (errorCount > 0 || failureCount > 0) {
-            level = "ERROR"
+            passed = "☒"
         } 
 
         this.ns.tprintf("\n");
-        this.ns.tprintf(`${level} Success: ${successCount} Failure: ${failureCount} Error: ${errorCount}`);
+        this.ns.tprintf(` ${passed} Success: ${successCount} Failure: ${failureCount} Error: ${errorCount}`);
+        this.ns.tprintf("\n");
     }
 
     static errorToString(err : Error |  AssertionError | string | unknown) : string {
