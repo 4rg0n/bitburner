@@ -1,6 +1,6 @@
 
 import { Flags } from "lib/Flags";
-import { toPrintableString } from "lib/utils";
+import { toPrintableJson } from "lib/utils";
 import { NS } from "@ns";
 import { Chabo, Task } from "/gang/Chabo";
 import { Equipment } from "/gang/Equipment";
@@ -29,10 +29,10 @@ import { Equipment } from "/gang/Equipment";
         if (taskTypes.length > 0 && taskTypes[0] !== "all") {
             for (const type of taskTypes) {
                 ns.tprintf(`${type}:\n`)
-                Task.get(ns, type).forEach(task => ns.tprintf(`${toPrintableString(task.stats)}`))
+                Task.get(ns, type).forEach(task => ns.tprintf(`${toPrintableJson(task.stats)}`))
             }
         } else {
-            Task.get(ns).forEach(task => ns.tprintf(`${toPrintableString(task.stats)}`))
+            Task.get(ns).forEach(task => ns.tprintf(`${toPrintableJson(task.stats)}`))
         }
         
         return;
@@ -46,20 +46,20 @@ import { Equipment } from "/gang/Equipment";
                 return matched.length > 0;
             }).forEach(chabo => {
                 ns.tprintf(`${chabo.name}:\n`);
-                ns.tprintf(`${toPrintableString(chabo.info)}`);
-                ns.tprintf(`${toPrintableString(chabo.statsRaw)}`);
-                ns.tprintf(`${toPrintableString(chabo.getAscensionResult())}`);
-                ns.tprintf(`${toPrintableString(chabo.getMultiWeights())}`);
+                ns.tprintf(`${toPrintableJson(chabo.info)}`);
+                ns.tprintf(`${toPrintableJson(chabo.statsRaw)}`);
+                ns.tprintf(`${toPrintableJson(chabo.getAscensionResult())}`);
+                ns.tprintf(`${toPrintableJson(chabo.getMultiWeights())}`);
                 ns.tprintf(`Noob: ${chabo.isNoob()}`);
                 ns.tprintf(`Blank: ${chabo.isBlank()}`);
             })
         } else {
             Chabo.get(ns).forEach(chabo => {
                 ns.tprintf(`${chabo.name}:\n`);
-                ns.tprintf(`${toPrintableString(chabo.info)}`);
-                ns.tprintf(`${toPrintableString(chabo.statsRaw)}`);
-                ns.tprintf(`${toPrintableString(chabo.getAscensionResult())}`);
-                ns.tprintf(`${toPrintableString(chabo.getMultiWeights())}`);
+                ns.tprintf(`${toPrintableJson(chabo.info)}`);
+                ns.tprintf(`${toPrintableJson(chabo.statsRaw)}`);
+                ns.tprintf(`${toPrintableJson(chabo.getAscensionResult())}`);
+                ns.tprintf(`${toPrintableJson(chabo.getMultiWeights())}`);
                 ns.tprintf(`Noob: ${chabo.isNoob()}`);
                 ns.tprintf(`Blank: ${chabo.isBlank()}`);
             });
@@ -69,8 +69,8 @@ import { Equipment } from "/gang/Equipment";
     }
 
     if (showGang) {
-        ns.tprintf(`${toPrintableString(ns.gang.getGangInformation())}`);
-        ns.tprintf(`${toPrintableString(ns.gang.getOtherGangInformation())}`);
+        ns.tprintf(`${toPrintableJson(ns.gang.getGangInformation())}`);
+        ns.tprintf(`${toPrintableJson(ns.gang.getOtherGangInformation())}`);
         return;
     }
 
@@ -80,10 +80,10 @@ import { Equipment } from "/gang/Equipment";
         if (equipNames.length > 0 && equipNames[0] !== "all") {
             for (const name of equipNames) {
                 equipments.filter(e => e.name === name)
-                    .forEach(e => ns.tprintf(`${e.name} (${e.type}):\n${toPrintableString(e.stats)}`))
+                    .forEach(e => ns.tprintf(`${e.name} (${e.type}):\n${toPrintableJson(e.stats)}`))
             }
         } else {
-            equipments.forEach(e => ns.tprintf(`${e.name} (${e.type}):\n${toPrintableString(e.stats)}`))
+            equipments.forEach(e => ns.tprintf(`${e.name} (${e.type}):\n${toPrintableJson(e.stats)}`))
         }
         
         return;

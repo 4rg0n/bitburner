@@ -1,7 +1,7 @@
 import { NS } from '@ns'
 import { Chabo, Task } from '/gang/Chabo';
 import { NameGenerator } from '/lib/NameGenerator';
-import { toPrintableString } from '/lib/utils';
+import { toPrintableJson } from '/lib/utils';
 
 export interface IGangConfig {
     chabos: Chabo[]
@@ -110,7 +110,7 @@ export class GangConfigGenerator {
 
     static async write(ns : NS, config : IGangConfig[], path : string) : Promise<string> {
         const simpleData = GangConfigGenerator.toSimple(config);
-        const data = toPrintableString(simpleData);
+        const data = toPrintableJson(simpleData);
 
         await ns.write(path, data, "w");
 

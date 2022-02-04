@@ -27,7 +27,7 @@ export class TestRunner {
         throw new Error(`Can only run functions and objects / classes`);
     }
 
-    runFunction(func : unknown, scope : any = this) : TestResult {
+    runFunction(func : unknown, scope : unknown = this) : TestResult {
         if (!_.isFunction(func)) {
             return new TestResult("" + func);
         }

@@ -1,58 +1,88 @@
+import { PropertyPath } from "lodash";
+import { toPrintableString } from "/lib/utils";
+
 export class Assert {
-    static isLength(any : any, length : number) : void {
+
+    static true(value : unknown, message : string | undefined = undefined) : void {
+        if (!value) this.fail(value, true, message, "==");
+    }
+
+    static equal(actual : unknown, expected : unknown, message : string | undefined = undefined) : void {
+        if (actual != expected) this.fail(actual, expected, message, "==");
+    }
+
+    static notEqual(actual : unknown, expected : unknown, message : string | undefined = undefined) : void {
+        if (actual == expected) {
+            this.fail(actual, expected, message, "!=");
+        }
+    }
+
+    static isLength(any : unknown, length : number, message : string | undefined = undefined) : void {
         if (_.isArray(any) || _.isString(any)) {
-            this.true(any.length === length, `Length to be ${length}, but got ${any.length}`);
+            if(any.length !== length) this.fail(any.length, length, message, "length ==");
         } else {
-            this.fail(`Expected value to be ${Array.name} or ${String.name}`);
+            this.fail(`Expected value to be ${Array.name} or ${String.name}, but got ${typeof any}`);
         }
     }
 
-    static empty(any : any) {
-        if (_.isArray(any)) {
-            this.true(any.length === 0, `Given value to be empty, but got ${any.length}`);
-        } else if (_.isString(any)) {
-            this.true(any === "", `Given value to be empty, but got ${any}`);
-        } else {
-            this.fail(`Expected value to be ${Array.name} or ${String.name}`);
-        }
+    static empty(any : unknown, message : string | undefined = undefined) : void {
+        if (!_.isEmpty(any)) this.fail(any, 0, message, "length ==");
     }
 
-    static notEmpty(any : any) {
-        if (_.isArray(any)) {
-            this.true(any.length > 0, `Given value to be not empty, but got ${any.length}`);
-        } else if (_.isString(any)) {
-            this.true(any !== "", `Given value to be not empty, but got ${any}`);
-        } else {
-            this.fail(undefined, undefined, `Expected value to be ${Array.name} or ${String.name}`);
-        }
+    static notEmpty(any : unknown, message : string | undefined = undefined) : void {
+        if (_.isEmpty(any)) this.fail(any, 0, message, "length >");
     }
 
-    static true(bool : boolean, msg : string | undefined = undefined) : void {
-        if (!bool) {
-            this.fail(bool, true, msg);
-        }
+    static isArray(any : unknown, message : string | undefined = undefined) : void {
+        if (!_.isArray(any)) this.fail(typeof any, "array", message, "==");
     }
 
-    static isArray(any : any) : void {
-        this.true(_.isArray(any), `Given value to be ${Array.name}, but got ${typeof any}`);
+    static notUndefinedOrNull(any : unknown, message : string | undefined = undefined) : void {
+        if (_.isUndefined(any) || _.isNull(any)) this.fail(any, message, "undefined or null", "!=");
     }
 
-    static fail(actual?: unknown | undefined, expected?: unknown | undefined, msg?: string | undefined) {
-        throw new AssertionError(actual, expected, msg); 
+    static has<T>(object: T, path: PropertyPath, message : string | undefined = undefined) : void {
+        if (!_.has(object, path)) this.fail(object, `${path.toString()}`, message, "does not have");
+    }
+
+    static fail(
+        actual : unknown | undefined = undefined,
+        expected : unknown | undefined = undefined, 
+        message : string | undefined = undefined,
+        operator : string | undefined  = undefined
+    ) : void {
+        throw new AssertionError({
+            message: message,
+            actual: actual,
+            expected: expected,
+            operator: operator,
+        });
     }
 }
 
-export class AssertionError extends Error {
-    actual: unknown;
-    expected: unknown;
+export class AssertionError extends Error implements IAssertionError {
+    actual: unknown | undefined;
+    expected: unknown | undefined;
+    operator: string | undefined;
 
-    constructor(actual?: unknown | undefined, expected?: unknown | undefined, msg?: string | undefined) {
-        msg = msg || `Got: ${actual}, but expected: ${expected}`;
+    constructor(options : IAssertionError) {
+        const operator = (!_.isUndefined(options.operator)) ? ` ${options.operator} ` : " to be ";
+        const msg = (_.isUndefined(options.message)) 
+            ? `Expected: ${toPrintableString(options.actual)}${operator}${toPrintableString(options.expected)}` : options.message;
+
         super(msg);
 
-        this.actual = actual;
-        this.expected = expected;
+        this.actual = options.actual;
+        this.expected = options.expected;
+        this.operator = operator;
         this.name = "AssertionError";
         Object.setPrototypeOf(this, AssertionError.prototype);
     }
 }
+interface IAssertionError {
+    message: string | undefined;
+    actual: unknown | undefined;
+    expected: unknown | undefined;
+    operator: string | undefined;
+}
+

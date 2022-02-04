@@ -1,4 +1,4 @@
-export function toPrintableString(thing = {}, blacklist = ["ns"]) : string{
+export function toPrintableJson(thing : unknown = {}, blacklist = ["ns"]) : string{
 	return JSON.stringify(thing, (key, value) => {
 		if (blacklist.indexOf(key) > -1) {
 			return undefined;
@@ -6,6 +6,31 @@ export function toPrintableString(thing = {}, blacklist = ["ns"]) : string{
 
 		return value;
 	}, 2);
+}
+
+export function toPrintableString(any : unknown) : string {
+    if (_.isArray(any) && any.length === 0) {
+        return "[]";
+    }
+
+    if (_.isArray(any) && any.length > 0) {
+        return `[${any.map(v => toPrintableString(v))}]`;
+    }
+
+    if (_.isObject(any) && _.isEmpty(any)) {
+        if (!("name" in any)) return "{}";
+        
+        return `{${(any as {[key: string]: unknown}).name}}`;
+    }
+
+    if (_.isObject(any) && !_.isEmpty(any)) {
+        if (!("name" in any)) return "{Object}";
+
+        return `{${(any as {[key: string]: unknown}).name}}`;
+    }
+
+    const str = _.toString(any);
+    return str;
 }
 
 export function random(min : number, max : number) : number {

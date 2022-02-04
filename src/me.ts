@@ -1,6 +1,6 @@
 import { NS, Player } from "@ns";
 import { Flags } from "lib/Flags";
-import { toPrintableString } from "lib/utils";
+import { toPrintableJson } from "lib/utils";
 
 /**
  * For displaying player information
@@ -28,14 +28,14 @@ import { toPrintableString } from "lib/utils";
 
         if (filterKeys.length === 1) {
             // display single key
-            ns.tprintf(`${filterKeys[0]}: ${toPrintableString(player[filterKeys[0] as keyof Player])}\n`);
+            ns.tprintf(`${filterKeys[0]}: ${toPrintableJson(player[filterKeys[0] as keyof Player])}\n`);
         } else if (filterKeys.length > 1) {
             // display multiple keys
             for (const filterKey of filterKeys) {
-                ns.tprintf(`${filterKey}: ${toPrintableString(player[filterKey as keyof Player])}\n`);
+                ns.tprintf(`${filterKey}: ${toPrintableJson(player[filterKey as keyof Player])}\n`);
             }
         } else {
             // display everything
-            ns.tprintf(`${toPrintableString(player)}`);
+            ns.tprintf(`${toPrintableJson(player)}`);
         }
 }

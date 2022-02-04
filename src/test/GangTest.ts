@@ -11,7 +11,7 @@ export async function main(ns : NS) : Promise<void> {
 }
 
 const GangTest = {
-    testFindSuitableTask: (ns : NS) : void => {
+    test_findSuitableTask: (ns : NS) : void => {
         const nsMock = ns;
 
         // mock ns function
@@ -41,12 +41,12 @@ const GangTest = {
                 agi_mult: 0,
                 cha_mult: 0,
         
-                hack_asc_mult: 0,
+                hack_asc_mult: 80,
                 str_asc_mult: 0,
                 def_asc_mult: 0,
                 dex_asc_mult: 0,
                 agi_asc_mult: 0,
-                cha_asc_mult: 0,
+                cha_asc_mult: 20,
         
                 hack_asc_points: 0,
                 str_asc_points: 0,
@@ -68,16 +68,18 @@ const GangTest = {
         const chabo = new Chabo(nsMock, "test");
     
         const tasks = gang.findSuitableTasks(chabo, 0);
-    
+        
+        Assert.isArray(tasks);
+
         Assert.notEmpty(tasks);
     },
     
-    testTrainFromChabo: (ns : NS) : void => {
+    test_trainFromChabo: (ns : NS) : void => {
         const chaboMock = new Chabo(ns, "test");
         TaskChain.trainFromChabo(ns, chaboMock);
     },
     
-    testTrainFromTasks: (ns : NS) : void => {
+    test_trainFromTasks: (ns : NS) : void => {
         const taskMock = new Task(ns, Task.Names.Phishing);
         TaskChain.trainFromTasks(ns, [taskMock]);
     }

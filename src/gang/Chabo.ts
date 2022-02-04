@@ -211,6 +211,20 @@ export class Chabo {
 
     getMultiWeights() : StatsWeight {
         const info = this.info;
+        const totalMult = +info.hack_mult + +info.str_mult + +info.def_mult + +info.dex_mult + +info.agi_mult + +info.cha_mult;
+
+        return {
+            hackWeight: (info.hack_mult / totalMult) * 100,
+            strWeight: (info.str_mult / totalMult) * 100,
+            defWeight: (info.def_mult / totalMult) * 100,
+            dexWeight: (info.dex_mult / totalMult) * 100,
+            agiWeight: (info.agi_mult / totalMult) * 100,
+            chaWeight: (info.cha_mult / totalMult) * 100
+        } 
+    }
+
+    getAscMultiWeights() : StatsWeight {
+        const info = this.info;
         const totalMult = +info.hack_asc_mult + +info.str_asc_mult + +info.def_asc_mult + +info.dex_asc_mult + +info.agi_asc_mult + +info.cha_asc_mult;
 
         return {
@@ -238,7 +252,7 @@ export class Chabo {
             return 1000;
         }
 
-        const weights =  this.getMultiWeights();
+        const weights = this.getMultiWeights();
         let difference = 0;
 
         for (const key in weights) {

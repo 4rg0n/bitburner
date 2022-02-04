@@ -1,7 +1,7 @@
 import { NS } from '@ns'
 import { GangConfigGenerator, IGangConfig } from '/gang/GangConfig';
 import { Flags } from '/lib/Flags';
-import { toPrintableString } from '/lib/utils';
+import { toPrintableJson } from '/lib/utils';
 
 export async function main(ns : NS) : Promise<void> {
     const flags = new Flags(ns, [
@@ -65,7 +65,7 @@ export async function main(ns : NS) : Promise<void> {
     }
     
     if (!_.isUndefined(gangConfig)) {
-        ns.tprintf(toPrintableString(gangConfig, ["ns"]));
+        ns.tprintf(toPrintableJson(gangConfig, ["ns"]));
     } else {
         ns.tprintf("INFO No gang config to print");
         return;

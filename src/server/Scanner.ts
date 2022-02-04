@@ -1,6 +1,6 @@
 import { NS, Server } from "@ns";
 import { Zerver } from "server/Zerver";
-import { toPrintableString } from "lib/utils";
+import { toPrintableJson } from "lib/utils";
 
 /**
  * For seacrhing and anylizing servers
@@ -160,19 +160,19 @@ export class Scanner {
 		for (const server of serverInfos) {
 			if (filterKeys.length === 1) {
 				// display single key
-				this.ns.tprintf(`${server.hostname}: ${toPrintableString(server[filterKeys[0] as keyof ServerInfo])}\n`);
+				this.ns.tprintf(`${server.hostname}: ${toPrintableJson(server[filterKeys[0] as keyof ServerInfo])}\n`);
 			} else if (filterKeys.length > 1) {
 				// display multiple keys
 				this.ns.tprintf(`${server.hostname}:`);
 
 				for (const filterKey of filterKeys) {
-					this.ns.tprintf(`  ${filterKey}: ${toPrintableString(server[filterKey as keyof ServerInfo])}\n`);
+					this.ns.tprintf(`  ${filterKey}: ${toPrintableJson(server[filterKey as keyof ServerInfo])}\n`);
 				}
 
 				this.ns.tprintf("\n");
 			} else {
 				// display everything
-				this.ns.tprintf(`${toPrintableString(server, ["zerver"])}`);
+				this.ns.tprintf(`${toPrintableJson(server, ["zerver"])}`);
 			}
 		}
 		
