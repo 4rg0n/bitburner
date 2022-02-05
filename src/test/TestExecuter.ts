@@ -7,7 +7,7 @@ export class TestExecuter {
         this.ns = ns;
     }
 
-    async exec(grep = "") : void {
+    async exec(grep = "") : Promise<void> {
         const tests = this.ls(grep);
 
         for (const test of tests) {
@@ -32,7 +32,7 @@ export class TestExecuter {
         const tests = this.ns.ls(this.ns.getHostname(), ".test.");
 
         if (grep !== "") {
-            return tests.filter(name => name.toLowerCase().indexOf(grep.toLowerCase) !== -1);
+            return tests.filter(name => name.toLowerCase().indexOf(grep.toLowerCase()) !== -1);
         }
         
         return tests;

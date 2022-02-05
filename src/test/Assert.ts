@@ -38,7 +38,7 @@ export class Assert {
     }
 
     static notUndefinedOrNull(any : unknown, message : string | undefined = undefined) : void {
-        if (_.isUndefined(any) || _.isNull(any)) this.fail(any, message, "undefined or null", "!=");
+        if (_.isUndefined(any) || _.isNull(any)) this.fail(any, "<undefined> or <null>", message, "!=");
     }
 
     static has<T>(object: T, path: PropertyPath, message : string | undefined = undefined) : void {

@@ -1,5 +1,5 @@
 import { NS } from '@ns'
-import { Chabo, Task, TaskChain, ChaboTask } from 'gang/Chabo';
+import { Chabo, Task, TaskChain, ChaboTasks } from 'gang/Chabo';
 import { TaskQueue } from 'gang/TaskQueue';
 import { Gang } from '/gang/Gang';
 import { GangConfig } from '/gang/GangConfig';
@@ -10,7 +10,7 @@ export class Babo {
     ns: NS
     taskQueue: TaskQueue
     workQueue: Map<Chabo, Task>
-    parkedQueue: ChaboTask[]
+    parkedQueue: ChaboTasks[]
     gang: Gang
 
     constructor(ns : NS, gangConfig : GangConfig | undefined = undefined) {
@@ -74,12 +74,17 @@ export class Babo {
 
         // Peace task handling
         if (wantedGain >= 1 && wantedLevel >= 1) {
-            // park original tasks and add one chabo to do peace task
             const chaboPeaceTasks = this.taskQueue.createPeaceTask();
-            const originalTasks = this.taskQueue.removeTaskByChabo(chaboPeaceTasks.chabo);
+            if (_.isUndefined(chaboPeaceTasks)) {
+                console.info("No chabo found for peace task");
+                return;
+            }
+
+            // park original tasks and add one chabo to do peace task
+            const originalTasks = this.taskQueue.removeTaskByChabo((chaboPeaceTasks as ChaboTasks).chabo);
 
             if (!_.isUndefined(originalTasks)) {
-                this.parkedQueue.push({chabo: chaboPeaceTasks.chabo, tasks: originalTasks.tasks});
+                this.parkedQueue.push({chabo: (chaboPeaceTasks as ChaboTasks).chabo, chain: originalTasks.chain});
             }
 
             this.taskQueue.addTasks([chaboPeaceTasks]);

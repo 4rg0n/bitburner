@@ -1,7 +1,9 @@
 import { NS } from '@ns'
-import { Chabo, Task, TaskChain } from '/gang/Chabo'
+import { Gang } from '/gang/Gang';
+import { TaskQueue } from '/gang/TaskQueue';
 import { Assert } from '/test/Assert';
 import { TestRunner } from '/test/TestRunner';
+import { Task, Chabo, ChaboTasks } from '/gang/Chabo';
 
 export async function main(ns : NS) : Promise<void> {
     const runner = new TestRunner(ns);
@@ -9,7 +11,10 @@ export async function main(ns : NS) : Promise<void> {
 }
 
 const Tests = {
-    test_trainFromChabo_combat: (ns : NS) : void => {
+    test_createPeaceTask_justice: (ns : NS) => {
+        const gang = new Gang(ns);
+        const taskQueue = new TaskQueue(ns, gang);
+
         const nsMock = ns;
         nsMock.gang.getMemberInformation = () => {
             return {
@@ -30,11 +35,11 @@ const Tests = {
                 agi_exp: 0,
                 cha_exp: 0,
         
-                hack_mult: 0,
-                str_mult: 25,
-                def_mult: 25,
-                dex_mult: 25,
-                agi_mult: 25,
+                hack_mult: 20,
+                str_mult: 20,
+                def_mult: 20,
+                dex_mult: 20,
+                agi_mult: 20,
                 cha_mult: 0,
         
                 hack_asc_mult: 0,
@@ -60,22 +65,22 @@ const Tests = {
             };
         }
         const chabo = new Chabo(nsMock, "test");
-        const chain = TaskChain.trainFromChabo(ns, chabo);
+        const chaboTasks = taskQueue.createPeaceTask([chabo]);
 
-        Assert.notUndefinedOrNull(chain);
-        Assert.isLength(chain.tasks, 1);
-        chain.tasks.forEach(t => {
-            Assert.equal(t.type, Task.Types.Train);
-        });
-
+        Assert.notUndefinedOrNull(chaboTasks);
+        Assert.isLength((chaboTasks as ChaboTasks).chain.tasks, 1);
         Assert.isLength(
-            chain.tasks.filter(t => t.name === Task.Names.TrainCombat), 
+            (chaboTasks as ChaboTasks).chain.tasks.filter(t => t.name === Task.Names.Justice), 
             1, 
-            `There must be 1 "${Task.Names.TrainCombat}" task`
+            `There must be 1 "${Task.Names.Justice}" task`
         );
+        Assert.equal((chaboTasks as ChaboTasks).chabo.name, chabo.name);
     },
-    
-    test_trainFromChabo_hacking: (ns : NS) : void => {
+
+    test_createPeaceTask_hacking: (ns : NS) => {
+        const gang = new Gang(ns);
+        const taskQueue = new TaskQueue(ns, gang);
+
         const nsMock = ns;
         nsMock.gang.getMemberInformation = () => {
             return {
@@ -126,68 +131,15 @@ const Tests = {
             };
         }
         const chabo = new Chabo(nsMock, "test");
-        const chain = TaskChain.trainFromChabo(ns, chabo);
+        const chaboTasks = taskQueue.createPeaceTask([chabo]);
 
-        Assert.notUndefinedOrNull(chain);
-        Assert.isLength(chain.tasks, 2);
-        chain.tasks.forEach(t => {
-            Assert.equal(t.type, Task.Types.Train);
-        });
-
+        Assert.notUndefinedOrNull(chaboTasks);
+        Assert.isLength((chaboTasks as ChaboTasks).chain.tasks, 1);
         Assert.isLength(
-            chain.tasks.filter(t => t.name === Task.Names.TrainCharisma), 
+            (chaboTasks as ChaboTasks).chain.tasks.filter(t => t.name === Task.Names.EthHacking), 
             1, 
-            `There must be 1 "${Task.Names.TrainCharisma}" task`
+            `There must be 1 "${Task.Names.EthHacking}" task`
         );
-        Assert.isLength(
-            chain.tasks.filter(t => t.name === Task.Names.TrainHacking), 
-            1, 
-            `There must be 1 "${Task.Names.TrainHacking}" task`
-        );
-    },
-
-    test_trainFromTask_hacking: (ns : NS) : void => {
-        const task = new Task(ns, Task.Names.Phishing);
-        const chain = TaskChain.trainFromTasks(ns, [task]);
-
-        Assert.notUndefinedOrNull(chain);
-        Assert.isLength((chain as TaskChain).tasks, 2);
-        (chain as TaskChain).tasks.forEach(t => {
-            Assert.equal(t.type, Task.Types.Train);
-        });
-
-        Assert.isLength(
-            (chain as TaskChain).tasks.filter(t => t.name === Task.Names.TrainCharisma), 
-            1, 
-            `There must be 1 "${Task.Names.TrainCharisma}" task`
-        );
-        Assert.isLength(
-            (chain as TaskChain).tasks.filter(t => t.name === Task.Names.TrainHacking), 
-            1, 
-            `There must be 1 "${Task.Names.TrainHacking}" task`
-        );
-    },
-
-    test_trainFromTask_combat: (ns : NS) : void => {
-        const task = new Task(ns, Task.Names.Mug);
-        const chain = TaskChain.trainFromTasks(ns, [task]);
-
-        Assert.notUndefinedOrNull(chain);
-        Assert.isLength((chain as TaskChain).tasks, 2);
-        (chain as TaskChain).tasks.forEach(t => {
-            Assert.equal(t.type, Task.Types.Train);
-        });
-
-        Assert.isLength(
-            (chain as TaskChain).tasks.filter(t => t.name === Task.Names.TrainCombat), 
-            1, 
-            `There must be 1 "${Task.Names.TrainCombat}" task`
-        );
-        Assert.isLength(
-            (chain as TaskChain).tasks.filter(t => t.name === Task.Names.TrainCharisma), 
-            1, 
-            `There must be 1 "${Task.Names.TrainCharisma}" task`
-        );
+        Assert.equal((chaboTasks as ChaboTasks).chabo.name, chabo.name);
     }
 }
-

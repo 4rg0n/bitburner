@@ -22,5 +22,10 @@ const Tests = {
         Assert.equal(toPrintableString([0,1,2]), "[0,1,2]");
         Assert.equal(toPrintableString([Assert,Assert,Assert]), "[{Assert},{Assert},{Assert}]");
         Assert.equal(toPrintableString(Assert), "{Assert}");
+        Assert.equal(toPrintableString(undefined), "<undefined>");
+        Assert.equal(toPrintableString(null), "<null>");
+        Assert.equal(toPrintableString(NaN), "<NaN>");
+        Assert.equal(toPrintableString(Number.NEGATIVE_INFINITY), "-Infinity");
+        Assert.equal(toPrintableString(Number.POSITIVE_INFINITY), "Infinity");
     }
 }

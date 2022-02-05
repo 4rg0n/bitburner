@@ -30,6 +30,25 @@ export class Chabo {
         return names.map(name => new Chabo(ns, name));
     }
 
+    static mapStatsWeight(statWeightName : string) : string {
+        switch (statWeightName) {
+            case "hackWeight":
+                return Chabo.Stats.Hack;
+            case "agiWeight":
+                return Chabo.Stats.Agi; 
+            case "strWeight":
+                return Chabo.Stats.Str; 
+            case "dexWeight":
+                return Chabo.Stats.Dex; 
+            case "defWeight":
+                return Chabo.Stats.Def; 
+            case "chaWeight":
+                return Chabo.Stats.Cha;
+            default:
+                throw new Error(`Invalid stat weight name: ${statWeightName}`);     
+        }
+    }
+
     get info() : GangMemberInfo {
         return this.ns.gang.getMemberInformation(this.name);
     }
@@ -191,12 +210,12 @@ export class Chabo {
 
     isNoob() : boolean {
         const info = this.info;
-        return info.agi_asc_mult === 1 
-            && info.cha_asc_mult === 1 
-            && info.def_asc_mult === 1 
-            && info.dex_asc_mult === 1 
-            && info.str_asc_mult === 1 
-            && info.hack_asc_mult === 1;
+        return info.agi_mult === 1 
+            && info.cha_mult === 1 
+            && info.def_mult === 1 
+            && info.dex_mult === 1 
+            && info.str_mult === 1 
+            && info.hack_mult === 1;
     }
 
     isBlank() : boolean {
@@ -260,9 +279,11 @@ export class Chabo {
         for (const key in chaboWeights) {
             const taskWeight : unknown = task.stats[key as keyof GangTaskStats];
             const chaboWeight = chaboWeights[key as keyof StatsWeight];
+
+            if (!_.isNumber(taskWeight) || !_.isNumber(chaboWeight)) continue;
+
             const weightDiff = Math.abs(chaboWeight - taskWeight);
 
-            if (!_.isNumber(taskWeight) || !_.isNumber(weightDiff) || !_.isNumber(chaboWeight)) continue;
             if (taskWeight <= 0) continue;
             if (chaboWeight <= 0) continue;
             
@@ -455,33 +476,27 @@ export class Task {
      */
      getEffectedStats() : string[] {
         const statWeights = this.getStatsWeight();
-        const stats = [];
+        const stats : string[] = [];
 
-        if (statWeights.agiWeight > 0) {
-            stats.push(Chabo.Stats.Agi);
-        }
-
-        if (statWeights.chaWeight > 0) {
-            stats.push(Chabo.Stats.Cha);
-        }
-
-        if (statWeights.defWeight > 0) {
-            stats.push(Chabo.Stats.Def);
-        }
-
-        if (statWeights.dexWeight > 0) {
-            stats.push(Chabo.Stats.Dex);
-        }
-
-        if (statWeights.hackWeight > 0) {
-            stats.push(Chabo.Stats.Hack);
-        }
-
-        if (statWeights.strWeight > 0) {
-            stats.push(Chabo.Stats.Str);
+        for (const key in statWeights) {
+            const value = statWeights[key as keyof StatsWeight];
+            if (value > 0) stats.push(Chabo.mapStatsWeight(key));
         }
 
         return stats;
+    }
+
+    getMostEffectedStat() : string {
+        const statWeights = this.getStatsWeight();
+        const statWeightsFlat : {name: string, value: number}[] = [];
+
+        for (const key in statWeights) {
+            const value = statWeights[key as keyof StatsWeight];
+            statWeightsFlat.push({name: key, value: value});
+        }
+
+        const highestStatWeight = _.sortBy(statWeightsFlat, stat => stat.value)[0];
+        return Chabo.mapStatsWeight(highestStatWeight.name);
     }
 
     addProgress(amount = 1) : number {
@@ -667,30 +682,11 @@ export class TaskChain {
      */
     getEffectedStats() : string[] {
         const statWeights = this.getStatsWeight();
-        const stats = [];
+        const stats : string[] = [];
 
-        if (statWeights.agiWeight > 0) {
-            stats.push(Chabo.Stats.Agi);
-        }
-
-        if (statWeights.chaWeight > 0) {
-            stats.push(Chabo.Stats.Cha);
-        }
-
-        if (statWeights.defWeight > 0) {
-            stats.push(Chabo.Stats.Def);
-        }
-
-        if (statWeights.dexWeight > 0) {
-            stats.push(Chabo.Stats.Dex);
-        }
-
-        if (statWeights.hackWeight > 0) {
-            stats.push(Chabo.Stats.Hack);
-        }
-
-        if (statWeights.strWeight > 0) {
-            stats.push(Chabo.Stats.Str);
+        for (const key in statWeights) {
+            const value = statWeights[key as keyof StatsWeight];
+            if (value > 0) stats.push(Chabo.mapStatsWeight(key));
         }
 
         return stats;
@@ -722,8 +718,8 @@ export interface Stats {
     cha: number
 }
 
-export interface ChaboTask {
+export interface ChaboTasks {
     chabo: Chabo
-    tasks: TaskChain
+    chain: TaskChain
 }
 

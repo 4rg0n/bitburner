@@ -9,6 +9,26 @@ export function toPrintableJson(thing : unknown = {}, blacklist = ["ns"]) : stri
 }
 
 export function toPrintableString(any : unknown) : string {
+    if (_.isUndefined(any)) {
+        return "<undefined>";
+    }
+
+    if (_.isNull(any)) {
+        return "<null>";
+    }
+
+    if (_.isNaN(any)) {
+        return "<NaN>";
+    }
+
+    if (!_.isFinite(any) && any === Number.POSITIVE_INFINITY) {
+        return "Infinity";
+    }
+
+    if (!_.isFinite(any) && any === Number.NEGATIVE_INFINITY) {
+        return "-Infinity";
+    }
+
     if (_.isArray(any) && any.length === 0) {
         return "[]";
     }

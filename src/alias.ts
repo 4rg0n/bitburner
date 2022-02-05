@@ -6,7 +6,7 @@ export async function main(ns : NS) : Promise<void> {
     const flags = new Flags(ns, [
         ["help", false, "For registering aliases"]
     ]);
-    const args = flags.args();
+    flags.args();
 
     const terminal = new Terminal();
 

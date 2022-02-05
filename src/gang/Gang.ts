@@ -1,4 +1,4 @@
-import { GangGenInfo, GangOtherInfo, NS } from '@ns'
+import { GangGenInfo, GangMemberInfo, GangOtherInfo, NS } from '@ns'
 import { Chabo, Task } from 'gang/Chabo';
 import { NameGenerator } from '/lib/NameGenerator';
 import { GangConfig } from '/gang/GangConfig';
@@ -62,14 +62,6 @@ export class Gang {
         return this.findSuitableChabos(task, availChabos);
     }
 
-    findSuitableChabos(task : Task, chabos : Chabo[] = []) : Chabo[] {
-        if (chabos.length === 0) {
-            chabos = this.chabos;
-        }
-
-        return chabos.filter(chabo => chabo.isSuitableTask(task));
-    }
-
     findSuitableTasks(chabo : Chabo, wantedGainLimit = 10) : Task[]  {
         const tasks = Task.get(this.ns).filter(t => t.type === Task.Types.Combat || t.type === Task.Types.Hack)
             .filter(t => chabo.isSuitableTask(t))
@@ -80,14 +72,21 @@ export class Gang {
         return tasks;
     }
 
-    findBestChabo(task : Task, chabos : Chabo[] = []) : Chabo {
-        if (chabos.length === 0) {
-            chabos = this.chabos;
+    /**
+     * @returns chabos, who can do th egiven tasks, ordered by most effected chabo stat
+     */
+    findSuitableChabos(task : Task, chabosAvail : Chabo[] = []) : Chabo[] {
+        if (chabosAvail.length === 0) {
+            chabosAvail = this.chabos;
         }
 
-        chabos = chabos.sort((a, b) => a.getTaskDiffWeights(task) - b.getTaskDiffWeights(task));
+        const mostEffectedStat = task.getMostEffectedStat();
 
-        return chabos[0];
+        return chabosAvail
+            .filter(chabo => !chabo.isNoob() && !chabo.isBlank())
+            .filter(chabo => chabo.isSuitableTask(task))
+            .sort((a, b) => (a.info[mostEffectedStat as keyof GangMemberInfo] as number) - (b.info[mostEffectedStat as keyof GangMemberInfo] as number))
+            .reverse();
     }
 
     getDiscount(): number {
