@@ -4,13 +4,15 @@ import { toPrintableJson } from "lib/utils";
 import { NS } from "@ns";
 import { Chabo, Task } from "/gang/Chabo";
 import { Equipment } from "/gang/Equipment";
+import { canRunGang } from '/lib/ns0';
 
 /**
  * For showing various gang information
  */
  export async function main(ns : NS): Promise<void> {
+    canRunGang(ns);
     const flags = new Flags(ns, [
-        ["...", [""], `Name(s) of gang member(s) to show info with via --chabo`],
+        ["...", [], `Name(s) of gang member(s) to show info with via --chabo`],
         ["task", ["all"], `Show tasks information: ${Object.values(Task.Categories).join(", ")}`],
         ["equip", ["all"], `Show equipment information: ${ns.gang.getEquipmentNames().join(", ")}`],
         ["chabo", false, `Show chabos information: ${ns.gang.getMemberNames().join(", ")}`],

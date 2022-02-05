@@ -36,3 +36,11 @@ export function hasBladeburnerApi(ns : NS) : boolean {
     return true;
 }
 
+export function canRunGang(ns : NS) : void {
+    shouldRun(ns, hasGangApi(ns), "need gang api access");
+}
+
+export function shouldRun(ns : NS, doRun = true, message = "") : void {
+    if (!doRun) throw `Can not run ${ns.getScriptName()} ${message}`;
+}
+

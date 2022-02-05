@@ -104,6 +104,20 @@ export class GangConfigGenerator {
         return config;
     }
 
+    static generateDefault(ns : NS) : IGangConfig[] {
+        return this.generateGangConfig(ns, 12, 0);
+    }
+
+    static async writeDefault(ns : NS) : Promise<string> {
+        const config = GangConfigGenerator.generateDefault(ns);
+        return await GangConfigGenerator.write(ns, config, GangConfigGenerator.DefaultConfigPath);
+    }
+
+    static async writeCurrent(ns : NS) : Promise<string>{
+        const config = GangConfigGenerator.fromCurrent(ns);
+        return  await GangConfigGenerator.write(ns, config, GangConfigGenerator.CurrentConfigPath);
+    }
+
     static async writeAlias(ns : NS, config : IGangConfig[], alias : string) : Promise<string> {
         return await GangConfigGenerator.write(ns, config, GangConfigGenerator.pathForAlias(alias));
     }

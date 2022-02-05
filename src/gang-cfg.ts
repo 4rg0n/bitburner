@@ -1,9 +1,11 @@
 import { NS } from '@ns'
 import { GangConfigGenerator, IGangConfig } from '/gang/GangConfig';
 import { Flags } from '/lib/Flags';
+import { canRunGang } from '/lib/ns0';
 import { toPrintableJson } from '/lib/utils';
 
 export async function main(ns : NS) : Promise<void> {
+    canRunGang(ns);
     const flags = new Flags(ns, [
         ["hack", 0, `Amount of members, who would do hacking tasks. Total combat and hack max: ${GangConfigGenerator.MaximumGangMembers}`],
         ["combat", 0, `Amount of members, who would do combat tasks. Total combat and hack max: ${GangConfigGenerator.MaximumGangMembers}`],
@@ -39,18 +41,15 @@ export async function main(ns : NS) : Promise<void> {
             if (!await ns.prompt(`There's already a default config ${GangConfigGenerator.DefaultConfigPath}. Overwrite?`)) return;
         }
 
-        gangConfig = GangConfigGenerator.generateGangConfig(ns, 6, 6);
+        const path = await GangConfigGenerator.writeDefault(ns);
 
-        await GangConfigGenerator.write(ns, gangConfig, GangConfigGenerator.DefaultConfigPath);
-        ns.tprintf(`INFO DEFAULT gang config saved to:\n nano ${GangConfigGenerator.DefaultConfigPath}.txt`);
+        ns.tprintf(`INFO DEFAULT gang config saved to:\n nano ${path}`);
         return;
     }
 
     if (doCurrent) {
-        gangConfig = GangConfigGenerator.fromCurrent(ns);
-
-        await GangConfigGenerator.write(ns, gangConfig, GangConfigGenerator.DefaultConfigPath);
-        ns.tprintf(`INFO CURRENT gang config saved to:\n nano ${GangConfigGenerator.DefaultConfigPath}.txt`);
+        const path = await GangConfigGenerator.writeCurrent(ns);
+        ns.tprintf(`INFO CURRENT gang config saved to:\n nano ${path}`);
         return;
     }
 

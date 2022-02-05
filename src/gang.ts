@@ -5,13 +5,15 @@ import { Chabo, Task } from "/gang/Chabo";
 import { TaskQueue } from "/gang/TaskQueue";
 import { Babo } from "/gang/Babo";
 import { GangConfig, GangConfigGenerator} from "/gang/GangConfig";
+import { canRunGang } from '/lib/ns0';
 
 /**
  * For managing your Gang (WIP) o.O
  */
  export async function main(ns : NS): Promise<void> {
+    canRunGang(ns);
     const flags = new Flags(ns, [
-        ["...", [""], `Nam(e) of gang member(s) to do either --work or --train `],
+        ["...", [], `Name(s) of gang member(s) to do either --work or --train `],
         ["config", "default", `Use configuration file for gang by alias`],
         ["work", "", `Do work by type ${Object.values(TaskQueue.Work).join(", ")}`],
         ["task", "", `Do specific task ${Object.values(Task.Names).join(", ")}.`],

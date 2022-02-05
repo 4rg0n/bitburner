@@ -77,7 +77,13 @@ export class Flags {
         const lines = [];
 
         for (const flag of this.flagSchemas) {
-            lines.push(`--${flag[0]} ${(this.defaultToString(flag[1]))}${this.descriptionToString(flag[2])}`);
+            let param = `${flag[0]}`;
+
+            if (param !== Flags.ParamAllFlag && param !== Flags.ParamFlag) {
+                param = `--${param}`;
+            }
+
+            lines.push(`${param} ${(this.defaultToString(flag[1]))}${this.descriptionToString(flag[2])}`);
         }
 
         return lines.join("\n");
