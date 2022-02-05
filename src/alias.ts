@@ -12,7 +12,7 @@ export async function main(ns : NS) : Promise<void> {
 
     // Distribution
     terminal.cmdHome(`alias -g dist-early="dist n00dles foodnstuff --take 0.1 --boost --aggro --scale 1"`);
-    terminal.cmdHome(`alias -g dist-mid="dist --target lowest --take 0.5 --boost --aggro --scale 1 --free 64"`);
+    terminal.cmdHome(`alias -g dist-mid="dist --target lowest --take 0.5 --boost --aggro --free 64"`);
     terminal.cmdHome(`alias -g dist-late="dist --take 0.9 --aggro --cap 2PB --share --free 64"`);
     
     // Scanning

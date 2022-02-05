@@ -1,4 +1,5 @@
 import { NS } from "@ns";
+import { asArray } from "/lib/utils";
 import { Zerver } from "/server/Zerver";
 
 /**
@@ -33,7 +34,7 @@ export class Runner {
         return Math.floor(free / need);
     }
 
-    calcRamFree(capacity: number | undefined = undefined) : number {
+    calcRamFree(capacity? : number) : number {
         if (typeof capacity === "undefined") {
             capacity = this.getRamCapacity();
         }
@@ -60,7 +61,7 @@ export class Runner {
      * @returns min thread count of all given scripts
      */
     minThreads(scripts : string|string[], threads = 0) : number {
-        scripts = _.toArray(scripts);
+        scripts = asArray(scripts);
         const allThreads = [];
 
         for (const script of scripts) {
@@ -78,8 +79,8 @@ export class Runner {
     }
 
     async await(scripts : string|string[], args : string|string[]  = this.defaultArgs): Promise<void>  {
-        scripts = _.toArray(scripts);
-        args = _.toArray(args);
+        scripts = asArray(scripts);
+        args = asArray(args);
 
         for (const i in scripts) {
             const script = scripts[i];
@@ -97,8 +98,8 @@ export class Runner {
         if (threads < 1) return;
 
         const ns = this.ns;
-        scripts = _.toArray(scripts);
-        args =  _.toArray(args);   
+        scripts = asArray(scripts);
+        args =  asArray(args);   
         threads = this.minThreads(scripts, threads);
 
         if (threads < 1) return;
@@ -112,16 +113,16 @@ export class Runner {
     }
     
     async finish(scripts : string|string[], threads = 1, args : string|string[] = this.defaultArgs): Promise<void>  {
-        scripts = _.toArray(scripts);
-        args = _.toArray(args);
+        scripts = asArray(scripts);
+        args = asArray(args);
 
         await this.start(scripts, threads, args);
         await this.await(scripts, args);
     }
 
     async kill(scripts : string|string[], args : string|string[] = this.defaultArgs): Promise<void>  {
-        const scriptsArr = _.toArray(scripts);
-        const argsArr = _.toArray(args);
+        const scriptsArr =asArray(scripts);
+        const argsArr = asArray(args);
 
         for (const i in scriptsArr) {
             this.ns.kill(scriptsArr[i], this.targetHost, ...argsArr);

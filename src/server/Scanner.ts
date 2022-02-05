@@ -28,7 +28,7 @@ export class Scanner {
 	}
 
 	scan(
-		search : {key: string | number | boolean | undefined; value: string | number | boolean | undefined} = {key: "", value: ""},
+		search : Search = {key: "", value: ""},
 		categories : string[] = [],
 		moneyRanks : string[] = [],
 		sort : {by: string; desc: boolean} = {by: "", desc: false}
@@ -59,7 +59,7 @@ export class Scanner {
 
 	scanServers(
 		servers : ServerInfo[],
-		search : {key: string | number | boolean | undefined; value: string | number | boolean | undefined} = {key: "", value: ""},
+		search : Search = {key: "", value: ""},
 		categories : string[] = [],
 		moneyRanks : string[] = [],
 		sort : {by: string; desc: boolean} = {by: "", desc: false}
@@ -78,7 +78,7 @@ export class Scanner {
 
 	scanHosts(
 		servers : ServerInfo[], 
-		search : {key: string | number | boolean | undefined; value: string | number | boolean | undefined} = {key: "", value: ""},
+		search : Search = {key: "", value: ""},
 		categories : string[] = [],
 		sort : {by: string; desc: boolean} = {by: "", desc: false}
 	) : ServerInfo[] {
@@ -345,7 +345,7 @@ export class Scanner {
 		return false;
 	}
 	
-	compareWithFunction(leftValue : string | number | boolean | string[] | undefined, rightValue : string | number | boolean | undefined, operator = Scanner.Comparator.none) : boolean {
+	compareWithFunction(leftValue? : string | number | boolean | string[], rightValue? : string | number | boolean, operator = Scanner.Comparator.none) : boolean {
 		if (typeof rightValue === "string" && this.containsFunction(rightValue)) {
 			rightValue = this.execNsFunction(rightValue);
 		}
@@ -353,7 +353,7 @@ export class Scanner {
 		return this.compare(leftValue, rightValue, operator)
 	}
 
-	compareArray(leftValues : number[] | string[], rightValue : number | string | undefined = undefined, operator = Scanner.Comparator.none) : boolean {
+	compareArray(leftValues : number[] | string[], rightValue? : number | string, operator = Scanner.Comparator.none) : boolean {
 		let result = false;
 
 		for (const i in leftValues) {
@@ -375,7 +375,7 @@ export class Scanner {
 		return result;
 	}
 
-	compareNumber(leftValue : number, rightValue : number | undefined = undefined, operator = Scanner.Comparator.none) : boolean {
+	compareNumber(leftValue : number, rightValue? : number, operator = Scanner.Comparator.none) : boolean {
 		// nothing to compare?
 		if (typeof rightValue === "undefined") {
 			return false;
@@ -481,7 +481,7 @@ export class ServerInfo {
 	levelNeeded: number
 	depth: number
 	areScriptsDeployed: boolean
-	parent: string | undefined
+	parent?: string
 	files: string[]
 
 	constructor(nsServer : Server, zerver : Zerver) {
@@ -543,3 +543,7 @@ export class ServerInfo {
 	}
 }
 
+interface Search {
+	key?: string | number | boolean;
+	value?: string | number | boolean;
+}

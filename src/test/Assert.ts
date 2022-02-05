@@ -3,21 +3,21 @@ import { toPrintableType } from "/lib/utils";
 
 export class Assert {
 
-    static true(value : unknown, message : string | undefined = undefined) : void {
+    static true(value : unknown, message? : string) : void {
         if (!value) this.fail(value, true, message, "==");
     }
 
-    static equal(actual : unknown, expected : unknown, message : string | undefined = undefined) : void {
+    static equal(actual : unknown, expected : unknown, message? : string) : void {
         if (actual != expected) this.fail(actual, expected, message, "==");
     }
 
-    static notEqual(actual : unknown, expected : unknown, message : string | undefined = undefined) : void {
+    static notEqual(actual : unknown, expected : unknown, message? : string) : void {
         if (actual == expected) {
             this.fail(actual, expected, message, "!=");
         }
     }
 
-    static isLength(any : unknown, length : number, message : string | undefined = undefined) : void {
+    static isLength(any : unknown, length : number, message? : string) : void {
         if (_.isArray(any) || _.isString(any)) {
             if(any.length !== length) this.fail(any, length, message, "length ==");
         } else {
@@ -25,31 +25,31 @@ export class Assert {
         }
     }
 
-    static empty(any : unknown, message : string | undefined = undefined) : void {
+    static empty(any : unknown, message? : string) : void {
         if (!_.isEmpty(any)) this.fail(any, 0, message, "length ==");
     }
 
-    static notEmpty(any : unknown, message : string | undefined = undefined) : void {
+    static notEmpty(any : unknown, message? : string) : void {
         if (_.isEmpty(any)) this.fail(any, 0, message, "length >");
     }
 
-    static isArray(any : unknown, message : string | undefined = undefined) : void {
+    static isArray(any : unknown, message? : string) : void {
         if (!_.isArray(any)) this.fail(typeof any, "array", message, "==");
     }
 
-    static notUndefinedOrNull(any : unknown, message : string | undefined = undefined) : void {
+    static notUndefinedOrNull(any : unknown, message? : string) : void {
         if (_.isUndefined(any) || _.isNull(any)) this.fail(any, "<undefined> or <null>", message, "!=");
     }
 
-    static has<T>(object: T, path: PropertyPath, message : string | undefined = undefined) : void {
+    static has<T>(object: T, path: PropertyPath, message? : string) : void {
         if (!_.has(object, path)) this.fail(object, `${path.toString()}`, message, "does not have");
     }
 
     static fail(
-        actual : unknown | undefined = undefined,
-        expected : unknown | undefined = undefined, 
-        message : string | undefined = undefined,
-        operator : string | undefined  = undefined
+        actual? : unknown,
+        expected? : unknown, 
+        message? : string,
+        operator? : string
     ) : void {
         throw new AssertionError({
             message: message,
@@ -61,9 +61,9 @@ export class Assert {
 }
 
 export class AssertionError extends Error implements IAssertionError {
-    actual: unknown | undefined;
-    expected: unknown | undefined;
-    operator: string | undefined;
+    actual?: unknown;
+    expected?: unknown;
+    operator?: string;
 
     constructor(options : IAssertionError) {
         const operator = (!_.isUndefined(options.operator)) ? ` ${options.operator} ` : " to be ";
@@ -80,9 +80,9 @@ export class AssertionError extends Error implements IAssertionError {
     }
 }
 interface IAssertionError {
-    message: string | undefined;
-    actual: unknown | undefined;
-    expected: unknown | undefined;
-    operator: string | undefined;
+    message?: string;
+    actual?: unknown;
+    expected?: unknown;
+    operator?: string;
 }
 

@@ -45,7 +45,7 @@ export class Zerver {
    ns: NS
    name: string
    depth: number
-   parent: Zerver | undefined
+   parent?: Zerver
    moneyRank: string
    moneyMax: number
    securityMin: number
@@ -56,7 +56,7 @@ export class Zerver {
    server: Server
    securityRank: string
 
-    constructor(ns : NS, name : string, depth : number | undefined = 0, parent : Zerver | undefined = undefined) { 
+    constructor(ns : NS, name : string, depth : number | undefined = 0, parent? : Zerver) { 
         this.ns = ns;
         this.type = Zerver.getServerType(name);
         this.name = name;

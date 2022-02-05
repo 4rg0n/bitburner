@@ -1,11 +1,12 @@
 
 import { Flags } from "lib/Flags";
 import { NS } from "@ns";
-import { Chabo, Task } from "/gang/Chabo";
+import { Chabo } from "/gang/Chabo";
 import { TaskQueue } from "/gang/TaskQueue";
 import { Babo } from "/gang/Babo";
 import { GangConfig, GangConfigGenerator} from "/gang/GangConfig";
 import { canRunGang } from '/lib/ns0';
+import { Task } from '/gang/Task';
 
 /**
  * For managing your Gang (WIP) o.O
@@ -15,9 +16,10 @@ import { canRunGang } from '/lib/ns0';
     const flags = new Flags(ns, [
         ["...", [], `Name(s) of gang member(s) to do either --work or --train `],
         ["config", "default", `Use configuration file for gang by alias`],
-        ["work", "", `Do work by type ${Object.values(TaskQueue.Work).join(", ")}`],
-        ["task", "", `Do specific task ${Object.values(Task.Names).join(", ")}.`],
-        ["train", "", `Do train for task: ${Object.values(Task.Names).join(", ")}.`],
+        ["work", TaskQueue.Work.Money, `Do work by type ${Object.values(TaskQueue.Work).join(", ")}`],
+        ["task", Task.Names.Laundering, `Do specific task ${Object.values(Task.Names).join(", ")}.`],
+        ["train", Task.Names.Phishing, `Do train for task: ${Object.values(Task.Names).join(", ")}.`],
+        ["multi", 1, `Use multiplier for training`],
 		["help", false, "For managing your gang (WIP)"]
 	]);
 	const args = flags.args();
@@ -28,6 +30,7 @@ import { canRunGang } from '/lib/ns0';
     const trainTask : string = args["train"];
     const taskName : string = args["task"];
     const configAlias : string = args["config"];
+    const progMulti : string = args["multi"];
 
     let babo : Babo;
 
@@ -41,10 +44,10 @@ import { canRunGang } from '/lib/ns0';
 
         const gangConfig = GangConfig.fromObjectArray(gangConfigData);
 
-        babo = new Babo(ns, gangConfig);
+        babo = new Babo(ns, gangConfig, progMulti);
         ns.tprintf(`INFO Babo loaded gang config ${configAlias} with ${gangConfig.length} entries`);
     } else {
-        babo = new Babo(ns);
+        babo = new Babo(ns, undefined, progMulti);
     }
 
     if (workType !== "") {
@@ -75,9 +78,10 @@ import { canRunGang } from '/lib/ns0';
         ns.disableLog("gang.setMemberTask");
 
         if (chaboNames.length > 0) {
-            chaboNames.forEach(name => babo.queueTask(new Chabo(ns, name), new Task(ns, trainTask)));
+            const chabos = chaboNames.map(name => new new Chabo(ns, name));
+            babo.queueTrain(new Task(ns, trainTask), chabos);
         } else {
-            babo.queueWithType(TaskQueue.Work.Training, new Task(ns, trainTask));
+            babo.queueTrain(new Task(ns, trainTask));
         }
 
         while(true) {

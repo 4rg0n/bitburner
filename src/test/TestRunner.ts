@@ -135,13 +135,13 @@ class TestResult {
         Skip: "skip"
     }
 
-    error: Error | AssertionError | string | undefined | unknown | undefined
+    error?: Error | AssertionError | string | unknown
     type: string
     name: string
 
     constructor(
         name: string,
-        error : Error | AssertionError | string | undefined | unknown | undefined = undefined,
+        error? : Error | AssertionError | string | unknown,
         type = TestResult.Types.Success
     ) {
         this.name = name;
@@ -149,7 +149,7 @@ class TestResult {
         this.type = type;
     }
 
-    static fromError(name : string, error : Error | AssertionError | string | undefined | unknown) : TestResult {
+    static fromError(name : string, error? : Error | AssertionError | string | unknown) : TestResult {
         let type : string | undefined = undefined;
         
         if (typeof error === "string") {

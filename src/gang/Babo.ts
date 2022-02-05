@@ -1,8 +1,11 @@
 import { NS } from '@ns'
-import { Chabo, Task, TaskChain, ChaboTasks } from 'gang/Chabo';
+import { Chabo } from 'gang/Chabo';
 import { TaskQueue } from 'gang/TaskQueue';
 import { Gang } from '/gang/Gang';
 import { GangConfig } from '/gang/GangConfig';
+import { TaskChain, ChaboTasks } from '/gang/TaskChain';
+import { Task } from '/gang/Task';
+import { asArray } from '/lib/utils';
 
 export class Babo {
 
@@ -12,22 +15,33 @@ export class Babo {
     parkedQueue: ChaboTasks[]
     gang: Gang
 
-    constructor(ns : NS, gangConfig : GangConfig | undefined = undefined) {
+    constructor(ns : NS, gangConfig? : GangConfig, progressMulti? : number) {
         this.ns = ns;
         this.gang = new Gang(ns, gangConfig);
-        this.taskQueue = new TaskQueue(ns, this.gang);
+        this.taskQueue = new TaskQueue(ns, this.gang, progressMulti);
         this.workQueue = new Map<Chabo, Task>();
         this.parkedQueue = [];
     }
 
-    queueWithType(workType : string | undefined = undefined, task : Task | undefined = undefined) : void {
+    queueWithType(workType? : string, task? : Task) : this {
         this.taskQueue.stopAll();
         this.recruitMissing();
-        this.taskQueue.queueWork(workType, task);
+        this.taskQueue.queueWork(workType, task, undefined);
+        return this;
+    }
+
+    queueTrain(task? : Task, chabosAvail? : Chabo[]) : this {
+        this.taskQueue.stopAll();
+        this.recruitMissing();
+
+        const tasks = this.taskQueue.createTrainingTasks([task], chabosAvail);
+        this.taskQueue.setTasks(tasks);
+        return this;
     }
 
     queueTask(chabo : Chabo | Chabo[], task : Task) : this {
-        const chabos : Chabo[] = _.toArray(chabo);
+        const chabos : Chabo[] = asArray(chabo);
+        task.progMulti = this.taskQueue.progressMulti; // todo not elegant
         chabos.forEach(c => this.taskQueue.set(c, new TaskChain([task])));
         return this;
     }
@@ -42,7 +56,7 @@ export class Babo {
             let task : Task | undefined;
 
             if (chain.isFinished()) {
-                chain.reset();
+                chain.reset(chabo);
                 task = chain.first();
 
                 if (task?.isTraining()) {
@@ -60,9 +74,14 @@ export class Babo {
             if (typeof task === "undefined") {
                 return;
             }
-
-            task.addProgress(1);
-            this.ns.print(`Progress ${chabo.name}: ${task.name} -> ${task.progress.toFixed(2)} / ${task.total.toFixed(2)}`);
+            
+            if (task.isTraining()) {
+                task.progressByAscMulti(chabo.info);
+            } else {
+                task.addProgress(1);
+            }
+            
+            this.ns.print(`Progress ${chabo.name}: ${task.name} -> ${task.progress.toFixed(0)} / ${task.total.toFixed(0)}`);
             chabo.work(task);
         });
     }

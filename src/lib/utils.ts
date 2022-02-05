@@ -8,7 +8,14 @@ export function toPrintableJson(thing : unknown = {}, blacklist = ["ns"]) : stri
 	}, 2);
 }
 
-export function toPrintableType(any : unknown) : string {
+/**
+ * 
+ * @param any 
+ * @param quote 
+ * @param quoteMode always, never, whitespace
+ * @returns 
+ */
+export function toPrintableType(any : unknown, quote = "'", quoteMode = "always") : string {
     if (_.isUndefined(any)) {
         return "<undefined>";
     }
@@ -50,7 +57,20 @@ export function toPrintableType(any : unknown) : string {
     }
 
     if (_.isString(any)) {
-        return `'${any}'`;
+        switch (quoteMode) {
+            case "always":
+                return `${quote}${any}${quote}`;
+            case "whitespace":
+                if (any.match("\\s")) {
+                    return `${quote}${any}${quote}`;
+                } 
+                break;
+            case "never":
+            default:
+                break;
+        }
+
+        return `${any}`;
     }
 
     const str = _.toString(any);
@@ -90,6 +110,10 @@ export function rankValue(value : number, ranks : string[], valueMax : number) :
 export function asLabel(string : string, width = 0) : string {
     const spacer = (width > 0) ? " ".repeat(width - string.length) : "";
     return  `${capatalize(string)}:${spacer}`;
+}
+
+export function asArray<T>(any : T | T[]) : T[]  {
+    return _.isArray(any) ? any : [any];
 }
 
 /**
@@ -204,7 +228,7 @@ export function asFormatGB(number : number, decimals = 2) : string {
  * @param text e.g. 1PB, 4096TB
  * @returns amount of GB or NaN when text can not be parsed
  */
-export function fromFormatGB(text : string | undefined) : number {
+export function fromFormatGB(text? : string) : number {
     if (typeof text !== "string" || text === "") {
         return NaN;
     }

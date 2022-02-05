@@ -1,4 +1,5 @@
 import { NS } from "@ns";
+import { toPrintableType } from "/lib/utils";
 
 /**
  * todo add short flag support (e.g. -h)
@@ -67,7 +68,7 @@ export class Flags {
         }
        
         if (typeof args["help"] !== "undefined" && args["help"] === true) {
-            throw "Usage:\n" + this.toString();
+            throw `Usage:\n${this.toString()}`;
         }
 
         return args;
@@ -89,19 +90,21 @@ export class Flags {
         return lines.join("\n");
     }
 
-    defaultToString(defaultValue : string | number | boolean | string[] | undefined = undefined) : string {
+    defaultToString(defaultValue? : string | number | boolean | string[]) : string {
         if (typeof defaultValue === "undefined" || defaultValue === "") {
             return "";
         }
 
-        return `[${defaultValue}] `;
+        return `${toPrintableType(defaultValue, '"', "whitespace")}`;
     }
 
-    descriptionToString(desc : string | undefined = undefined) : string {
+    descriptionToString(desc? : string) : string {
         if (typeof desc === "undefined") {
             return "";
         }
 
-        return `- ${desc}`;
+        return ` - ${desc}`;
     }
 }
+
+

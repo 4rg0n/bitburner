@@ -3,8 +3,10 @@ import { Gang } from '/gang/Gang';
 import { TaskQueue } from '/gang/TaskQueue';
 import { Assert } from '/test/Assert';
 import { TestRunner } from '/test/TestRunner';
-import { Task, Chabo, ChaboTasks } from '/gang/Chabo';
+import { Chabo } from '/gang/Chabo';
 import { hasGangApi } from '/lib/ns0';
+import { Task } from '/gang/Task';
+import { ChaboTasks } from '/gang/TaskChain';
 
 export async function main(ns : NS) : Promise<void> {
     if (TestRunner.shouldSkip(ns, !hasGangApi(ns), "need gang api")) return;

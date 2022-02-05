@@ -15,12 +15,14 @@ export class TestExecuter {
      * @param self should include tests, which test the test execution itself
      */
     async exec(grep = "", self = false) : Promise<void> {
-        let tests = this.ls(grep);
+        let tests;
 
-        if (!self) {
-            tests = tests
-                .filter(name => name.toLowerCase().indexOf(TestRunner.name.toLowerCase()) === -1)
-                .filter(name => name.toLowerCase().indexOf(TestExecuter.name.toLowerCase()) === -1);
+        if (self) {
+            tests = this.ls()
+                .filter(name => name.toLowerCase().indexOf(TestRunner.name.toLowerCase()) === 1 
+                || name.toLowerCase().indexOf(TestExecuter.name.toLowerCase()) === 1);
+        } else {
+            tests = this.ls(grep);
         }
 
         for (const testScript of tests) {

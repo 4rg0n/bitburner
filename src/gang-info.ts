@@ -2,9 +2,10 @@
 import { Flags } from "lib/Flags";
 import { toPrintableJson } from "lib/utils";
 import { NS } from "@ns";
-import { Chabo, Task } from "/gang/Chabo";
+import { Chabo } from "/gang/Chabo";
 import { Equipment } from "/gang/Equipment";
 import { canRunGang } from '/lib/ns0';
+import { Task } from '/gang/Task';
 
 /**
  * For showing various gang information
@@ -32,7 +33,7 @@ import { canRunGang } from '/lib/ns0';
             for (const type of taskTypes) {
                 const tasks = Task.get(ns, type);
 
-                tasks.forEach(task => ns.tprintf(`${toPrintableJson(task.stats)}`));
+                tasks.forEach(task => ns.tprintf(`• ${task.name}:\n${toPrintableJson(task.stats)}`));
                 ns.tprintf(`Found ${tasks.length} task(s) of type ${type}`);
             }
         } else {
@@ -51,23 +52,11 @@ import { canRunGang } from '/lib/ns0';
 
                 return matched.length > 0;
             }).forEach(chabo => {
-                ns.tprintf(`${chabo.name}:\n`);
-                ns.tprintf(`${toPrintableJson(chabo.info)}`);
-                ns.tprintf(`${toPrintableJson(chabo.statsRaw)}`);
-                ns.tprintf(`${toPrintableJson(chabo.getAscensionResult())}`);
-                ns.tprintf(`${toPrintableJson(chabo.getMultiWeights())}`);
-                ns.tprintf(`Noob: ${chabo.isNoob()}`);
-                ns.tprintf(`Blank: ${chabo.isBlank()}`);
+                printChabo(ns, chabo);
             })
         } else {
             Chabo.get(ns).forEach(chabo => {
-                ns.tprintf(`${chabo.name}:\n`);
-                ns.tprintf(`${toPrintableJson(chabo.info)}`);
-                ns.tprintf(`${toPrintableJson(chabo.statsRaw)}`);
-                ns.tprintf(`${toPrintableJson(chabo.getAscensionResult())}`);
-                ns.tprintf(`${toPrintableJson(chabo.getMultiWeights())}`);
-                ns.tprintf(`Noob: ${chabo.isNoob()}`);
-                ns.tprintf(`Blank: ${chabo.isBlank()}`);
+               printChabo(ns, chabo);
             });
         }
        
@@ -86,7 +75,7 @@ import { canRunGang } from '/lib/ns0';
         if (equipNames.length > 0 && equipNames[0] !== "all") {
             for (const name of equipNames) {
                 const equsByName = equipments.filter(e => e.name === name);
-                equsByName.forEach(e => ns.tprintf(`${e.name} (${e.type}):\n${toPrintableJson(e.stats)}`));
+                equsByName.forEach(e => ns.tprintf(`• ${e.name} (${e.type}):\n${toPrintableJson(e.stats)}`));
 
                 ns.tprintf(`Found ${equsByName.length} equipment(s) with ${name} in it`);
             }
@@ -97,5 +86,25 @@ import { canRunGang } from '/lib/ns0';
         
         return;
     }
+}
+
+function printChabo(ns: NS, chabo : Chabo) : void {
+    ns.tprintf(`${chabo.name}:\n`);
+    ns.tprintf(`• info:\n${toPrintableJson(chabo.info)}`);
+    ns.tprintf(`• statsRaw:\n${toPrintableJson(chabo.statsRaw)}`);
+    ns.tprintf(`• ascResult:\n${toPrintableJson(chabo.getAscResult())}`);
+    ns.tprintf(`• statMultiWeights:\n${toPrintableJson(chabo.getMultiWeights())}`);
+    ns.tprintf(`• statAscMultiWeights:\n${toPrintableJson(chabo.getAscMultiWeights())}`);
+    ns.tprintf(`• suitableEquipment:\n${toPrintableJson(chabo.getSuitableEquipment())}`);
+    ns.tprintf(`• combatMultiWeight: ${chabo.combatMultiWeight}`);
+    ns.tprintf(`• ombatAscMultiWeight: ${chabo.combatAscMultiWeight}`);
+    ns.tprintf(`• combatStatsMulti: ${chabo.combatStatsMulti}`);
+    ns.tprintf(`• combatStatsAscMulti: ${chabo.combatStatsAscMulti}`);
+    ns.tprintf(`• isNoob: ${chabo.isNoob()}`);
+    ns.tprintf(`• isBlank: ${chabo.isBlank()}`);
+    ns.tprintf(`• isWorking: ${chabo.isWorking()}`);
+    ns.tprintf(`• canAscend: ${chabo.canAscend()}`);
+    ns.tprintf(`• shouldAscend: ${chabo.shouldAscend()}`);
+    ns.tprintf(`• needsTraining: ${chabo.needsTraining()}`);
 }
 

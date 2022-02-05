@@ -1,14 +1,15 @@
 import { GangGenInfo, GangMemberInfo, GangOtherInfo, NS } from '@ns'
-import { Chabo, Task } from 'gang/Chabo';
+import { Chabo } from 'gang/Chabo';
 import { NameGenerator } from '/lib/NameGenerator';
 import { GangConfig } from '/gang/GangConfig';
+import { Task } from '/gang/Task';
 
 export class Gang {
 
     ns: NS
-    gangConfig: GangConfig | undefined
+    gangConfig?: GangConfig
 
-    constructor(ns : NS, gangConfig : GangConfig | undefined = undefined) {
+    constructor(ns : NS, gangConfig? : GangConfig) {
         this.ns = ns;
         this.gangConfig = gangConfig;
     }
@@ -62,7 +63,7 @@ export class Gang {
         return this.findSuitableChabos(task, availChabos);
     }
 
-    findSuitableTasks(chabo : Chabo, wantedGainLimit = 10, tasksAvail : Task[] | undefined = undefined) : Task[]  {
+    findSuitableTasks(chabo : Chabo, wantedGainLimit = 10, tasksAvail? : Task[]) : Task[]  {
         if (_.isUndefined(tasksAvail)) tasksAvail = Task.get(this.ns);
 
         const tasks = tasksAvail.filter(t => t.type === Task.Types.Combat || t.type === Task.Types.Hack)

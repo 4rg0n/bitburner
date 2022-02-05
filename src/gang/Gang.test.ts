@@ -1,9 +1,10 @@
 import { NS } from '@ns'
-import { Chabo, Task } from '/gang/Chabo'
+import { Chabo } from '/gang/Chabo'
 import { Gang } from '/gang/Gang'
 import { hasGangApi } from '/lib/ns0';
 import { Assert } from '/test/Assert';
 import { TestRunner } from '/test/TestRunner';
+import { Task } from '/gang/Task';
 
 export async function main(ns : NS) : Promise<void> {
     if (TestRunner.shouldSkip(ns, !hasGangApi(ns), "need gang api")) return;

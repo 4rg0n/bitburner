@@ -75,7 +75,7 @@ export class Scheduler {
         this.ramUsageHistory = new NumberStack([], 10);
     }
 
-    static createWorkQueues(ns : NS, targets : Zerver[], taking : number | undefined = undefined) : WorkQueue[] {
+    static createWorkQueues(ns : NS, targets : Zerver[], taking? : number) : WorkQueue[] {
         return targets.map(target => new WorkQueue(ns, target, taking));
     }
 
@@ -167,7 +167,7 @@ export class Scheduler {
     /**
      * Creates runners for scripts execution
      */
-    runner(server : Zerver, target : string, id : number | string | undefined = undefined) : Runner {
+    runner(server : Zerver, target : string, id? : number | string) : Runner {
         let args;
 
         // add an id to each runner: will result in spawning more scripts
@@ -224,7 +224,7 @@ export class Scheduler {
 
                 if (maxThreads < 1) break;
                 if (runner.isRunning(work.script)) {
-                    //console.info(`Script ${work.script} ${work.threads} still running on ${runner.targetHost} -> ${runner.defaultArgs}`);
+                    console.info(`Script ${work.script} ${work.threads} still running on ${runner.targetHost} -> ${runner.defaultArgs}`);
                     continue;
                 } 
 
@@ -236,11 +236,11 @@ export class Scheduler {
                 // update queue
                 this.initQueue[j] = work;
 
-                //console.info(`Started ${work.script} ${work.progress}/${work.threads} on ${runner.targetHost} -> ${runner.defaultArgs}`);
+                console.info(`Started ${work.script} ${work.progress}/${work.threads} on ${runner.targetHost} -> ${runner.defaultArgs}`);
                 
                 if (work.progress >= work.threads) {
                     work.setStatus(WorkTicket.Status.Running);
-                    //console.info(`Waiting for work done ${work.script} ${work.progress}/${work.threads} ${work.target.name}`);
+                    console.info(`Waiting for work done ${work.script} ${work.progress}/${work.threads} ${work.target.name}`);
                     this.waitingQueue.push(work);
                 }
             }
@@ -259,7 +259,7 @@ export class Scheduler {
             works.workQueue.tickets
                 .filter(work => work.isNew())
                 .forEach(work => {
-                    //console.info(`Polled work ${work.script} ${work.threads} ${work.target.name}`);
+                    console.info(`Polled work ${work.script} ${work.threads} ${work.target.name}`);
                     work.setStatus(WorkTicket.Status.Initiating);
                     this.initQueue.push(work);
                 });
@@ -289,7 +289,7 @@ export class Scheduler {
 
             return servers.every(server => !this.runner(server, work.target.name).isRunning(work.script));
         }).forEach(work => {
-            //console.info(`Done work ${work.script} ${work.progress}/${work.threads} ${work.target.name}`);
+            console.info(`Done work ${work.script} ${work.progress}/${work.threads} ${work.target.name}`);
             work.setStatus(WorkTicket.Status.Done);
         });
 
@@ -299,7 +299,7 @@ export class Scheduler {
     /**
      * Creates new work tickets
      */
-    scheduleWork(scheduledWorks : WorkQueue[] | undefined = undefined): void {
+    scheduleWork(scheduledWorks? : WorkQueue[]): void {
         const works = scheduledWorks || this.scheduledQueue;
 
         switch(this.shareMode) {
@@ -321,7 +321,7 @@ export class Scheduler {
         }
     }
 
-    scheduleShareWork(works : WorkQueue[], ramAvail : number | undefined = undefined) : void {
+    scheduleShareWork(works : WorkQueue[], ramAvail? : number) : void {
         if (works.length == 0) return;
         if (!this.canShare()) return;
 
@@ -410,7 +410,7 @@ export class Scheduler {
         this.recordRamUsage();
     }
 
-    async deployHacksToServers(servers : Zerver[] | undefined = undefined): Promise<void> {
+    async deployHacksToServers(servers? : Zerver[]): Promise<void> {
         servers = servers || this.scheduledQueue.map(workQueue => workQueue.target);
 
         await this.deployer.deployScriptsToServers(servers);
@@ -425,7 +425,7 @@ export class Scheduler {
         return totalRamMax;
     }
 
-    getTotalRamAvail(capacity : number | undefined = undefined) : number {
+    getTotalRamAvail(capacity? : number) : number {
         if (typeof capacity === "undefined") {
             capacity = this.getTotalRamCapacity();
         }

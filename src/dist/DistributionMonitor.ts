@@ -35,7 +35,7 @@ export class DistributionMonitor {
     views: {[key: string]: {title: string | undefined; content: UIContainer | Animation | Distribution | ProgressBar | Progression | Progressions | string | number | boolean | undefined}}  
     maxLabelWith: number  
 
-    constructor(ns : NS, scheduler : Scheduler, purchaser : Purchaser | undefined = undefined, template : string[] = []) {
+    constructor(ns : NS, scheduler : Scheduler, purchaser? : Purchaser, template : string[] = []) {
         this.log = new Log(ns);
         this.scheduler = scheduler;
         this.purchaser = purchaser;

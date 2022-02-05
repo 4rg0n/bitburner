@@ -1,7 +1,8 @@
 import { NS } from '@ns'
-import { Chabo, Task } from '/gang/Chabo';
+import { Chabo } from '/gang/Chabo';
 import { NameGenerator } from '/lib/NameGenerator';
 import { toPrintableJson } from '/lib/utils';
+import { Task } from '/gang/Task';
 
 export interface IGangConfig {
     chabos: Chabo[]

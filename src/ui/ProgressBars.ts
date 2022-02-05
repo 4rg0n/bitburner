@@ -194,7 +194,7 @@ export class Progression implements UI {
         this.error = false;
     }
 
-    setProgress(progress : number, progressTotal : number | undefined = undefined) : Progression {
+    setProgress(progress : number, progressTotal? : number) : Progression {
         if (typeof progressTotal !== "undefined") {
             this.progressTotal = progressTotal;
         }
@@ -291,12 +291,12 @@ export class Progressions implements UI {
     indent: string
 
     constructor(
-        size : number | undefined = undefined,
-        overload : number | undefined = undefined, 
+        size? : number,
+        overload? : number, 
         keys : string[] = [], 
         indent = 0,
-        template : string[] | undefined = undefined, 
-        format : string | undefined = undefined
+        template? : string[], 
+        format? : string
     ) {
         this.keys = keys;
         this.progressions = {};
@@ -344,12 +344,12 @@ export class Distribution extends Progressions implements UI {
     showTotal: boolean
 
     constructor(
-        size : number | undefined = undefined, 
-        overload : number | undefined = undefined, 
-        keys : string[] | undefined = undefined,
+        size? : number, 
+        overload? : number, 
+        keys? : string[],
         indent = 0,
-        template : string[] | undefined = undefined, 
-        format : string | undefined = undefined,
+        template? : string[], 
+        format? : string,
         showTotal = true
     ) {
         super(size, overload, keys, indent, template, format)

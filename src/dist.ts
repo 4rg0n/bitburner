@@ -80,26 +80,30 @@ export async function main(ns : NS): Promise<void> {
 
     ns.tprintf(`Found ${targets.length} target(s) and ${scheduler.workers.length} worker(s)`);
 
-    const monitorTemplate = [
-        DistributionMonitor.Templates.Targets,
-        DistributionMonitor.Templates.Line,
-        DistributionMonitor.Templates.DistSecurity,
-        DistributionMonitor.Templates.Line,
-        DistributionMonitor.Templates.DistThreadsScheduled,
-        DistributionMonitor.Templates.DistThreadsInit,
-        DistributionMonitor.Templates.ThreadsInitProgress,
-        DistributionMonitor.Templates.DistThreadsWaiting,
-        DistributionMonitor.Templates.Line,
-        DistributionMonitor.Templates.Load,
-        DistributionMonitor.Templates.Money,
-    ];
+    let monitor;
 
-    if (scale > 0) monitorTemplate.push(DistributionMonitor.Templates.Scale);
-    if (doBoost) monitorTemplate.push(DistributionMonitor.Templates.Boost);
-    if (shareMode !== Scheduler.ShareMode.None) monitorTemplate.push(DistributionMonitor.Templates.Share);
-
-    const monitor = new DistributionMonitor(ns, scheduler, purchaser, monitorTemplate);
-
+    if (!silent) {
+        const monitorTemplate = [
+            DistributionMonitor.Templates.Targets,
+            DistributionMonitor.Templates.Line,
+            DistributionMonitor.Templates.DistSecurity,
+            DistributionMonitor.Templates.Line,
+            DistributionMonitor.Templates.DistThreadsScheduled,
+            DistributionMonitor.Templates.DistThreadsInit,
+            DistributionMonitor.Templates.ThreadsInitProgress,
+            DistributionMonitor.Templates.DistThreadsWaiting,
+            DistributionMonitor.Templates.Line,
+            DistributionMonitor.Templates.Load,
+            DistributionMonitor.Templates.Money,
+        ];
+    
+        if (scale > 0) monitorTemplate.push(DistributionMonitor.Templates.Scale);
+        if (doBoost) monitorTemplate.push(DistributionMonitor.Templates.Boost);
+        if (shareMode !== Scheduler.ShareMode.None) monitorTemplate.push(DistributionMonitor.Templates.Share);
+    
+        monitor = new DistributionMonitor(ns, scheduler, purchaser, monitorTemplate);
+    }
+    
     while (true) {
         await ns.sleep(500);
         if (purchaser.canUpgradeServers()) {
@@ -113,7 +117,7 @@ export async function main(ns : NS): Promise<void> {
         await scheduler.run();
         await ns.sleep(500);
 
-        if (silent === true) continue;
+        if (silent || _.isUndefined(monitor)) continue;
 
         monitor.display();
     }

@@ -25,7 +25,7 @@ export class WorkQueue {
         this.workQueue = new WorkStack([], this.maxSize);
     }
 
-    addWork(script : string, threads : number, priority : number | undefined = undefined)  : void {
+    addWork(script : string, threads : number, priority? : number)  : void {
         if (threads < 1) return;
 
         const ramUsage = this.ns.getScriptRam(script) * threads;
