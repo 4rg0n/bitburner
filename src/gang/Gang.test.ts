@@ -1,5 +1,5 @@
 import { NS } from '@ns'
-import { Chabo, Task, TaskChain } from '/gang/Chabo'
+import { Chabo, Task } from '/gang/Chabo'
 import { Gang } from '/gang/Gang'
 import { Assert } from '/test/Assert';
 import { TestRunner } from '/test/TestRunner';

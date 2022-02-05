@@ -1,6 +1,9 @@
 import { NS } from '@ns'
 import { AssertionError } from '/test/Assert';
 
+/**
+ * FIXME There might be issues when e.g. gang API isn't currently available and you try to run tests with it
+ */
 export class TestRunner {
     ns : NS
 

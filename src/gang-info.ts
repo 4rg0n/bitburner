@@ -20,19 +20,23 @@ import { Equipment } from "/gang/Equipment";
 	const args = flags.args();
 
     const chaboNames : string[] = args._;
-    const taskTypes : string[] = args["taskinfo"];
+    const taskTypes : string[] = args["task"];
     const showChabo : boolean = args["chabo"];
-    const equipNames : string[] = args["equipinfo"];
+    const equipNames : string[] = args["equip"];
     const showGang : boolean = args["gang"];
 
     if (flags.isPresent("task")) {
         if (taskTypes.length > 0 && taskTypes[0] !== "all") {
             for (const type of taskTypes) {
-                ns.tprintf(`${type}:\n`)
-                Task.get(ns, type).forEach(task => ns.tprintf(`${toPrintableJson(task.stats)}`))
+                const tasks = Task.get(ns, type);
+
+                tasks.forEach(task => ns.tprintf(`${toPrintableJson(task.stats)}`));
+                ns.tprintf(`Found ${tasks.length} task(s) of type ${type}`);
             }
         } else {
-            Task.get(ns).forEach(task => ns.tprintf(`${toPrintableJson(task.stats)}`))
+            const tasks = Task.get(ns);
+            tasks.forEach(task => ns.tprintf(`${toPrintableJson(task.stats)}`));
+            ns.tprintf(`Found(${tasks.length} task(s)`);
         }
         
         return;
@@ -79,11 +83,14 @@ import { Equipment } from "/gang/Equipment";
 
         if (equipNames.length > 0 && equipNames[0] !== "all") {
             for (const name of equipNames) {
-                equipments.filter(e => e.name === name)
-                    .forEach(e => ns.tprintf(`${e.name} (${e.type}):\n${toPrintableJson(e.stats)}`))
+                const equsByName = equipments.filter(e => e.name === name);
+                equsByName.forEach(e => ns.tprintf(`${e.name} (${e.type}):\n${toPrintableJson(e.stats)}`));
+
+                ns.tprintf(`Found ${equsByName.length} equipment(s) with ${name} in it`);
             }
         } else {
-            equipments.forEach(e => ns.tprintf(`${e.name} (${e.type}):\n${toPrintableJson(e.stats)}`))
+            equipments.forEach(e => ns.tprintf(`${e.name} (${e.type}):\n${toPrintableJson(e.stats)}`));
+            ns.tprintf(`Found ${equipments.length} equipment(s) with ${name} in it`);
         }
         
         return;

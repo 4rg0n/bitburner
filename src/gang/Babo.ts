@@ -4,7 +4,6 @@ import { TaskQueue } from 'gang/TaskQueue';
 import { Gang } from '/gang/Gang';
 import { GangConfig } from '/gang/GangConfig';
 
-
 export class Babo {
 
     ns: NS

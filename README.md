@@ -161,7 +161,7 @@ import { someFunction } from 'main'
 For debugging bitburner on Steam you will need to enable a remote debugging port. This can be done by rightclicking bitburner in your Steam library and selecting properties. There you need to add `--remote-debugging-port=9222` [Thanks @DarkMio]
 
 In VS Code press `F5` or goto `Run -> Start Debugging` to connect VS Code with Bitburner.
-You can then set (breakpoints in VS Code)[https://code.visualstudio.com/docs/editor/debugging#_breakpoints] as usual.
+You can then set [breakpoints in VS Code](https://code.visualstudio.com/docs/editor/debugging#_breakpoints) as usual.
 
 When debugging you see errors like the following:
 

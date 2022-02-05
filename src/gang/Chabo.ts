@@ -424,7 +424,7 @@ export class Task {
      * @returns list of tasks filtered by category and ordered by baseWanted desc
      */
     static get(ns : NS, category = "") : Task[] {
-        let tasks = Object.values(Task.Names).map(name => new Task(ns, name));
+        let tasks = ns.gang.getTaskNames().map(name => new Task(ns, name));
 
         switch (category) {
             case Task.Categories.Money:
