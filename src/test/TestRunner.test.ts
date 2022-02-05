@@ -7,7 +7,7 @@ import { TestRunner, TestSkipError } from '/test/TestRunner';
  * Tests TestRunner itself
  */
 export async function main(ns : NS) : Promise<void> {
-    //TestRunner.shouldSkip(true, "example skip"); //Skip?
+    //if (TestRunner.shouldSkip(true, "example skip")) return; //Skip?
     const runner = new TestRunner(ns);
     runner.run(Tests);
 }
