@@ -1,10 +1,13 @@
 import { NS } from '@ns'
 import { Chabo, Task } from '/gang/Chabo'
 import { Gang } from '/gang/Gang'
+import { hasGangApi } from '/lib/ns0';
 import { Assert } from '/test/Assert';
 import { TestRunner } from '/test/TestRunner';
 
 export async function main(ns : NS) : Promise<void> {
+    if (TestRunner.shouldSkip(ns, !hasGangApi(ns), "need gang api")) return;
+
     const runner = new TestRunner(ns);
     runner.run(Tests);
 }
@@ -63,8 +66,8 @@ const Tests = {
         
         const gang = new Gang(ns);
         const chabo = new Chabo(nsMock, "test");
-    
-        const tasks = gang.findSuitableTasks(chabo);
+        const tasksAvail = Task.get(ns, undefined, Object.values(Task.Names));
+        const tasks = gang.findSuitableTasks(chabo, undefined, tasksAvail);
         
         Assert.isArray(tasks);
         Assert.notEmpty(tasks);
@@ -128,8 +131,8 @@ const Tests = {
         
         const gang = new Gang(ns);
         const chabo = new Chabo(nsMock, "test");
-    
-        const tasks = gang.findSuitableTasks(chabo);
+        const tasksAvail = Task.get(ns, undefined, Object.values(Task.Names));
+        const tasks = gang.findSuitableTasks(chabo, undefined, tasksAvail);
         
         Assert.isArray(tasks);
         Assert.notEmpty(tasks);

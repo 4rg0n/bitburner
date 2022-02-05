@@ -421,10 +421,12 @@ export class Task {
      * 
      * @param ns 
      * @param category 
+     * @param namesAvail list of available task names
      * @returns list of tasks filtered by category and ordered by baseWanted desc
      */
-    static get(ns : NS, category = "") : Task[] {
-        let tasks = ns.gang.getTaskNames().map(name => new Task(ns, name));
+    static get(ns : NS, category = "", namesAvail : string[] | undefined = undefined) : Task[] {
+        if (_.isUndefined(namesAvail)) namesAvail = ns.gang.getTaskNames();
+        let tasks = namesAvail.map(name => new Task(ns, name));
 
         switch (category) {
             case Task.Categories.Money:

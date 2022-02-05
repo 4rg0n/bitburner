@@ -1,9 +1,6 @@
 import { NS } from '@ns'
 import { AssertionError } from '/test/Assert';
 
-/**
- * FIXME There might be issues when e.g. gang API isn't currently available and you try to run tests with it
- */
 export class TestRunner {
     ns : NS
 
@@ -39,28 +36,22 @@ export class TestRunner {
             func.apply(scope, [this.ns]);
             this.ns.tprintf(`SUCCESS ☑ ${this.ns.getScriptName()}#${func.name}`);
         } catch (err) {
-
             const result = TestResult.fromError(func.name, err);
-
             let level = "";
+            let symbol = "☒"
 
             if (result.type === TestResult.Types.Failure) {
                 level = "WARN";
             } else if (result.type === TestResult.Types.Error) {
                 level = "ERROR";
-            }
-
-            let state = "";
-
-            if (result.type === TestResult.Types.Failure) {
-                state = "FAILED";
-            } else if (result.type === TestResult.Types.Error) {
-                state = "ERROR";
+            } else if (result.type === TestResult.Types.Skip) {
+                symbol = "☐";
+                level = "SKIPPED";
             }
 
             const msg = TestRunner.errorToString(err);
-            this.ns.tprintf(`${level} ☒ ${this.ns.getScriptName()}#${func.name} test result: ${state} \n${msg}}`);
-            this.ns.tprintf("\n");
+            this.ns.tprintf(`${level} ${symbol} ${this.ns.getScriptName()}#${func.name} test: ${_.upperCase(result.type)} \n${msg}`);
+            if (result.type !== TestResult.Types.Skip) this.ns.tprintf("\n");
             return result;
         }
 
@@ -84,16 +75,37 @@ export class TestRunner {
     printResults(results : TestResult[]) : void {
         const errorCount = results.filter(res => res.type === TestResult.Types.Error).length;
         const failureCount = results.filter(res => res.type === TestResult.Types.Failure).length;
+        const skipCount = results.filter(res => res.type === TestResult.Types.Skip).length;
         const successCount = results.filter(res => res.type === TestResult.Types.Success).length;
         let passed = "☑";
 
         if (errorCount > 0 || failureCount > 0) {
-            passed = "☒"
+            passed = "☒";
         } 
 
         this.ns.tprintf("\n");
-        this.ns.tprintf(` ${passed} Success: ${successCount} Failure: ${failureCount} Error: ${errorCount}`);
+        this.ns.tprintf(` ${passed} Success: ${successCount} Failure: ${failureCount} Error: ${errorCount} Skip: ${skipCount}`);
         this.ns.tprintf("\n");
+    }
+
+    static shouldSkip(ns: NS, doSkip = false, message = "") : boolean {
+        try {
+            TestRunner.skip(doSkip, message);
+        } catch(err) {
+            if (err instanceof TestSkipError) {
+                ns.tprintf(`SKIPPED ☐ ${ns.getScriptName()} tests - ${message}`);
+                ns.tprintf(`\n`);
+                return true;
+            }
+
+            throw err;
+        }
+
+        return false;
+    }
+
+    static skip(doSkip = false, message = "") : void {
+        if (doSkip) throw new TestSkipError(message);
     }
 
     static errorToString(err : Error |  AssertionError | string | unknown) : string {
@@ -119,7 +131,8 @@ class TestResult {
     static Types = {
         Success: "success",
         Failure: "failure",
-        Error: "error"
+        Error: "error",
+        Skip: "skip"
     }
 
     error: Error | AssertionError | string | undefined | unknown | undefined
@@ -141,6 +154,8 @@ class TestResult {
         
         if (typeof error === "string") {
             type = TestResult.Types.Error;
+        } else if (error instanceof TestSkipError) {
+            type = TestResult.Types.Skip;
         } else if (error instanceof Error) {
             if (error.name === AssertionError.name) {
                 type = TestResult.Types.Failure;
@@ -152,3 +167,15 @@ class TestResult {
         return new TestResult(name, error, type);
     }
 }
+
+export class TestSkipError {
+    message: string;
+
+    constructor(message = "") {
+        this.message = message;
+    }
+
+    toString() : string {
+        return `${TestSkipError.name}: ${this.message}`;
+    }
+} 

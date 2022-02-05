@@ -1,4 +1,3 @@
-import { asArray } from "lib/lib";
 import { NS } from "@ns";
 import { Zerver } from "/server/Zerver";
 
@@ -61,7 +60,7 @@ export class Runner {
      * @returns min thread count of all given scripts
      */
     minThreads(scripts : string|string[], threads = 0) : number {
-        scripts = asArray(scripts);
+        scripts = _.toArray(scripts);
         const allThreads = [];
 
         for (const script of scripts) {
@@ -79,8 +78,8 @@ export class Runner {
     }
 
     async await(scripts : string|string[], args : string|string[]  = this.defaultArgs): Promise<void>  {
-        scripts = asArray(scripts);
-        args = asArray(args);
+        scripts = _.toArray(scripts);
+        args = _.toArray(args);
 
         for (const i in scripts) {
             const script = scripts[i];
@@ -98,8 +97,8 @@ export class Runner {
         if (threads < 1) return;
 
         const ns = this.ns;
-        scripts = asArray(scripts);
-        args = asArray(args);   
+        scripts = _.toArray(scripts);
+        args =  _.toArray(args);   
         threads = this.minThreads(scripts, threads);
 
         if (threads < 1) return;
@@ -113,16 +112,16 @@ export class Runner {
     }
     
     async finish(scripts : string|string[], threads = 1, args : string|string[] = this.defaultArgs): Promise<void>  {
-        scripts = asArray(scripts);
-        args = asArray(args);
+        scripts = _.toArray(scripts);
+        args = _.toArray(args);
 
         await this.start(scripts, threads, args);
         await this.await(scripts, args);
     }
 
     async kill(scripts : string|string[], args : string|string[] = this.defaultArgs): Promise<void>  {
-        const scriptsArr = asArray(scripts);
-        const argsArr = asArray(args);
+        const scriptsArr = _.toArray(scripts);
+        const argsArr = _.toArray(args);
 
         for (const i in scriptsArr) {
             this.ns.kill(scriptsArr[i], this.targetHost, ...argsArr);

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { NS } from '@ns'
 import { Assert } from '/test/Assert';
-import { TestRunner } from '/test/TestRunner';
+import { TestRunner, TestSkipError } from '/test/TestRunner';
 /**
  * Tests TestRunner itself
  */
@@ -12,11 +12,15 @@ export async function main(ns : NS) : Promise<void> {
 
 const Tests = {
     testShouldFail: (ns : NS) : void => {
-        Assert.fail(undefined, undefined, "FAILED");
+        Assert.fail("muh", "blub", "FAILED");
     },
     
     testShouldError: (ns : NS) : void => {
        throw new Error("ERROR");
+    },
+
+    testShouldSkip: (ns : NS) : void => {
+        throw new TestSkipError("SKIPPED");
     },
     
     testShouldSucceed: (ns : NS) : void => {

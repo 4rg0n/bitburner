@@ -4,6 +4,8 @@ import { toPrintableJson } from "lib/utils";
 
 /**
  * For displaying player information
+ * 
+ * todo add bitnode infos
  */
  export async function main(ns : NS): Promise<void>  {
     const flags = new Flags(ns, [

@@ -8,7 +8,7 @@ export function toPrintableJson(thing : unknown = {}, blacklist = ["ns"]) : stri
 	}, 2);
 }
 
-export function toPrintableString(any : unknown) : string {
+export function toPrintableType(any : unknown) : string {
     if (_.isUndefined(any)) {
         return "<undefined>";
     }
@@ -22,11 +22,11 @@ export function toPrintableString(any : unknown) : string {
     }
 
     if (!_.isFinite(any) && any === Number.POSITIVE_INFINITY) {
-        return "Infinity";
+        return "<Infinity>";
     }
 
     if (!_.isFinite(any) && any === Number.NEGATIVE_INFINITY) {
-        return "-Infinity";
+        return "<-Infinity>";
     }
 
     if (_.isArray(any) && any.length === 0) {
@@ -34,7 +34,7 @@ export function toPrintableString(any : unknown) : string {
     }
 
     if (_.isArray(any) && any.length > 0) {
-        return `[${any.map(v => toPrintableString(v))}]`;
+        return `[${any.map(v => toPrintableType(v))}]`;
     }
 
     if (_.isObject(any) && _.isEmpty(any)) {
@@ -47,6 +47,10 @@ export function toPrintableString(any : unknown) : string {
         if (!("name" in any)) return "{Object}";
 
         return `{${(any as {[key: string]: unknown}).name}}`;
+    }
+
+    if (_.isString(any)) {
+        return `'${any}'`;
     }
 
     const str = _.toString(any);

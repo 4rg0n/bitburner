@@ -62,8 +62,10 @@ export class Gang {
         return this.findSuitableChabos(task, availChabos);
     }
 
-    findSuitableTasks(chabo : Chabo, wantedGainLimit = 10) : Task[]  {
-        const tasks = Task.get(this.ns).filter(t => t.type === Task.Types.Combat || t.type === Task.Types.Hack)
+    findSuitableTasks(chabo : Chabo, wantedGainLimit = 10, tasksAvail : Task[] | undefined = undefined) : Task[]  {
+        if (_.isUndefined(tasksAvail)) tasksAvail = Task.get(this.ns);
+
+        const tasks = tasksAvail.filter(t => t.type === Task.Types.Combat || t.type === Task.Types.Hack)
             .filter(t => chabo.isSuitableTask(t))
             .filter(t => this.calculateWantedLevelGain(chabo, t) <= wantedGainLimit)
             .sort((a, b) => a.stats.difficulty - b.stats.difficulty)

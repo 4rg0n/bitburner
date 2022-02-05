@@ -1,5 +1,5 @@
 import { PropertyPath } from "lodash";
-import { toPrintableString } from "/lib/utils";
+import { toPrintableType } from "/lib/utils";
 
 export class Assert {
 
@@ -67,8 +67,8 @@ export class AssertionError extends Error implements IAssertionError {
 
     constructor(options : IAssertionError) {
         const operator = (!_.isUndefined(options.operator)) ? ` ${options.operator} ` : " to be ";
-        const expectedMsg = `Expected: ${toPrintableString(options.actual)}${operator}${toPrintableString(options.expected)}`;
-        const msg = (_.isUndefined(options.message)) ? `${expectedMsg}` : `${options.message}\n ${expectedMsg}`;
+        const expectedMsg = `↯ Expected: ${toPrintableType(options.actual)}${operator}${toPrintableType(options.expected)}`;
+        const msg = (_.isUndefined(options.message)) ? `${expectedMsg}` : `${options.message}\n${expectedMsg}`;
 
         super(msg);
 
