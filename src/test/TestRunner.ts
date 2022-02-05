@@ -8,6 +8,11 @@ export class TestRunner {
         this.ns = ns;
     }
 
+    /**
+     * Runs a function or methods in an object starting with "test"
+     * 
+     * @param runable object or function
+     */
     run(runable : (unknown | {[key: string]: unknown})) : void {
         let results : TestResult[] = [];
 
@@ -58,6 +63,12 @@ export class TestRunner {
         return new TestResult(func.name);
     }
 
+    /**
+     * Runs methods in object starting with "test"
+     * 
+     * @param obj with "test" functions to run
+     * @returns 
+     */
     runObject(obj : {[key: string]: unknown}) : TestResult[] {
         const results : TestResult[] = [];
 
@@ -88,6 +99,10 @@ export class TestRunner {
         this.ns.tprintf("\n");
     }
 
+    /**
+     * Will print a message and return whether to skip.
+     * Used for not executing test files under some conditions. E.g. an api is not accessable.
+     */
     static shouldSkip(ns: NS, doSkip = false, message = "") : boolean {
         try {
             TestRunner.skip(doSkip, message);
@@ -104,6 +119,11 @@ export class TestRunner {
         return false;
     }
 
+    /**
+     * Will throw an error when should skip.
+     * Used for skipping a test function under certain conditions. 
+     * The runner will mark the test as skipped.
+     */
     static skip(doSkip = false, message = "") : void {
         if (doSkip) throw new TestSkipError(message);
     }

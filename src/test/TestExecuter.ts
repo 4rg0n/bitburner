@@ -11,6 +11,8 @@ export class TestExecuter {
     }
 
     /**
+     * Runs .test. files with given part in name or all when empty
+     * 
      * @param grep part of test name
      * @param self should include tests, which test the test execution itself
      */
@@ -53,6 +55,12 @@ export class TestExecuter {
         }
     }
 
+    /**
+     * For waiting until a script is finished executing
+     * 
+     * @param script 
+     * @param timeout in ms
+     */
     async await(script : string, timeout = 0): Promise<void>  {
         let elapsedTime = 0;
         while (this.ns.isRunning(script, this.ns.getHostname())) {
@@ -60,7 +68,7 @@ export class TestExecuter {
             elapsedTime =+ 1000;
 
             if ((timeout !== 0 && elapsedTime >= timeout)) {
-                throw new TimeoutError(`Did not finish in ${timeout}ms`)
+                throw new TimeoutError(`waiting for ${script} to finish`, timeout)
             }
         }
     }
@@ -78,12 +86,14 @@ export class TestExecuter {
 
 class TimeoutError {
     message: string;
+    timeout: number;
 
-    constructor(message = "") {
+    constructor(message = "", timeout = 0) {
         this.message = message;
+        this.timeout = timeout;
     }
     
     toString() : string {
-        return `${TimeoutError.name}: ${this.message}`;
+        return `${TimeoutError.name} (${this.timeout}ms): ${this.message}`;
     }
 }

@@ -30,7 +30,7 @@ import { Task } from '/gang/Task';
     const trainTask : string = args["train"];
     const taskName : string = args["task"];
     const configAlias : string = args["config"];
-    const progMulti : string = args["multi"];
+    const progMulti : number = args["multi"];
 
     let babo : Babo;
 
@@ -78,7 +78,7 @@ import { Task } from '/gang/Task';
         ns.disableLog("gang.setMemberTask");
 
         if (chaboNames.length > 0) {
-            const chabos = chaboNames.map(name => new new Chabo(ns, name));
+            const chabos = chaboNames.map(name => new Chabo(ns, name));
             babo.queueTrain(new Task(ns, trainTask), chabos);
         } else {
             babo.queueTrain(new Task(ns, trainTask));

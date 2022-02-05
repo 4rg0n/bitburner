@@ -119,7 +119,7 @@ export class TaskQueue {
             chabosAvail = this.gang.chabos;
         }
 
-        const taskArr = asArray(task);
+        const taskArr = _.toArray(task);
         let tasks : ChaboTasks[] = [];
 
         switch(workType) {

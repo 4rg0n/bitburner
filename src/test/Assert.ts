@@ -1,8 +1,11 @@
 import { PropertyPath } from "lodash";
 import { toPrintableType } from "/lib/utils";
 
+/**
+ * Used for assertins in tests.
+ * An AssertionError will mark a test as failed.
+ */
 export class Assert {
-
     static true(value : unknown, message? : string) : void {
         if (!value) this.fail(value, true, message, "==");
     }

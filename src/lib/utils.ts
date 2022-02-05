@@ -112,7 +112,7 @@ export function asLabel(string : string, width = 0) : string {
     return  `${capatalize(string)}:${spacer}`;
 }
 
-export function asArray<T>(any : T | T[]) : T[]  {
+export function asArray<T>(any : T | T[]) : T[] {
     return _.isArray(any) ? any : [any];
 }
 

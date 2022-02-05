@@ -34,8 +34,9 @@ export class Babo {
         this.taskQueue.stopAll();
         this.recruitMissing();
 
-        const tasks = this.taskQueue.createTrainingTasks([task], chabosAvail);
-        this.taskQueue.setTasks(tasks);
+        const tasks = (_.isUndefined(task)) ? [] : [task];
+        const chaboTasks = this.taskQueue.createTrainingTasks(tasks, chabosAvail);
+        this.taskQueue.setTasks(chaboTasks);
         return this;
     }
 
