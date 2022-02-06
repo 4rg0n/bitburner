@@ -1,3 +1,7 @@
+/**
+ * @param thing object to transform
+ * @param blacklist field names to exclude
+ */
 export function toPrintableJson(thing : unknown = {}, blacklist = ["ns"]) : string{
 	return JSON.stringify(thing, (key, value) => {
 		if (blacklist.indexOf(key) > -1) {
@@ -9,11 +13,11 @@ export function toPrintableJson(thing : unknown = {}, blacklist = ["ns"]) : stri
 }
 
 /**
+ * For printing variable content or types in a human readable form
  * 
- * @param any 
- * @param quote 
+ * @param any to transform
+ * @param quote sign to use for quoting strings
  * @param quoteMode always, never, whitespace
- * @returns 
  */
 export function toPrintableType(any : unknown, quote = "'", quoteMode = "always") : string {
     if (_.isUndefined(any)) {
@@ -265,6 +269,12 @@ export function median(numbers : number[]) : number {
     return sorted[middle];
 }
 
+/**
+ * 
+ * @param format e.g. "Server {0} is {1}"
+ * @param args e.g. "n00dles", "hacked" 
+ * @returns e.g. "Server n00dles is hacked"
+ */
 export function format(format : string, ...args : string[]) : string {
     for (const k in args) {
         format = format.replace("{" + k + "}", args[k])
@@ -273,6 +283,10 @@ export function format(format : string, ...args : string[]) : string {
     return format
 }
 
+/**
+ * Buffers a certain amount of numbers
+ * Can do various calculations with buffered nummers
+ */
 export class NumberStack {
 
     numbers: number[];

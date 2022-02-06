@@ -1,6 +1,6 @@
 import { rankValue } from "lib/utils.js";
 /**
- * Custom representation of a server
+ * Custom representation of an ingame server
  */
 export class Zerver {
     static Scripts = {
@@ -271,7 +271,7 @@ export class Zerver {
         return true;
     }
     /**
-     * @param {number} taking
+     * @param taking
      * @returns
      */
     analyzeInitThreads(taking) {
@@ -319,7 +319,7 @@ export class Zerver {
         return threads;
     }
     /**
-     * @returns {number} number of possible threads
+     * @returns number of possible threads
      */
     threads(script, ramMax = 0) {
         ramMax = (ramMax > 0) ? ramMax : this.ramMax;

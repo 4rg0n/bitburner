@@ -2,6 +2,9 @@ import { NS } from "@ns";
 import { asFormat } from "lib/utils";
 import { HackNode } from "node/HackNode";
 
+/**
+ * For purchasing and upgrading Hacknet Nodes
+ */
 export class NodePurchaser {
 
     ns: NS
@@ -10,9 +13,9 @@ export class NodePurchaser {
     
     /**
      * 
-     * @param {NS} ns 
-     * @param {number} max amount of nodes to own. 0 means infinite
-     * @param {number} moneyThreashhold when given, will only purchase when more than this amount of money is available
+     * @param ns 
+     * @param max amount of nodes to own. 0 means infinite
+     * @param moneyThreashhold when given, will only purchase when more than this amount of money is available
      */
     constructor(ns : NS, max = 0, moneyThreashhold = 0) {
         this.ns = ns;
@@ -44,9 +47,8 @@ export class NodePurchaser {
     }
 
     /**
-     * 
-     * @param {HackNode[]} nodes 
-     * @returns {HackNode[]} 
+     * Try to upgrade owned nodes and buy new ones if cheaper.
+     * Should be run in a loop.
      */
     upgradeNodes(nodes : HackNode[] = []): void {
         nodes = (nodes.length > 0) ? nodes : HackNode.get(this.ns);
@@ -65,7 +67,7 @@ export class NodePurchaser {
             }
         }
 
-        // expensive first
+        // most expensive first
         nodes = nodes.sort((a, b) => a.getUpgradeCost() - b.getUpgradeCost()).reverse();
 
         for (const idx in nodes) {
@@ -98,8 +100,7 @@ export class NodePurchaser {
     }
 
     /**
-     * 
-     * @returns {HackNode|undefined} when no node could be purchased undefined is returned
+     * @returns purchased node or undefined when no node could be purchased
      */
     purchaseNode() : HackNode | undefined {
         const cost = this.getPurchaseNodeCost();

@@ -1,5 +1,8 @@
 import { Zerver } from "/server/Zerver";
 
+/**
+ * For controlling ingame terminal via scripts
+ */
 export class Terminal {
 
     doc: Document

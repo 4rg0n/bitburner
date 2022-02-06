@@ -2,6 +2,8 @@ import { NS } from '@ns'
 import { Zerver } from '/server/Zerver';
 
 /**
+ * Solves Coding Contracts
+ * 
  * Mostly copied from https://gist.github.com/OrangeDrangon/8a08d2d7d425fddd2558e1c0c5fae78b 
  * and https://steamcommunity.com/sharedfiles/filedetails/?id=2712741294/, because I'm stupid and lazy...
  * 
@@ -18,6 +20,11 @@ export class Contractor {
         return Zerver.get(this.ns).filter(s => s.hasContract);
     }
 
+    /**
+     * Find and solve Coding Contracts
+     * 
+     * @param dry will only print results instead of solving
+     */
     solveAll(dry = false) : void {
         const servers = this.findServers();
 
@@ -54,6 +61,9 @@ export class Contractor {
         }
     }
 
+    /**
+     * Solve a specific Coding Contract
+     */
     solve(name : string, data : any, host : string, contractFile : string, dry = false) : string | boolean | undefined {
         let result;
 
@@ -104,7 +114,6 @@ export class Contractor {
                 result = this.findJump(data, 0);
                 break;
             case "Sanitize Parentheses in Expression":
-                // todo bugged?
                 result = this.sanitizeParentheses(data);
                 break;
             default:
@@ -126,6 +135,9 @@ export class Contractor {
         return this.ns.codingcontract.attempt(result, contractFile, host, {returnReward: true})
     }
 
+    /**
+     * Minimum Path Sum in a Triangle
+     */
     solveTriangleSum(arrayData : number[][]) : number {
         const triangle = arrayData;
         let nextArray : number[] = [];
@@ -150,6 +162,9 @@ export class Contractor {
         return Math.min.apply(null, nextArray);
     }
 
+    /**
+     * Unique Paths in a Grid II
+     */
     uniquePathsII(grid : number[][], ignoreFirst = false, ignoreLast = false) : number {
         const rightMoves = grid[0].length - 1;
         const downMoves = grid.length - 1;
@@ -177,6 +192,9 @@ export class Contractor {
         return totalPossiblePaths;
     }
 
+    /**
+     * Unique Paths in a Grid I
+     */
     uniquePathsI(grid : number[]) : number {
         const rightMoves = grid[0] - 1;
         const downMoves = grid[1] - 1;
@@ -194,6 +212,9 @@ export class Contractor {
         return this.factorialDivision(n - 1, d) * n;
     }
 
+    /**
+     * Generate IP Addresses
+     */
     generateIps(num : number) : string[] {
         const numStr : string = num.toString();
         const length = numStr.length;
@@ -234,6 +255,9 @@ export class Contractor {
         return true;
     }
 
+    /**
+     * Algorithmic Stock Trader I
+     */
     stockTraderI(data : number[]) : number {
         const transactionsMax = 1;
         const prices = data;
@@ -242,6 +266,9 @@ export class Contractor {
         return this.maxProfit(prices, days, transactionsMax);
     }
 
+    /**
+     * Algorithmic Stock Trader II
+     */
     stockTraderII(data : number[]) : number {
         const transactionsMax = Math.ceil(data.length / 2);
         const prices = data;
@@ -250,6 +277,9 @@ export class Contractor {
         return this.maxProfit(prices, days, transactionsMax);
     }
 
+    /**
+     * Algorithmic Stock Trader III
+     */
     stockTraderIII(data : number[]) : number {
         const transactionsMax = 2;
         const prices = data;
@@ -257,7 +287,10 @@ export class Contractor {
 
         return this.maxProfit(prices, days, transactionsMax);
     }
-  
+    
+    /**
+     * Algorithmic Stock Trader IV
+     */
     stockTraderIV(data : [number, number[]]) : number {
         const transactionsMax = data[0];
         const prices = data[1];
@@ -298,6 +331,9 @@ export class Contractor {
         return result;
     }
 
+    /**
+     * Find Largest Prime Factor
+     */
     factor(num : number) : number {
         for (let div = 2; div <= Math.sqrt(num); div++) {
             if (num % div != 0) {
@@ -310,7 +346,9 @@ export class Contractor {
         return num;
     }
 
-    
+    /**
+     * Spiralize Matrix
+     */
     spiral(arr : number[][], accum : number[] = []) : number[] {
         if (arr.length === 0 || arr[0].length === 0) {
             return accum;
@@ -351,6 +389,9 @@ export class Contractor {
         return res;
     }
 
+    /**
+     * Merge Overlapping Intervals
+     */
     mergeOverlap(intervals : number[][]) : number[][] {
         intervals.sort(([minA], [minB]) => minA - minB);
         for (let i = 0; i < intervals.length; i++) {
@@ -370,6 +411,9 @@ export class Contractor {
         return intervals;
     }
 
+    /**
+     * Total Ways to Sum
+     */
     totalWayToSum(data : number) : number {
         const cache = {};
         const n = data;
@@ -415,6 +459,9 @@ export class Contractor {
         return s;
     }
 
+    /**
+     * Find All Valid Math Expressions
+     */
     findAllValidMathExpr(data : [string, number]) : string[] {
         const s = data[0];
         const n = data[1];
@@ -471,6 +518,9 @@ export class Contractor {
         return results;
     }
 
+    /**
+     * Subarray with Maximum Sum
+     */
     findMaxSubArraySum(arr : number[]) : number {
         if (arr.length == 0) {
             return 0;
@@ -493,6 +543,9 @@ export class Contractor {
         return sum;
     }
 
+    /**
+     * Array Jumping Game
+     */
     findJump(data : number[], pos : number) : number {
 
         const maxJump = data[pos];
@@ -510,6 +563,9 @@ export class Contractor {
         return 0;
     }
 
+    /**
+     * Sanitize Parentheses in Expression
+     */
     sanitizeParentheses(data : string) : string[] {
         const context = {"maxLeftLength":0}
         let exprs = this.findSanitized(data, 0, context);

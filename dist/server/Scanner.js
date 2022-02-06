@@ -332,7 +332,7 @@ export class Scanner {
     }
 }
 /**
- * Wrapper for the games default {@type {Server}} object
+ * Wrapper for the games default {@type {Server}} and custom {@type {Zerver}} object
  */
 export class ServerInfo {
     cpuCores;

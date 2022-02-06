@@ -53,6 +53,19 @@ export class Babo {
     poll() : void {
         this.pollPeace();
 
+        /*
+        TODO Cycle:
+        * Train 
+          => until shouldAscend()
+        * Work + buy Equ (when to start to buy equ?)
+          => until too expensive (what is too expensive?) to buy new 
+          => OR when all equ is bought
+          => When equ was bought 
+             => Train (until EXP gain % is under X) + Ascend 
+             ELSE 
+             => Ascend
+        */
+
         this.taskQueue.queue.forEach((chain, chabo) => {
             let task : Task | undefined;
 

@@ -44,5 +44,5 @@ export async function main(ns : NS): Promise<void>  {
 		return;
 	}
 	
-	purchaser.buyServers(ram);
+	purchaser.buyOrUpgradeServers(ram);
 }

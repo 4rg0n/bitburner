@@ -70,7 +70,6 @@ export class NameGenerator {
             const randPrefix = NameGenerator.Prefixes[random(0, NameGenerator.Prefixes.length - 1)];
             const randSuffix = NameGenerator.Suffixes[random(0, NameGenerator.Suffixes.length - 1)];
             name = randPrefix + randSuffix; 
-            console.log("BLACKLIST", blacklist);
 
             repeat = (blacklist.filter(blacklisted => blacklisted.toLowerCase() === name.toLowerCase()).length > 0);
         } while (repeat);

@@ -1,6 +1,9 @@
 import { NS, NodeStats } from '@ns'
 import { asFormatGB } from 'lib/utils';
 
+/**
+ * Represents an ingame Hacknet Node
+ */
 export class HackNode {
 
     ns: NS

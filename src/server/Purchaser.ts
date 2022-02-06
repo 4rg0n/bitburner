@@ -15,10 +15,10 @@ export class Purchaser {
 	ramMin: number
 
 	/**
-	 * @param {NS} ns
-	 * @param {number} scale how much % of own money should be spent for buying between 0 and 1
-	 * @param {number} multi multiplikator on how much to scale the servers 
-	 * @param {number} ramMin minimum amount of ram to buy 
+	 * @param ns
+	 * @param scale how much % of own money should be spent for buying between 0 and 1
+	 * @param multi multiplikator on how much to scale the servers 
+	 * @param ramMin minimum amount of ram to buy 
 	 */
 	constructor(ns : NS, scale = 1, multi = 2, ramMin = 8) {
 		this.ns = ns;
@@ -29,7 +29,7 @@ export class Purchaser {
 
 	/**
 	 * 
-	 * @returns {string[]} names of upgraded servers
+	 * @returns names of servers to upgrade
 	 */
 	upgradeServers() : string[] {
 		if (!this.canUpgradeServers()) {
@@ -37,7 +37,7 @@ export class Purchaser {
 		}
 
 		const ram = this.getRamMaxUpgrade();
-		return this.buyServers(ram);
+		return this.buyOrUpgradeServers(ram);
 	}
 
 	canUpgradeServers() : boolean {
@@ -64,10 +64,10 @@ export class Purchaser {
 	}
 
 	/**
-	 * @param {number} ram 
-	 * @returns {string[]} hostnames of bought / upgraded servers
+	 * @param ram 
+	 * @returns hostnames of bought / upgraded servers
 	 */
-	buyServers(ram : number) : string[] {
+	buyOrUpgradeServers(ram : number) : string[] {
 		const newServers : string[] = [];
 
 		if (!this.canBuyServers(ram)) {
@@ -87,10 +87,8 @@ export class Purchaser {
 		const updatedServers = [];
 
 		for (const host of pServers) {
-			const hostname = this.buyUpgrade(host, ram);
-
-			if (typeof hostname !== "undefined") {
-				updatedServers.push(hostname);
+			if (this.upgrade(host, ram)) {
+				updatedServers.push(host);
 			}
 		}
 
@@ -120,9 +118,8 @@ export class Purchaser {
 	}
 
 	/**
-	 * 
-	 * @param {number} ram 
-	 * @returns {string} bought server name or not if coud not be bought
+	 * @param ram 
+	 * @returns bought server name or undefined if no server was bought
 	 */
 	buyNew(ram : number) : string | undefined {
 		if (!this.canBuy(ram)) {
@@ -133,20 +130,21 @@ export class Purchaser {
 	}
 
 	/**
-	 * 
-	 * @param {string} host 
-	 * @param {number} ram 
-	 * @returns {string} bought server name
+	 * @param host 
+	 * @param ram 
+	 * @returns whether server was upgraded
 	 */
-	buyUpgrade(host : string, ram : number) : string | undefined {
+	upgrade(host : string, ram : number) : boolean {
 		const currentRam = this.ns.getServerMaxRam(host);
 
 		if (ram > currentRam && this.canBuy(ram)) {
 			this.shutdownServer(host);
-			return this.buyNew(ram);
+			const name = this.buyNew(ram);
+
+			return _.isUndefined(name);
 		}
 
-		return undefined;
+		return false;
 	}
 
 	shutdownServer(host : string) : void {
@@ -155,9 +153,8 @@ export class Purchaser {
 	}
 
 	/**
-	 * 
-	 * @param {number} ram 
-	 * @returns {number} cost to replace all servers
+	 * @param ram 
+	 * @returns cost to replace all servers
 	 */
 	getCostTotal(ram : number) : number {
 		return this.ns.getPurchasedServerCost(ram) * this.ns.getPurchasedServerLimit();
@@ -178,7 +175,7 @@ export class Purchaser {
 	}
 
 	/**
-	 * @returns {number} highest ram of all private servers
+	 * @returns highest ram of all private servers
 	 */
 	getRamMax() : number {
 		const ramMax = Math.max(...this.getRamAll());
@@ -195,7 +192,7 @@ export class Purchaser {
 	}
 
 	/**
-	 * @returns {number} lowest ram of all private servers
+	 * @returns lowest ram of all private servers
 	 */
 	getRamMin() : number {
 		const ramMin = Math.min(...this.getRamAll());
@@ -213,7 +210,7 @@ export class Purchaser {
 
 	/**
 	 * 
-	 * @returns {number[]} list with ram of all private servers
+	 * @returns list with ram of all private servers
 	 */
 	getRamAll() : number[] {
 		return this.ns.getPurchasedServers()
@@ -222,7 +219,7 @@ export class Purchaser {
 
 	/**
 	 * 
-	 * @returns {number} max amount of ram able to purchase for all servers
+	 * @returns max amount of ram able to purchase for all servers
 	 */
 	getRamMaxUpgrade() : number {
 		let nextRam = this.getRamNextUpgrade();

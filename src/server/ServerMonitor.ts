@@ -3,6 +3,9 @@ import { Log } from "lib/Log";
 import { ProgressBar, Progression } from "ui/ProgressBars";
 import { ServerInfo } from "server/Scanner";
 
+/**
+ * For displaying server information in a log output window
+ */
 export class ServerMonitor {
     static MaxServerGrowth = 100;
     static MaxHackDifficulty = 100;
@@ -12,6 +15,10 @@ export class ServerMonitor {
     log: Log
     bars: {[key: string]: Progression | ProgressBar}
 
+    /**
+     * @param ns 
+     * @param hosts names of servers to monitor
+     */
     constructor(ns : NS, hosts : string[] = []) {
         this.ns = ns;
         this.hosts = hosts;
@@ -25,6 +32,9 @@ export class ServerMonitor {
         this.bars.growBar = new Progression(new ProgressBar(10));
     }
 
+    /**
+     * Collect server infos and display
+     */
     monitor(): void {
         const serverInfos = ServerInfo.get(this.ns, this.hosts);
         this.display(serverInfos);
