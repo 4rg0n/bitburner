@@ -24,7 +24,7 @@ export class Assert {
         if (_.isArray(any) || _.isString(any)) {
             if(any.length !== length) this.fail(any, length, message, "length ==");
         } else {
-            this.fail(`Expected value to be ${Array.name} or ${String.name}, but got ${typeof any}`);
+            this.fail(typeof any, `${Array.name} or ${String.name}`, undefined, "is");
         }
     }
 
