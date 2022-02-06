@@ -26,7 +26,7 @@ export class Babo {
     queueWithType(workType? : string, task? : Task) : this {
         this.taskQueue.stopAll();
         this.recruitMissing();
-        this.taskQueue.queueWork(workType, task, undefined);
+        this.taskQueue.queueByType(workType, task, undefined);
         return this;
     }
 
@@ -60,7 +60,7 @@ export class Babo {
                 chain.reset(chabo);
                 task = chain.first();
 
-                if (task?.isTraining()) {
+                if (task?.isTrain()) {
                     if (chabo.shouldAscend(chain.getEffectedStats())) {
                         if (typeof chabo.ascend() !== "undefined") {
                             this.ns.print(`Ascended ${chabo.name}`);
@@ -76,7 +76,7 @@ export class Babo {
                 return;
             }
             
-            if (task.isTraining()) {
+            if (task.isTrain()) {
                 task.progressByAscMulti(chabo.info);
             } else {
                 task.addProgress(1);

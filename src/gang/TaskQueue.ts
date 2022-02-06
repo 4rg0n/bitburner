@@ -3,7 +3,6 @@ import { Chabo} from 'gang/Chabo';
 import { Gang } from '/gang/Gang';
 import { Task } from '/gang/Task';
 import { TaskChain, ChaboTasks } from '/gang/TaskChain';
-import { asArray } from '/lib/utils';
 export class TaskQueue {
     static Work = {
         Respect: "respect",
@@ -114,7 +113,7 @@ export class TaskQueue {
         });
     }
 
-    queueWork(workType = TaskQueue.Work.Training, task? : Task, chabosAvail? : Chabo[]) : void {
+    queueByType(workType = TaskQueue.Work.Training, task? : Task, chabosAvail? : Chabo[]) : void {
         if (typeof chabosAvail === "undefined") {
             chabosAvail = this.gang.chabos;
         }
@@ -266,18 +265,15 @@ export class TaskQueue {
 
     createPeaceTask(chabos : Chabo[] = []) : ChaboTasks | undefined {
         const peaceTasks = Task.get(this.ns, Task.Categories.Peace);
-        const chaboPeaceTasks : ChaboTasks[] = [];
-
-        for (const task of peaceTasks) {
-            const suitableChabos = this.gang.findSuitableChabos(task, chabos);
-
-            if (suitableChabos.length > 0) {
-                chaboPeaceTasks.push({chabo: suitableChabos[0], chain: new TaskChain([task])});
-            }
-        }
+        const chaboPeaceTasks = this.createTasks(peaceTasks, chabos);
 
         // todo this might be a bad idea to return the first
         return chaboPeaceTasks[0];
+    }
+
+    createWorkTask(chabos : Chabo[] = []) : ChaboTasks | undefined {
+        const workTasks = Task.get(this.ns).filter(t => t.isWork());
+        return this.createSuitableTasks(workTasks, chabos);
     }
 }
 

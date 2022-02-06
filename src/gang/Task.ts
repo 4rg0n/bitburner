@@ -86,6 +86,13 @@ import { StatsMapper, StatsWeight } from "/gang/Stats";
         return task;
     }
 
+    static fromRespect(ns : NS, taskName : string, chaboInfo : GangMemberInfo, progMulti = 1) : Task {
+        const task = new Task(ns, taskName, undefined, undefined, progMulti);
+        task.resetByRespect(chaboInfo);
+
+        return task;
+    }
+
     static isValidTaskName(name? : string) : boolean {
         if (typeof name === "undefined") {
             return false;
@@ -199,7 +206,7 @@ import { StatsMapper, StatsWeight } from "/gang/Stats";
     /**
      * @returns list of stats effected by tasks in chain
      */
-     getEffectedStats() : string[] {
+    getEffectedStats() : string[] {
         const statWeights = this.getStatsWeight();
         return StatsMapper.getEffectedStats(statWeights);
     }
@@ -216,7 +223,7 @@ import { StatsMapper, StatsWeight } from "/gang/Stats";
     }
 
     progressByAscMulti(chaboInfo : GangMemberInfo) : number {
-        if (!this.isTraining()) {
+        if (!this.isTrain()) {
             return this.progress;
         }
 
@@ -228,12 +235,23 @@ import { StatsMapper, StatsWeight } from "/gang/Stats";
     }
 
     progressByAscResult(ascension : GangMemberAscension) : number {
-        if (!this.isTraining()) {
+        if (!this.isTrain()) {
             return this.progress;
         }
 
         const statName = this.getMostEffectedStat();
         const amount = StatsMapper.extractAscResult(statName, ascension);
+        this.progress = this.progress +amount;
+
+        return this.progress;
+    }
+
+    progressByRespect(chaboInfo : GangMemberInfo) : number {
+        if (!this.isWork()) {
+            return this.progress;
+        }
+
+        const amount = chaboInfo.earnedRespect;
         this.progress = this.progress +amount;
 
         return this.progress;
@@ -276,6 +294,16 @@ import { StatsMapper, StatsWeight } from "/gang/Stats";
         this.progress = chaboValue;
     }
 
+    resetByRespect(chaboInfo? : GangMemberInfo, respectNeeded = 10000) : void {
+        if (_.isUndefined(chaboInfo)) {
+            this.restProgress();
+            return;
+        }
+
+        this.total = this.calcTotal(chaboInfo.earnedRespect, respectNeeded)
+        this.progress = chaboInfo.earnedRespect;
+    }
+
     resetByAscResult(ascension? : GangMemberAscension) : void {
         if (_.isUndefined(ascension)) {
             this.restProgress();
@@ -290,11 +318,23 @@ import { StatsMapper, StatsWeight } from "/gang/Stats";
         this.progress = chaboValue;
     }
 
-    isTraining() : boolean {
+    isTrain() : boolean {
         return this.type === Task.Types.Train;
     }
 
+    isWork() : boolean {
+        return this.type === Task.Types.Combat || this.type === Task.Types.Hack;
+    }
+
+    isWar() : boolean {
+        return this.type === Task.Types.War;
+    }
+
     calcTotal(chaboValue : number, taskValue : number) : number {
+        if (chaboValue <= 0) {
+            chaboValue = taskValue;
+        }
+
         return ((taskValue * chaboValue) + chaboValue) * this.progMulti;
     }
 }
